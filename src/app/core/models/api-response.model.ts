@@ -26,14 +26,23 @@ export interface ApiResponse<T = unknown> {
 export interface PageResponse<T> {
   /** Lista de elementos de la página actual */
   readonly content: T[];
-  /** Número de página actual (índice base 0) */
-  readonly page: number;
+  /** Número de página actual (índice base 0, Spring Data usa 'number' o alias 'page') */
+  readonly page?: number;
+  readonly number?: number;
   /** Cantidad de elementos solicitados por página */
   readonly size: number;
   /** Total general de elementos existentes en la base de datos */
   readonly totalElements: number;
   /** Total general de páginas disponibles */
   readonly totalPages: number;
+  /** Cantidad de elementos en la página actual */
+  readonly numberOfElements?: number;
+  /** Bandera que indica si es la primera página */
+  readonly first?: boolean;
+  /** Bandera que indica si es la última página */
+  readonly last?: boolean;
+  /** Bandera que indica si el contenido de la página está vacío */
+  readonly empty?: boolean;
 }
 
 /**
@@ -52,12 +61,12 @@ export function isApiResponse<T = unknown>(value: unknown): value is ApiResponse
   return (
     typeof value === 'object' &&
     value !== null &&
-    ('success' in value ||
-      'exito' in value ||
-      'message' in value ||
+    ('exito' in value ||
+      'success' in value ||
       'mensaje' in value ||
-      'data' in value ||
-      'datos' in value)
+      'message' in value ||
+      'datos' in value ||
+      'data' in value)
   );
 }
 
@@ -72,7 +81,7 @@ export function isPageResponse<T>(value: unknown): value is PageResponse<T> {
   const candidate = value as Record<string, unknown>;
   return (
     Array.isArray(candidate['content']) &&
-    typeof candidate['page'] === 'number' &&
+    (typeof candidate['page'] === 'number' || typeof candidate['number'] === 'number') &&
     typeof candidate['size'] === 'number' &&
     typeof candidate['totalElements'] === 'number' &&
     typeof candidate['totalPages'] === 'number'
@@ -80,31 +89,39 @@ export function isPageResponse<T>(value: unknown): value is PageResponse<T> {
 }
 
 /**
+ * Obtiene el índice de la página actual de forma unificada (base 0).
+ */
+export function getPageNumber<T>(pageResponse: PageResponse<T>): number {
+  return pageResponse.page ?? pageResponse.number ?? 0;
+}
+
+/**
  * Extrae de forma segura los datos de una respuesta ApiResponse,
- * evaluando indistintamente 'data' o 'datos'.
+ * priorizando la clave del backend ('datos') sobre el alias de compatibilidad ('data').
  */
 export function getApiResponseData<T>(response: ApiResponse<T>): T | undefined {
-  return response.data !== undefined ? response.data : response.datos;
+  return response.datos !== undefined ? response.datos : response.data;
 }
 
 /**
  * Extrae de forma segura el mensaje de una respuesta ApiResponse,
- * evaluando indistintamente 'message' o 'mensaje'.
+ * priorizando la clave del backend ('mensaje') sobre el alias de compatibilidad ('message').
  */
 export function getApiResponseMessage(response: ApiResponse<unknown>): string {
-  return response.message ?? response.mensaje ?? '';
+  return response.mensaje ?? response.message ?? '';
 }
 
 /**
  * Determina si la respuesta representa una operación exitosa,
- * evaluando indistintamente 'success' o 'exito'.
+ * priorizando la clave del backend ('exito') sobre el alias ('success').
  */
 export function isApiResponseSuccess(response: ApiResponse<unknown>): boolean {
-  if (response.success !== undefined) {
-    return response.success;
-  }
   if (response.exito !== undefined) {
     return response.exito;
   }
+  if (response.success !== undefined) {
+    return response.success;
+  }
   return false;
 }
+

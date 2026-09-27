@@ -7,6 +7,7 @@ import {
   ApiResponse,
   AuthUser,
   getApiResponseData,
+  isJwtResponse,
   JwtResponse,
   LoginRequest,
   ModuloResponse,
@@ -57,7 +58,8 @@ export class AuthService {
   login(credentials: LoginRequest): Observable<ApiResponse<JwtResponse>> {
     return this.http.post<ApiResponse<JwtResponse>>(`${this.apiUrl}/auth/login`, credentials).pipe(
       tap((response) => {
-        const jwtData = getApiResponseData(response);
+        const jwtData =
+          getApiResponseData(response) ?? (isJwtResponse(response) ? response : null);
         if (jwtData) {
           this.establecerSesion(jwtData);
         }
@@ -72,7 +74,12 @@ export class AuthService {
   consultarMisModulos(): Observable<ApiResponse<ModuloResponse[]>> {
     return this.http.get<ApiResponse<ModuloResponse[]>>(`${this.apiUrl}/auth/mis-modulos`).pipe(
       tap((response) => {
-        const modulos = getApiResponseData(response) ?? [];
+        const data = getApiResponseData(response);
+        const modulos = Array.isArray(data)
+          ? data
+          : Array.isArray(response)
+            ? (response as unknown as ModuloResponse[])
+            : [];
         this._modules.set(modulos);
         this.persistirEnStorage(STORAGE_KEYS.MODULES, JSON.stringify(modulos));
       }),

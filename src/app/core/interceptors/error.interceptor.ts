@@ -32,7 +32,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           // 403 Forbidden: Detecta falta de permisos o cuenta inactiva
           const rawMessage =
             typeof error.error === 'object' && error.error !== null
-              ? (error.error.message ?? error.error.mensaje ?? '')
+              ? (error.error.mensaje ?? error.error.message ?? '')
               : '';
 
           const isInactive =

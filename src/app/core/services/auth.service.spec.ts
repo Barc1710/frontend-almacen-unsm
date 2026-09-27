@@ -34,23 +34,23 @@ describe('AuthService', () => {
     expect(service.debeCambiarClave()).toBe(false);
   });
 
-  it('debe autenticar credenciales y actualizar signals al llamar a login', () => {
+  it('debe autenticar credenciales y actualizar signals al llamar a login con respuesta en español ({ exito, mensaje, datos })', () => {
     const loginPayload: LoginRequest = { usuario: 'admin', clave: 'secret123' };
     const mockJwt: JwtResponse = {
       token: 'jwt.token.xyz',
       usuario: 'admin',
       nombre: 'Administrador UNSM',
       perfil: 'ADMINISTRADOR',
-      debeCambiarClave: false,
+      debeCambiarClave: true,
     };
     const mockResponse: ApiResponse<JwtResponse> = {
-      success: true,
-      message: 'Sesión iniciada',
-      data: mockJwt,
+      exito: true,
+      mensaje: 'Autenticación exitosa',
+      datos: mockJwt,
     };
 
     service.login(loginPayload).subscribe((res) => {
-      expect(res.data?.token).toBe('jwt.token.xyz');
+      expect(res.datos?.token).toBe('jwt.token.xyz');
     });
 
     const req = httpTesting.expectOne(`${environment.apiUrl}/auth/login`);
@@ -62,6 +62,13 @@ describe('AuthService', () => {
     expect(service.token()).toBe('jwt.token.xyz');
     expect(service.username()).toBe('admin');
     expect(service.isAdmin()).toBe(true);
+    expect(service.debeCambiarClave()).toBe(true);
+  });
+
+  it('debe permitir cambiar la bandera debeCambiarClave mediante setDebeCambiarClave', () => {
+    service.setDebeCambiarClave(true);
+    expect(service.debeCambiarClave()).toBe(true);
+    service.setDebeCambiarClave(false);
     expect(service.debeCambiarClave()).toBe(false);
   });
 
