@@ -1,7 +1,8 @@
 import { HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { DOCUMENT, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../services/auth.service';
+import { getApiPath } from '../http/api-url';
 
 /**
  * Interceptor funcional HTTP que inyecta la cabecera 'Authorization: Bearer <token>'
@@ -12,20 +13,14 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const token = authService.token();
 
-  // Excluir la petición de autenticación pública
-  const isLoginEndpoint = req.url.includes('/auth/login');
+  const apiPath = getApiPath(req.url, environment.apiUrl, inject(DOCUMENT).baseURI);
 
-  // Validar si la petición se dirige al contexto base del backend
-  const isTargetApi =
-    req.url.startsWith(environment.apiUrl) ||
-    req.url.startsWith('/api/v1') ||
-    (!req.url.startsWith('http') && !req.url.startsWith('assets/'));
-
-  if (token && isTargetApi && !isLoginEndpoint) {
+  if (token && apiPath !== null && apiPath !== '/auth/login') {
     const authenticatedRequest = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`,
       },
+      redirect: 'error',
     });
     return next(authenticatedRequest);
   }

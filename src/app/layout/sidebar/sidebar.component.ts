@@ -1,25 +1,33 @@
 import { NgOptimizedImage } from '@angular/common';
-import { Component, computed, effect, inject, signal, Type } from '@angular/core';
+import { Component, computed, inject, linkedSignal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { filter, map } from 'rxjs';
 import {
-  LucideBoxes,
-  LucideBuilding2,
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+} from '@angular/router';
+import {
   LucideChevronDown,
-  LucideClipboardList,
-  LucideLayoutDashboard,
-  LucidePackageCheck,
-  LucideShieldCheck,
-  LucideTruck,
-  LucideUserCog,
-  LucideUsers,
+  LucideDynamicIcon,
+  type LucideIcon,
   LucideX,
 } from '@lucide/angular';
+import { filter, map } from 'rxjs';
 import { AuthService } from '../../core/services';
-import { ModuloResponse } from '../../core/models';
 import { LayoutService } from '../layout.service';
 import { getSidebarIcon } from './sidebar-icons';
+
+export interface SidebarItem {
+  readonly id: number | string;
+  readonly codigo: string;
+  readonly nombre: string;
+  readonly url: string;
+  readonly icono: LucideIcon;
+  readonly orden: number;
+  readonly esGrupo?: boolean;
+  readonly submodulos?: SidebarItem[];
+}
 
 @Component({
   selector: 'app-sidebar',
@@ -27,28 +35,18 @@ import { getSidebarIcon } from './sidebar-icons';
     RouterLink,
     RouterLinkActive,
     NgOptimizedImage,
-    LucideLayoutDashboard,
-    LucideBoxes,
-    LucideTruck,
-    LucidePackageCheck,
-    LucideClipboardList,
-    LucideBuilding2,
-    LucideUsers,
-    LucideShieldCheck,
-    LucideUserCog,
     LucideChevronDown,
     LucideX,
+    LucideDynamicIcon,
   ],
   templateUrl: './sidebar.component.html',
+  styleUrl: './sidebar.component.css',
 })
 export class SidebarComponent {
-  private readonly router = inject(Router);
   protected readonly authService = inject(AuthService);
   protected readonly layoutService = inject(LayoutService);
+  private readonly router = inject(Router);
 
-  /**
-   * Señal reactiva que monitorea la URL activa del enrutador
-   */
   readonly currentUrl = toSignal(
     this.router.events.pipe(
       filter((e): e is NavigationEnd => e instanceof NavigationEnd),
@@ -57,51 +55,95 @@ export class SidebarComponent {
     { initialValue: this.router.url },
   );
 
-  /**
-   * Determina de forma reactiva si la ruta activa corresponde al módulo o submódulos de seguridad
-   */
-  readonly isSeguridadActive = computed<boolean>(() =>
-    this.currentUrl().includes('/seguridad'),
-  );
+  readonly items = computed<SidebarItem[]>(() => {
+    const rawModules = this.authService.modules();
+    const sorted = [...rawModules].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
 
-  /**
-   * Estado de apertura del submódulo desplegable Seguridad
-   */
-  readonly isSeguridadOpen = signal<boolean>(this.router.url.includes('/seguridad'));
+    const standardItems: SidebarItem[] = [];
+    const seguridadSubmodules: SidebarItem[] = [];
 
-  constructor() {
-    // Si se navega a cualquier ruta de seguridad, expandir automáticamente el menú
-    effect(() => {
-      if (this.isSeguridadActive()) {
-        this.isSeguridadOpen.set(true);
+    for (const mod of sorted) {
+      const codigo = mod.codigo.trim().toUpperCase();
+      const rawUrl = mod.url.trim();
+      const url = rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`;
+      const icono = getSidebarIcon(mod.icono || codigo);
+
+      if (
+        url.startsWith('/seguridad') ||
+        codigo === 'USUARIOS' ||
+        codigo === 'PERFILES' ||
+        codigo === 'PERFIL' ||
+        codigo === 'ROLES' ||
+        codigo === 'PERMISOS'
+      ) {
+        seguridadSubmodules.push({
+          id: mod.id,
+          codigo,
+          nombre: mod.nombre,
+          url,
+          icono,
+          orden: mod.orden,
+        });
+        continue;
       }
-    });
+
+      standardItems.push({
+        id: mod.id,
+        codigo,
+        nombre: mod.nombre,
+        url,
+        icono,
+        orden: mod.orden,
+      });
+    }
+
+    if (seguridadSubmodules.length > 0) {
+      standardItems.push({
+        id: 'group-seguridad',
+        codigo: 'SEGURIDAD',
+        nombre: 'Seguridad',
+        url: '/seguridad',
+        icono: getSidebarIcon('SEGURIDAD'),
+        orden: 9999,
+        esGrupo: true,
+        submodulos: seguridadSubmodules,
+      });
+    }
+
+    return standardItems;
+  });
+
+  readonly isSeguridadActive = computed<boolean>(() => {
+    const url = this.currentUrl();
+    const items = this.items();
+    const segGroup = items.find((i) => i.codigo === 'SEGURIDAD' && i.esGrupo);
+    return (
+      url.startsWith('/seguridad') ||
+      (segGroup?.submodulos?.some((sub) => this.isSubActive(sub)) ?? false)
+    );
+  });
+
+  readonly isSeguridadOpen = linkedSignal(() => this.isSeguridadActive());
+
+  isItemActive(item: SidebarItem, rlaActive?: boolean): boolean {
+    if (rlaActive) return true;
+    const current = this.currentUrl();
+    if (item.url === '/dashboard') {
+      return current === '/dashboard' || current === '' || current === '/';
+    }
+    return current === item.url || current.startsWith(item.url + '/');
   }
 
-  /**
-   * Alterna la visibilidad del menú desplegable Seguridad
-   */
+  isSubActive(sub: SidebarItem, rlaActive?: boolean): boolean {
+    if (rlaActive) return true;
+    const current = this.currentUrl();
+    return current === sub.url || current.startsWith(sub.url + '/');
+  }
+
   toggleSeguridad(): void {
     this.isSeguridadOpen.update((open) => !open);
   }
 
-  /**
-   * Ordena los módulos autorizados según el criterio de negocio: por orden ascendente.
-   */
-  sortedModules(): ModuloResponse[] {
-    return [...this.authService.modules()].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
-  }
-
-  /**
-   * Resuelve el icono correspondiente a un módulo a partir de su código.
-   */
-  getIcon(codigo: string | null | undefined): Type<unknown> {
-    return getSidebarIcon(codigo);
-  }
-
-  /**
-   * Cierra el menú lateral en modo móvil al interactuar o navegar.
-   */
   closeMobileMenu(): void {
     this.layoutService.close();
   }

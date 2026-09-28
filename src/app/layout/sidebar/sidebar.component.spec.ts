@@ -1,100 +1,104 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { LucideBoxes, LucideClipboardList, LucideLayoutDashboard } from '@lucide/angular';
 import { ModuloResponse } from '../../core/models';
 import { AuthService } from '../../core/services';
 import { LayoutService } from '../layout.service';
-import { DEFAULT_SIDEBAR_ICON, getSidebarIcon, SIDEBAR_ICONS } from './sidebar-icons';
 import { SidebarComponent } from './sidebar.component';
+import { DashboardComponent } from '../../features/dashboard/dashboard.component';
+
+const article: ModuloResponse = {
+  id: 1,
+  codigo: 'ARTICULOS',
+  nombre: 'Catálogo autorizado',
+  url: '/articulos',
+  icono: 'boxes',
+  orden: 1,
+};
+
+const provider: ModuloResponse = {
+  id: 2,
+  codigo: 'PROVEEDORES',
+  nombre: 'Proveedores',
+  url: '/mantenimiento/proveedores',
+  icono: null,
+  orden: 2,
+};
 
 describe('SidebarComponent', () => {
-  let component: SidebarComponent;
   let fixture: ComponentFixture<SidebarComponent>;
-
-  const mockModules = signal<ModuloResponse[]>([
-    {
-      id: 2,
-      codigo: 'KARDEX',
-      nombre: 'Kardex Valorizado',
-      url: '/kardex',
-      icono: 'clipboard',
-      orden: 2,
-    },
-    {
-      id: 1,
-      codigo: 'DASHBOARD',
-      nombre: 'Panel de Control',
-      url: '/dashboard',
-      icono: 'dashboard',
-      orden: 1,
-    },
-    {
-      id: 3,
-      codigo: 'ARTICULOS',
-      nombre: 'Catálogo de Artículos',
-      url: '/articulos',
-      icono: 'boxes',
-      orden: 3,
-    },
-  ]);
-
-  let layoutServiceSpy: {
-    close: ReturnType<typeof vi.fn>;
-  };
+  const modules = signal<ModuloResponse[]>([]);
+  const isAdmin = signal<boolean>(false);
+  const close = vi.fn();
 
   beforeEach(async () => {
-    layoutServiceSpy = {
-      close: vi.fn(),
-    };
-
+    modules.set([article]);
+    isAdmin.set(false);
+    close.mockClear();
     await TestBed.configureTestingModule({
       imports: [SidebarComponent],
       providers: [
-        provideRouter([]),
+        provideRouter([
+          { path: 'articulos', component: DashboardComponent },
+          { path: 'mantenimiento/proveedores', component: DashboardComponent },
+        ]),
         {
           provide: AuthService,
           useValue: {
-            modules: mockModules.asReadonly(),
+            modules: modules.asReadonly(),
+            isAdmin: isAdmin.asReadonly(),
           },
         },
-        {
-          provide: LayoutService,
-          useValue: layoutServiceSpy,
-        },
+        { provide: LayoutService, useValue: { close } },
       ],
     }).compileComponents();
-
     fixture = TestBed.createComponent(SidebarComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
-  it('debe crearse satisfactoriamente', () => {
-    expect(component).toBeTruthy();
+  it('muestra solamente los módulos autorizados devueltos por el backend', () => {
+    const nav = (fixture.nativeElement as HTMLElement).querySelector('nav')!;
+    expect(nav.querySelectorAll('a')).toHaveLength(1);
+    expect(nav.textContent).toContain('Catálogo autorizado');
+    expect(nav.querySelector('a')?.getAttribute('href')).toBe('/articulos');
   });
 
-  it('debe ordenar los módulos ascendentemente según su atributo orden', () => {
-    const sorted = component.sortedModules();
-    expect(sorted.length).toBe(3);
-    expect(sorted[0].codigo).toBe('DASHBOARD');
-    expect(sorted[0].orden).toBe(1);
-    expect(sorted[1].codigo).toBe('KARDEX');
-    expect(sorted[1].orden).toBe(2);
-    expect(sorted[2].codigo).toBe('ARTICULOS');
-    expect(sorted[2].orden).toBe(3);
+  it('actualiza los enlaces cuando cambian los módulos', async () => {
+    modules.set([]);
+    await fixture.whenStable();
+    const nav = (fixture.nativeElement as HTMLElement).querySelector('nav')!;
+    expect(nav.querySelectorAll('a')).toHaveLength(0);
+    expect(nav.textContent).toContain('No hay módulos disponibles');
   });
 
-  it('debe resolver iconos reconocidos y aplicar fallback por defecto', () => {
-    expect(component.getIcon('ARTICULOS')).toBe(LucideBoxes);
-    expect(component.getIcon('KARDEX')).toBe(LucideClipboardList);
-    expect(component.getIcon('DASHBOARD')).toBe(LucideLayoutDashboard);
-    expect(component.getIcon('CODIGO_INEXISTENTE')).toBe(DEFAULT_SIDEBAR_ICON);
-    expect(component.getIcon('')).toBe(DEFAULT_SIDEBAR_ICON);
+  it('muestra múltiples módulos devueltos por el backend', async () => {
+    modules.set([article, provider]);
+    await fixture.whenStable();
+    const nav = (fixture.nativeElement as HTMLElement).querySelector('nav')!;
+    expect(nav.querySelectorAll('a')).toHaveLength(2);
+    expect(nav.textContent).toContain('Catálogo autorizado');
+    expect(nav.textContent).toContain('Proveedores');
   });
 
-  it('debe invocar layoutService.close() al llamar a closeMobileMenu()', () => {
-    component.closeMobileMenu();
-    expect(layoutServiceSpy.close).toHaveBeenCalledTimes(1);
+  it('cierra el menú móvil al invocar closeMobileMenu', () => {
+    fixture.componentInstance.closeMobileMenu();
+    expect(close).toHaveBeenCalledOnce();
+  });
+
+  it('muestra el grupo Seguridad si existen submódulos de seguridad', async () => {
+    modules.set([
+      article,
+      {
+        id: 3,
+        codigo: 'USUARIOS',
+        nombre: 'Usuarios',
+        url: '/seguridad/usuarios',
+        icono: null,
+        orden: 3,
+      },
+    ]);
+    await fixture.whenStable();
+    const nav = (fixture.nativeElement as HTMLElement).querySelector('nav')!;
+    expect(nav.textContent).toContain('Seguridad');
   });
 });

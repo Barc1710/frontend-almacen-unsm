@@ -1,0 +1,29 @@
+.sidebar-scroll {
+  --scroll-thumb: rgb(255 255 255 / 22%);
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) transparent;
+}
+
+.sidebar-scroll:is(:hover, :focus-within) {
+  --scroll-thumb: rgb(255 255 255 / 40%);
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 999px;
+}
+
+@media (forced-colors: active) {
+  .sidebar-scroll {
+    scrollbar-color: auto;
+  }
+}

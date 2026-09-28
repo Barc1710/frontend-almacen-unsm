@@ -1,115 +1,89 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  provideRouter,
+  RouterStateSnapshot,
+  UrlTree,
+} from '@angular/router';
+import { firstValueFrom, isObservable, of } from 'rxjs';
 import { AuthService } from '../services/auth.service';
-import { authGuard, publicGuard } from './auth.guard';
+import { authGuard, landingGuard, moduleGuard, publicGuard } from './auth.guard';
 
-describe('authGuard', () => {
-  let authServiceSpy: {
-    isAuthenticated: ReturnType<typeof vi.fn>;
-    debeCambiarClave: ReturnType<typeof vi.fn>;
-  };
-  let router: Router;
-
-  beforeEach(() => {
-    authServiceSpy = {
-      isAuthenticated: vi.fn(),
-      debeCambiarClave: vi.fn(),
-    };
-
-    TestBed.configureTestingModule({
-      providers: [{ provide: AuthService, useValue: authServiceSpy }],
-    });
-
-    router = TestBed.inject(Router);
-  });
-
-  const dummyRoute = {} as ActivatedRouteSnapshot;
-  const createDummyState = (url: string) => ({ url }) as RouterStateSnapshot;
-
-  it('debe redirigir al login con returnUrl si el usuario no está autenticado', () => {
-    authServiceSpy.isAuthenticated.mockReturnValue(false);
-
-    const result = TestBed.runInInjectionContext(() =>
-      authGuard(dummyRoute, createDummyState('/articulos')),
-    );
-
-    expect(result instanceof UrlTree).toBe(true);
-    const urlTree = result as UrlTree;
-    expect(urlTree.toString()).toContain('/auth/login');
-    expect(urlTree.queryParams['returnUrl']).toBe('/articulos');
-  });
-
-  it('debe redirigir a /cambiar-clave si debeCambiarClave es true y se intenta acceder a otra ruta', () => {
-    authServiceSpy.isAuthenticated.mockReturnValue(true);
-    authServiceSpy.debeCambiarClave.mockReturnValue(true);
-
-    const result = TestBed.runInInjectionContext(() =>
-      authGuard(dummyRoute, createDummyState('/dashboard')),
-    );
-
-    expect(result instanceof UrlTree).toBe(true);
-    const urlTree = result as UrlTree;
-    expect(urlTree.toString()).toBe('/cambiar-clave');
-  });
-
-  it('debe permitir la navegación a /cambiar-clave cuando debeCambiarClave es true para evitar bucle', () => {
-    authServiceSpy.isAuthenticated.mockReturnValue(true);
-    authServiceSpy.debeCambiarClave.mockReturnValue(true);
-
-    const result = TestBed.runInInjectionContext(() =>
-      authGuard(dummyRoute, createDummyState('/cambiar-clave')),
-    );
-
-    expect(result).toBe(true);
-  });
-
-  it('debe permitir la navegación normal si está autenticado y debeCambiarClave es false', () => {
-    authServiceSpy.isAuthenticated.mockReturnValue(true);
-    authServiceSpy.debeCambiarClave.mockReturnValue(false);
-
-    const result = TestBed.runInInjectionContext(() =>
-      authGuard(dummyRoute, createDummyState('/articulos')),
-    );
-
-    expect(result).toBe(true);
-  });
-});
-
-describe('publicGuard', () => {
-  let authServiceSpy: {
-    isAuthenticated: ReturnType<typeof vi.fn>;
-    debeCambiarClave: ReturnType<typeof vi.fn>;
+describe('Guards de sesión y permisos', () => {
+  const route = {} as ActivatedRouteSnapshot;
+  const state = (url: string) => ({ url }) as RouterStateSnapshot;
+  const auth = {
+    isAuthenticated: vi.fn(),
+    debeCambiarClave: vi.fn(),
+    ensureModules: vi.fn(),
+    canAccessModule: vi.fn(),
+    landingUrl: vi.fn(),
   };
 
   beforeEach(() => {
-    authServiceSpy = {
-      isAuthenticated: vi.fn(),
-      debeCambiarClave: vi.fn(),
-    };
-
+    auth.isAuthenticated.mockReturnValue(true);
+    auth.debeCambiarClave.mockReturnValue(true);
+    auth.ensureModules.mockReturnValue(of(true));
+    auth.canAccessModule.mockReset().mockReturnValue(false);
+    auth.landingUrl.mockReturnValue('/articulos');
     TestBed.configureTestingModule({
-      providers: [{ provide: AuthService, useValue: authServiceSpy }],
+      providers: [provideRouter([]), { provide: AuthService, useValue: auth }],
     });
   });
 
-  const dummyRoute = {} as ActivatedRouteSnapshot;
-  const dummyState = { url: '/login' } as RouterStateSnapshot;
-
-  it('debe permitir el acceso si el usuario no está autenticado', () => {
-    authServiceSpy.isAuthenticated.mockReturnValue(false);
-
-    const result = TestBed.runInInjectionContext(() => publicGuard(dummyRoute, dummyState));
-
-    expect(result).toBe(true);
+  it('redirige a la ruta oficial de login preservando el destino', () => {
+    auth.isAuthenticated.mockReturnValue(false);
+    const result = TestBed.runInInjectionContext(() =>
+      authGuard(route, state('/articulos')),
+    ) as UrlTree;
+    expect(result.toString()).toBe('/auth/login?returnUrl=%2Farticulos');
   });
 
-  it('debe redirigir a /dashboard si el usuario ya está autenticado', () => {
-    authServiceSpy.isAuthenticated.mockReturnValue(true);
-    authServiceSpy.debeCambiarClave.mockReturnValue(false);
+  it.each(['/dashboard', '/articulos', '/dashboard#/cambiar-clave'])(
+    'no fuerza un cambio de clave pendiente al visitar %s',
+    (url) => {
+      expect(TestBed.runInInjectionContext(() => authGuard(route, state(url)))).toBe(true);
+    },
+  );
 
-    const result = TestBed.runInInjectionContext(() => publicGuard(dummyRoute, dummyState));
+  it('deja entrar al login sin sesión', () => {
+    auth.isAuthenticated.mockReturnValue(false);
+    expect(TestBed.runInInjectionContext(() => publicGuard(route, state('/auth/login')))).toBe(
+      true,
+    );
+  });
 
-    expect(result instanceof UrlTree).toBe(true);
-    expect((result as UrlTree).toString()).toBe('/dashboard');
+  it('envía las sesiones existentes al selector de destino autorizado', () => {
+    const result = TestBed.runInInjectionContext(() =>
+      publicGuard(route, state('/auth/login')),
+    ) as UrlTree;
+    expect(result.toString()).toBe('/');
+  });
+
+  it('elige un módulo permitido aunque dashboard no esté asignado', async () => {
+    const result = TestBed.runInInjectionContext(() => landingGuard(route, state('/')));
+    const resolved = isObservable(result) ? await firstValueFrom(result) : await result;
+    expect((resolved as UrlTree).toString()).toBe('/articulos');
+  });
+
+  it.each([true, false])('aplica permisos con acceso=%s', async (allowed) => {
+    auth.canAccessModule.mockReturnValue(allowed);
+    const result = TestBed.runInInjectionContext(() =>
+      moduleGuard('ARTICULOS')(route, state('/articulos')),
+    );
+    const resolved = isObservable(result) ? await firstValueFrom(result) : await result;
+    expect(auth.canAccessModule).toHaveBeenCalledWith('ARTICULOS');
+    if (allowed) expect(resolved).toBe(true);
+    else expect((resolved as UrlTree).toString()).toBe('/sin-acceso');
+  });
+
+  it('deniega la ruta cuando no pueden cargarse permisos', async () => {
+    auth.ensureModules.mockReturnValue(of(false));
+    auth.canAccessModule.mockReturnValue(true);
+    const result = TestBed.runInInjectionContext(() =>
+      moduleGuard('ARTICULOS')(route, state('/articulos')),
+    );
+    const resolved = isObservable(result) ? await firstValueFrom(result) : await result;
+    expect((resolved as UrlTree).toString()).toBe('/sin-acceso');
   });
 });

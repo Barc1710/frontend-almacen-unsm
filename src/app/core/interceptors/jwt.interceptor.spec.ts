@@ -61,4 +61,41 @@ describe('jwtInterceptor', () => {
     expect(req.request.headers.has('Authorization')).toBe(false);
     req.flush({});
   });
+  it.each([
+    '//external.example/api/v1/articulos',
+    '//localhost:8080/api/v1/articulos',
+    'https://external.example/api/v1/articulos',
+    'http://localhost:8080.evil.example/api/v1/articulos',
+    'http://localhost:8081/api/v1/articulos',
+    'https://localhost:8080/api/v1/articulos',
+    `${environment.apiUrl}-externa/articulos`,
+    `${environment.apiUrl}0/articulos`,
+    `${environment.apiUrl}/../privado`,
+    `${environment.apiUrl}/%2e%2e/privado`,
+    `${environment.apiUrl}/%2fprivado`,
+    '/api/v1/articulos',
+    '/images/logos/escudo_unsm.png',
+  ])('no adjunta el token a un destino fuera de la API: %s', (url) => {
+    httpClient.get(url).subscribe();
+    const req = httpTesting.expectOne(url);
+    expect(req.request.headers.has('Authorization')).toBe(false);
+    req.flush({});
+  });
+
+  it('excluye login con query y barra final', () => {
+    const url = `${environment.apiUrl}/auth/login/?source=dev`;
+    httpClient.post(url, {}).subscribe();
+    const req = httpTesting.expectOne(url);
+    expect(req.request.headers.has('Authorization')).toBe(false);
+    req.flush({});
+  });
+
+  it('no confunde un texto en query con el endpoint de login', () => {
+    const url = `${environment.apiUrl}/articulos?next=/auth/login`;
+    httpClient.get(url).subscribe();
+    const req = httpTesting.expectOne(url);
+    expect(req.request.headers.get('Authorization')).toBe('Bearer valid-jwt-token');
+    expect(req.request.redirect).toBe('error');
+    req.flush({});
+  });
 });

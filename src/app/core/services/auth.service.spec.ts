@@ -91,7 +91,7 @@ describe('AuthService', () => {
     };
 
     service.consultarMisModulos().subscribe((res) => {
-      expect(res.data?.length).toBe(2);
+      expect(res.datos?.length).toBe(2);
     });
 
     const req = httpTesting.expectOne(`${environment.apiUrl}/auth/mis-modulos`);
@@ -110,5 +110,92 @@ describe('AuthService', () => {
     expect(service.token()).toBeNull();
     expect(service.currentUser()).toBeNull();
     expect(service.modules()).toEqual([]);
+  });
+  it.each(['ADMINISTRADOR', 'USUARIO'])('usa módulos reales para el perfil %s', (perfil) => {
+    service.login({ usuario: 'persona', clave: 'clave' }).subscribe();
+    httpTesting.expectOne(`${environment.apiUrl}/auth/login`).flush({
+      datos: { token: 'real-token', usuario: 'persona', nombre: 'Persona', perfil },
+    });
+    service.consultarMisModulos().subscribe();
+    httpTesting.expectOne(`${environment.apiUrl}/auth/mis-modulos`).flush({
+      datos: [
+        {
+          id: 2,
+          codigo: 'KARDEX',
+          nombre: 'Mi kardex',
+          url: '//external.example',
+          icono: null,
+          orden: 2,
+        },
+        {
+          id: 1,
+          codigo: 'ARTICULOS',
+          nombre: 'Mis artículos',
+          url: '/modulo/articulos',
+          icono: null,
+          orden: 1,
+        },
+      ],
+    });
+    expect(service.navigationModules().map((module) => module.codigo)).toEqual([
+      'ARTICULOS',
+      'KARDEX',
+    ]);
+    expect(service.landingUrl()).toBe('/dashboard');
+    expect(service.canAccessModule('DASHBOARD')).toBe(true);
+    expect(service.canAccessModule('USUARIOS')).toBe(perfil === 'ADMINISTRADOR');
+  });
+
+  it('rechaza login sin token en vez de emitir éxito', () => {
+    const error = vi.fn();
+    service.login({ usuario: 'u', clave: 'p' }).subscribe({ error });
+    httpTesting.expectOne(`${environment.apiUrl}/auth/login`).flush({ datos: { usuario: 'u' } });
+    expect(error).toHaveBeenCalledOnce();
+    expect(service.isAuthenticated()).toBe(false);
+  });
+
+  it('rechaza respuestas marcadas como fallidas aunque contengan token', () => {
+    const error = vi.fn();
+    service.login({ usuario: 'u', clave: 'p' }).subscribe({ error });
+    httpTesting.expectOne(`${environment.apiUrl}/auth/login`).flush({
+      exito: false,
+      datos: {
+        token: 'token',
+        usuario: 'u',
+        nombre: 'Usuario',
+        perfil: 'ADMINISTRADOR',
+      },
+    });
+    expect(error).toHaveBeenCalledOnce();
+    expect(service.isAuthenticated()).toBe(false);
+  });
+
+  it('descarta permisos de una petición que termina después del logout', () => {
+    service.login({ usuario: 'u', clave: 'p' }).subscribe();
+    httpTesting.expectOne(`${environment.apiUrl}/auth/login`).flush({
+      datos: {
+        token: 'token',
+        usuario: 'u',
+        nombre: 'Usuario',
+        perfil: 'USUARIO',
+      },
+    });
+    service.consultarMisModulos().subscribe();
+    const pending = httpTesting.expectOne(`${environment.apiUrl}/auth/mis-modulos`);
+    service.clearSession();
+    pending.flush({
+      datos: [
+        {
+          id: 1,
+          codigo: 'ARTICULOS',
+          nombre: 'Artículos',
+          url: '/articulos',
+          icono: null,
+          orden: 1,
+        },
+      ],
+    });
+    expect(service.modules()).toEqual([]);
+    expect(service.modulesLoaded()).toBe(false);
   });
 });

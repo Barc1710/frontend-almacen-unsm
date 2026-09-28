@@ -1,6 +1,11 @@
 import { Routes } from '@angular/router';
-import { authGuard, publicGuard } from './core/guards';
-import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
+import { authGuard, landingGuard, moduleGuard, publicGuard } from './core/guards';
+
+const loadAccessStatus = () =>
+  import('./features/auth/access-status.component').then((m) => m.AccessStatusComponent);
+
+const loadDashboard = () =>
+  import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent);
 
 export const routes: Routes = [
   {
@@ -11,62 +16,19 @@ export const routes: Routes = [
   },
   {
     path: '',
-    component: MainLayoutComponent,
+    loadComponent: () =>
+      import('./layout/main-layout/main-layout.component').then((m) => m.MainLayoutComponent),
     canActivate: [authGuard],
+    canActivateChild: [authGuard],
     children: [
-      {
-        path: '',
-        pathMatch: 'full',
-        redirectTo: 'dashboard',
-      },
-      {
-        path: 'dashboard',
-        loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-      },
-      {
-        path: 'articulos',
-        loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-      },
-      {
-        path: 'ingresos',
-        loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-      },
-      {
-        path: 'egresos',
-        loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-      },
-      {
-        path: 'kardex/general',
-        loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-      },
-      {
-        path: 'mantenimiento/proveedores',
-        loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-      },
-      {
-        path: 'mantenimiento/clientes',
-        loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-      },
-      {
-        path: 'seguridad/usuarios',
-        loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-      },
-      {
-        path: 'cambiar-clave',
-        redirectTo: 'dashboard',
-      },
+      { path: '', pathMatch: 'full', canActivate: [landingGuard], loadComponent: loadAccessStatus },
+      { path: 'sin-acceso', loadComponent: loadAccessStatus },
+      { path: 'dashboard', canActivate: [moduleGuard()], loadComponent: loadDashboard },
+      { path: 'cambiar-clave', pathMatch: 'full', redirectTo: '' },
+      // Rutas dinámicas universales para módulos y submódulos cargados desde la base de datos
+      { path: ':modulo', canActivate: [moduleGuard()], loadComponent: loadDashboard },
+      { path: ':seccion/:submodulo', canActivate: [moduleGuard()], loadComponent: loadDashboard },
     ],
   },
-  {
-    path: '**',
-    redirectTo: 'auth/login',
-  },
+  { path: '**', redirectTo: '' },
 ];

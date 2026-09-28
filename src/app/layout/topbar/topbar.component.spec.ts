@@ -49,21 +49,22 @@ describe('TopbarComponent', () => {
 
     fixture = TestBed.createComponent(TopbarComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('debe crearse satisfactoriamente', () => {
     expect(component).toBeTruthy();
   });
 
-  it('debe calcular correctamente las iniciales del usuario para el avatar', () => {
-    expect(component.userInitials()).toBe('CA');
-
+  it('debe mostrar el nombre actualizado y usar el usuario como alternativa', async () => {
+    const header = fixture.nativeElement as HTMLElement;
+    expect(header.textContent).toContain('Carlos Alvares');
     mockUserFullName.set('Juan');
-    expect(component.userInitials()).toBe('JU');
-
+    await fixture.whenStable();
+    expect(header.textContent).toContain('Juan');
     mockUserFullName.set('');
-    expect(component.userInitials()).toBe('U');
+    await fixture.whenStable();
+    expect(header.textContent).toContain('calvares');
   });
 
   it('debe alternar y cerrar el menú de perfil', () => {

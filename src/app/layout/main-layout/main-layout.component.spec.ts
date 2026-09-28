@@ -39,7 +39,7 @@ describe('MainLayoutComponent', () => {
         {
           provide: AuthService,
           useValue: {
-            modules: mockModules.asReadonly(),
+            navigationModules: mockModules.asReadonly(),
             userFullName: mockUserFullName.asReadonly(),
             username: mockUsername.asReadonly(),
             userProfile: mockUserProfile.asReadonly(),

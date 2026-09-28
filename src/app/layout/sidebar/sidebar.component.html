@@ -1,28 +1,32 @@
-<div class="flex flex-col h-full bg-[#007A30] text-white select-none">
+<div
+  class="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#007A30] text-white select-none"
+>
   <!-- Cabecera Institucional del Sidebar -->
   <div class="px-3.5 pt-5 pb-2 flex items-start justify-between shrink-0">
     <div class="flex items-start gap-3 min-w-0 flex-1">
       <!-- Escudo Institucional centrado verticalmente únicamente con UNIDAD DE SERVICIOS GENERALES -->
-      <div class="flex items-center shrink-0 min-h-[64px]">
+      <div class="flex items-center shrink-0 min-h-16">
         <img
           ngSrc="/images/logos/escudo_unsm.png"
           width="60"
           height="68"
           priority
           alt="Escudo Oficial UNSM"
-          class="h-16 sm:h-[66px] w-auto object-contain select-none drop-shadow-md"
+          class="h-16 sm:h-16.5 w-auto object-contain select-none drop-shadow-md"
         />
       </div>
 
       <div class="flex flex-col min-w-0 font-sans flex-1">
         <!-- Bloque de 3 líneas centrado con el escudo, letra más grande -->
-        <div class="flex items-center min-h-[64px]">
-          <h2 class="text-[1.02rem] sm:text-[1.10rem] font-bold text-white tracking-tight uppercase leading-[1.12]">
+        <div class="flex items-center min-h-16">
+          <h2
+            class="text-base sm:text-lg font-bold text-white tracking-tight uppercase leading-tight"
+          >
             UNIDAD DE<br />SERVICIOS<br />GENERALES
           </h2>
         </div>
-        <!-- UNSM más pequeño en amarillo institucional, fuera del centrado del logo -->
-        <span class="text-[10px] font-bold text-[#FFE800] tracking-widest uppercase mt-0.5">
+        <!-- UNSM más pequeño en amarillo institucional -->
+        <span class="text-xs font-bold text-[#FFE800] tracking-widest uppercase mt-0.5">
           UNSM
         </span>
       </div>
@@ -39,184 +43,117 @@
     </button>
   </div>
 
-  <!-- Lista de Navegación Principal -->
-  <nav
-    class="flex-1 overflow-y-auto px-3 py-2 space-y-0.5"
-    role="navigation"
-    aria-label="Menú principal de navegación"
-  >
-    <!-- Separador distintivo de cabecera antes de Dashboard -->
-    <div class="h-px bg-white/20 mx-3 my-2 shadow-2xs" aria-hidden="true"></div>
+  <!-- Separador antes de módulos -->
+  <div class="h-px bg-white/20 mx-3 my-2 shadow-2xs" aria-hidden="true"></div>
 
-    <!-- Dashboard -->
-    <a
-      routerLink="/dashboard"
-      (click)="closeMobileMenu()"
-      routerLinkActive="bg-white/15 text-white font-bold shadow-xs ring-1 ring-white/20 [&_.icon-box]:bg-[#00A0DF] [&_.icon-box]:text-white [&_.icon-box]:shadow-sm"
-      [routerLinkActiveOptions]="{ exact: true }"
-      class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#007A30]"
+  <!-- Lista de Navegación Dinámica según módulos autorizados del Backend -->
+  <div class="sidebar-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto bg-[#007A30]">
+    <nav
+      class="min-h-full space-y-1 bg-[#007A30] px-3 py-1"
+      aria-label="Menú principal de navegación"
     >
-      <div class="icon-box size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 text-white/80 group-hover:bg-white/20 group-hover:text-white transition-colors duration-150">
-        <svg lucideLayoutDashboard class="size-4.5"></svg>
-      </div>
-      <span class="truncate">Dashboard</span>
-    </a>
-
-    <!-- Separador sutil -->
-    <div class="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
-
-    <!-- Inventario -->
-    <a
-      routerLink="/articulos"
-      (click)="closeMobileMenu()"
-      routerLinkActive="bg-white/15 text-white font-bold shadow-xs ring-1 ring-white/20 [&_.icon-box]:bg-[#00A0DF] [&_.icon-box]:text-white [&_.icon-box]:shadow-sm"
-      [routerLinkActiveOptions]="{ exact: false }"
-      class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#007A30]"
-    >
-      <div class="icon-box size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 text-white/80 group-hover:bg-white/20 group-hover:text-white transition-colors duration-150">
-        <svg lucideBoxes class="size-4.5"></svg>
-      </div>
-      <span class="truncate">Inventario</span>
-    </a>
-
-    <!-- Separador sutil -->
-    <div class="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
-
-    <!-- Ingresos -->
-    <a
-      routerLink="/ingresos"
-      (click)="closeMobileMenu()"
-      routerLinkActive="bg-white/15 text-white font-bold shadow-xs ring-1 ring-white/20 [&_.icon-box]:bg-[#00A0DF] [&_.icon-box]:text-white [&_.icon-box]:shadow-sm"
-      [routerLinkActiveOptions]="{ exact: false }"
-      class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#007A30]"
-    >
-      <div class="icon-box size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 text-white/80 group-hover:bg-white/20 group-hover:text-white transition-colors duration-150">
-        <svg lucideTruck class="size-4.5"></svg>
-      </div>
-      <span class="truncate">Ingresos</span>
-    </a>
-
-    <!-- Separador sutil -->
-    <div class="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
-
-    <!-- Egresos -->
-    <a
-      routerLink="/egresos"
-      (click)="closeMobileMenu()"
-      routerLinkActive="bg-white/15 text-white font-bold shadow-xs ring-1 ring-white/20 [&_.icon-box]:bg-[#00A0DF] [&_.icon-box]:text-white [&_.icon-box]:shadow-sm"
-      [routerLinkActiveOptions]="{ exact: false }"
-      class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#007A30]"
-    >
-      <div class="icon-box size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 text-white/80 group-hover:bg-white/20 group-hover:text-white transition-colors duration-150">
-        <svg lucidePackageCheck class="size-4.5"></svg>
-      </div>
-      <span class="truncate">Egresos</span>
-    </a>
-
-    <!-- Separador sutil -->
-    <div class="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
-
-    <!-- Kardex -->
-    <a
-      routerLink="/kardex/general"
-      (click)="closeMobileMenu()"
-      routerLinkActive="bg-white/15 text-white font-bold shadow-xs ring-1 ring-white/20 [&_.icon-box]:bg-[#00A0DF] [&_.icon-box]:text-white [&_.icon-box]:shadow-sm"
-      [routerLinkActiveOptions]="{ exact: false }"
-      class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#007A30]"
-    >
-      <div class="icon-box size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 text-white/80 group-hover:bg-white/20 group-hover:text-white transition-colors duration-150">
-        <svg lucideClipboardList class="size-4.5"></svg>
-      </div>
-      <span class="truncate">Kardex</span>
-    </a>
-
-    <!-- Separador sutil -->
-    <div class="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
-
-    <!-- Proveedores -->
-    <a
-      routerLink="/mantenimiento/proveedores"
-      (click)="closeMobileMenu()"
-      routerLinkActive="bg-white/15 text-white font-bold shadow-xs ring-1 ring-white/20 [&_.icon-box]:bg-[#00A0DF] [&_.icon-box]:text-white [&_.icon-box]:shadow-sm"
-      [routerLinkActiveOptions]="{ exact: false }"
-      class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#007A30]"
-    >
-      <div class="icon-box size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 text-white/80 group-hover:bg-white/20 group-hover:text-white transition-colors duration-150">
-        <svg lucideBuilding2 class="size-4.5"></svg>
-      </div>
-      <span class="truncate">Proveedores</span>
-    </a>
-
-    <!-- Separador sutil -->
-    <div class="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
-
-    <!-- Clientes -->
-    <a
-      routerLink="/mantenimiento/clientes"
-      (click)="closeMobileMenu()"
-      routerLinkActive="bg-white/15 text-white font-bold shadow-xs ring-1 ring-white/20 [&_.icon-box]:bg-[#00A0DF] [&_.icon-box]:text-white [&_.icon-box]:shadow-sm"
-      [routerLinkActiveOptions]="{ exact: false }"
-      class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#007A30]"
-    >
-      <div class="icon-box size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 text-white/80 group-hover:bg-white/20 group-hover:text-white transition-colors duration-150">
-        <svg lucideUsers class="size-4.5"></svg>
-      </div>
-      <span class="truncate">Clientes</span>
-    </a>
-
-    <!-- Separador sutil -->
-    <div class="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
-
-    <!-- Seguridad (Desplegable) -->
-    <div class="space-y-1">
-      <button
-        type="button"
-        (click)="toggleSeguridad()"
-        [class.bg-white\/15]="isSeguridadOpen() || isSeguridadActive()"
-        [class.text-white]="isSeguridadOpen() || isSeguridadActive()"
-        [class.font-bold]="isSeguridadOpen() || isSeguridadActive()"
-        [class.ring-1]="isSeguridadOpen() || isSeguridadActive()"
-        [class.ring-white\/20]="isSeguridadOpen() || isSeguridadActive()"
-        [class.shadow-xs]="isSeguridadOpen() || isSeguridadActive()"
-        class="w-full group flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#007A30]"
-        [attr.aria-expanded]="isSeguridadOpen()"
-        aria-controls="submenu-seguridad"
-      >
-        <div class="flex items-center gap-3 min-w-0">
-          <div
-            [class.bg-\[\#00A0DF\]]="isSeguridadOpen() || isSeguridadActive()"
-            [class.text-white]="isSeguridadOpen() || isSeguridadActive()"
-            [class.shadow-sm]="isSeguridadOpen() || isSeguridadActive()"
-            class="icon-box size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 text-white/80 group-hover:bg-white/20 group-hover:text-white transition-colors duration-150"
-          >
-            <svg lucideShieldCheck class="size-4.5"></svg>
-          </div>
-          <span class="truncate">Seguridad</span>
-        </div>
-        <svg
-          lucideChevronDown
-          class="size-4 text-white/70 transition-transform duration-200 shrink-0 ml-2"
-          [class.rotate-180]="isSeguridadOpen()"
-        ></svg>
-      </button>
-
-      <!-- Submódulo: Usuarios (mismo tamaño que los módulos, ancho reducido por la indentación ml-5) -->
-      @if (isSeguridadOpen()) {
-        <div id="submenu-seguridad" class="mt-1 space-y-1 ml-5 animate-in fade-in slide-in-from-top-1 duration-150">
+      @for (item of items(); track item.id; let last = $last) {
+        @if (!item.esGrupo) {
+          <!-- Módulo estándar de primer nivel devuelto por el Backend -->
           <a
-            routerLink="/seguridad/usuarios"
+            [routerLink]="item.url"
             (click)="closeMobileMenu()"
-            routerLinkActive="bg-white/15 text-white font-bold shadow-xs ring-1 ring-white/20 [&_.sub-icon-box]:bg-[#FFE800] [&_.sub-icon-box]:text-[#004e1a] [&_.sub-icon-box]:shadow-sm"
-            [routerLinkActiveOptions]="{ exact: false }"
+            [class.bg-white\/15]="isItemActive(item, itemActive.isActive)"
+            [class.text-white]="isItemActive(item, itemActive.isActive)"
+            [class.font-bold]="isItemActive(item, itemActive.isActive)"
+            [class.shadow-xs]="isItemActive(item, itemActive.isActive)"
+            [class.ring-1]="isItemActive(item, itemActive.isActive)"
+            [class.ring-white\/20]="isItemActive(item, itemActive.isActive)"
+            routerLinkActive="bg-white/15 text-white font-bold shadow-xs ring-1 ring-white/20"
+            #itemActive="routerLinkActive"
+            [routerLinkActiveOptions]="{ exact: item.url === '/dashboard' }"
             class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#007A30]"
           >
-            <div class="sub-icon-box size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 text-white/80 group-hover:bg-white/20 group-hover:text-white transition-colors duration-150">
-              <svg lucideUserCog class="size-4.5"></svg>
+            <div
+              [class]="isItemActive(item, itemActive.isActive) ? 'bg-[#00A0DF] text-white shadow-sm' : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'"
+              class="size-8 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-150"
+            >
+              <svg [lucideIcon]="item.icono" class="size-4.5"></svg>
             </div>
-            <span class="truncate">Usuarios</span>
+            <span class="truncate">{{ item.nombre }}</span>
           </a>
-        </div>
+
+          <!-- Separador sutil entre módulos -->
+          @if (!last) {
+            <div class="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
+          }
+        } @else {
+          <!-- Módulo Desplegable (Grupo Seguridad) -->
+          <div class="space-y-1">
+            <button
+              type="button"
+              (click)="toggleSeguridad()"
+              [class.bg-white\/15]="isSeguridadOpen() || isSeguridadActive()"
+              [class.text-white]="isSeguridadOpen() || isSeguridadActive()"
+              [class.font-bold]="isSeguridadOpen() || isSeguridadActive()"
+              [class.ring-1]="isSeguridadOpen() || isSeguridadActive()"
+              [class.ring-white\/20]="isSeguridadOpen() || isSeguridadActive()"
+              [class.shadow-xs]="isSeguridadOpen() || isSeguridadActive()"
+              class="w-full group flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#007A30]"
+              [attr.aria-expanded]="isSeguridadOpen()"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                <div
+                  [class]="(isSeguridadOpen() || isSeguridadActive()) ? 'bg-[#00A0DF] text-white shadow-sm' : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'"
+                  class="size-8 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-150"
+                >
+                  <svg [lucideIcon]="item.icono" class="size-4.5"></svg>
+                </div>
+                <span class="truncate">{{ item.nombre }}</span>
+              </div>
+              <svg
+                lucideChevronDown
+                class="size-4 text-white/70 transition-transform duration-200 shrink-0 ml-2"
+                [class.rotate-180]="isSeguridadOpen()"
+              ></svg>
+            </button>
+
+            <!-- Submódulos de Seguridad (ej. Usuarios, Perfiles) -->
+            @if (isSeguridadOpen()) {
+              <div class="mt-1 space-y-1 ml-5 animate-in fade-in slide-in-from-top-1 duration-150">
+                @for (sub of item.submodulos; track sub.id) {
+                  <a
+                    [routerLink]="sub.url"
+                    (click)="closeMobileMenu()"
+                    [class.bg-white\/15]="isSubActive(sub, subActive.isActive)"
+                    [class.text-white]="isSubActive(sub, subActive.isActive)"
+                    [class.font-bold]="isSubActive(sub, subActive.isActive)"
+                    [class.shadow-xs]="isSubActive(sub, subActive.isActive)"
+                    [class.ring-1]="isSubActive(sub, subActive.isActive)"
+                    [class.ring-white\/20]="isSubActive(sub, subActive.isActive)"
+                    routerLinkActive="bg-white/15 text-white font-bold shadow-xs ring-1 ring-white/20"
+                    #subActive="routerLinkActive"
+                    [routerLinkActiveOptions]="{ exact: false }"
+                    class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#007A30]"
+                  >
+                    <div
+                      [class]="isSubActive(sub, subActive.isActive) ? 'bg-[#FFE800] text-[#004e1a] shadow-sm font-bold' : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'"
+                      class="size-8 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-150"
+                    >
+                      <svg [lucideIcon]="sub.icono" class="size-4.5"></svg>
+                    </div>
+                    <span class="truncate">{{ sub.nombre }}</span>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Separador sutil tras el grupo si no es el último elemento -->
+          @if (!last) {
+            <div class="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
+          }
+        }
+      } @empty {
+        <p class="px-3 py-4 text-sm text-white/70 text-center" role="status">
+          No hay módulos disponibles.
+        </p>
       }
-    </div>
-  </nav>
+    </nav>
+  </div>
 </div>

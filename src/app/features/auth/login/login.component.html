@@ -1,4 +1,6 @@
-<div class="min-h-screen w-full flex flex-col lg:flex-row relative selection:bg-unsm-green-light selection:text-unsm-green-dark">
+<div
+  class="min-h-screen w-full flex flex-col lg:flex-row relative selection:bg-unsm-green-light selection:text-unsm-green-dark"
+>
   <!-- Fondo para versión móvil: imagen campus con overlay verde institucional -->
   <div class="lg:hidden absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
     <img
@@ -8,9 +10,7 @@
       alt=""
       class="object-cover object-center"
     />
-    <div
-      class="absolute inset-0 bg-gradient-to-r from-[#1c2c21] to-[#004e1a] opacity-85"
-    ></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-[#1c2c21] to-[#004e1a] opacity-85"></div>
   </div>
 
   <!-- Panel Izquierdo: Formulario de Autenticación (punto medio equilibrado y centrado verticalmente) -->
@@ -38,7 +38,8 @@
         id="login-heading"
         class="text-xl sm:text-2xl lg:text-[1.65rem] font-bold text-[#4b4b4d] text-center uppercase font-sans leading-tight px-1"
       >
-        Universidad Nacional<br class="hidden sm:inline" /> de San Martín
+        Universidad Nacional<br class="hidden sm:inline" />
+        de San Martín
       </h1>
 
       <!-- Subtítulo: Sistema de Gestión de Almacén Central con letra grisácea #9a9a9b -->
@@ -47,7 +48,9 @@
       </p>
 
       <!-- Saludo: Bienvenido en letra grisácea #9a9a9b -->
-      <h2 class="text-lg sm:text-xl font-normal text-[#9a9a9b] text-center tracking-normal mt-4 mb-3 font-sans">
+      <h2
+        class="text-lg sm:text-xl font-normal text-[#9a9a9b] text-center tracking-normal mt-4 mb-3 font-sans"
+      >
         Bienvenido
       </h2>
 
@@ -60,6 +63,7 @@
               id="usuario-input"
               type="text"
               formControlName="usuario"
+              autocomplete="username"
               placeholder=" "
               class="peer block w-full h-12 rounded-[10px] border border-[#009531] bg-[#f2fff6] px-4 pt-3 pb-1 text-sm text-[#4b4b4d] focus:bg-[#f2fff6] focus:border-[#009531] focus:ring-2 focus:ring-[#009531]/20 outline-none transition-all duration-200"
               [class.border-slate-800]="isFieldInvalid('usuario')"
@@ -67,9 +71,7 @@
             />
             <label
               for="usuario-input"
-              class="absolute start-3.5 top-1/2 -translate-y-1/2 text-sm font-normal text-[#009531] bg-[#f2fff6] px-1 transition-all duration-200 pointer-events-none origin-[0]
-                     peer-focus:-top-2.5 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-[#009531] peer-focus:bg-white peer-focus:rounded-sm peer-focus:px-1.5
-                     peer-[:not(:placeholder-shown)]:-top-2.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:text-[#009531] peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:rounded-sm peer-[:not(:placeholder-shown)]:px-1.5"
+              class="absolute start-3.5 top-1/2 -translate-y-1/2 text-sm font-normal text-[#009531] bg-[#f2fff6] px-1 transition-all duration-200 pointer-events-none origin-[0] peer-focus:-top-2.5 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-[#009531] peer-focus:bg-white peer-focus:rounded-sm peer-focus:px-1.5 peer-[:not(:placeholder-shown)]:-top-2.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:text-[#009531] peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:rounded-sm peer-[:not(:placeholder-shown)]:px-1.5"
             >
               Usuario
             </label>
@@ -77,9 +79,7 @@
           <!-- Espacio reservado con distancia fija: Usuario obligatorio en letra delgada -->
           <div class="h-5 mt-1 flex items-center">
             @if (isFieldInvalid('usuario')) {
-              <p class="text-xs text-slate-800 font-normal">
-                Usuario obligatorio
-              </p>
+              <p class="text-xs text-slate-800 font-normal">Usuario obligatorio</p>
             }
           </div>
         </div>
@@ -91,6 +91,7 @@
               id="clave-input"
               [type]="showPassword() ? 'text' : 'password'"
               formControlName="clave"
+              autocomplete="current-password"
               placeholder=" "
               class="peer block w-full h-12 rounded-[10px] border border-[#009531] bg-[#f2fff6] px-4 pt-3 pb-1 pr-11 text-sm text-[#4b4b4d] focus:bg-[#f2fff6] focus:border-[#009531] focus:ring-2 focus:ring-[#009531]/20 outline-none transition-all duration-200"
               [class.border-slate-800]="isFieldInvalid('clave')"
@@ -98,9 +99,7 @@
             />
             <label
               for="clave-input"
-              class="absolute start-3.5 top-1/2 -translate-y-1/2 text-sm font-normal text-[#009531] bg-[#f2fff6] px-1 transition-all duration-200 pointer-events-none origin-[0]
-                     peer-focus:-top-2.5 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-[#009531] peer-focus:bg-white peer-focus:rounded-sm peer-focus:px-1.5
-                     peer-[:not(:placeholder-shown)]:-top-2.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:text-[#009531] peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:rounded-sm peer-[:not(:placeholder-shown)]:px-1.5"
+              class="absolute start-3.5 top-1/2 -translate-y-1/2 text-sm font-normal text-[#009531] bg-[#f2fff6] px-1 transition-all duration-200 pointer-events-none origin-[0] peer-focus:-top-2.5 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-[#009531] peer-focus:bg-white peer-focus:rounded-sm peer-focus:px-1.5 peer-[:not(:placeholder-shown)]:-top-2.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:text-[#009531] peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:rounded-sm peer-[:not(:placeholder-shown)]:px-1.5"
             >
               Contraseña
             </label>
@@ -120,9 +119,7 @@
           <!-- Espacio reservado con distancia fija: Contraseña obligatoria en letra delgada -->
           <div class="h-5 mt-1 flex items-center">
             @if (isFieldInvalid('clave')) {
-              <p class="text-xs text-slate-800 font-normal">
-                Contraseña obligatoria
-              </p>
+              <p class="text-xs text-slate-800 font-normal">Contraseña obligatoria</p>
             }
           </div>
         </div>
@@ -143,34 +140,24 @@
 
           <!-- Notificación de error: solo texto en letras rojas suaves directamente abajo de Ingresar sin contenedor -->
           @if (errorMessage()) {
-            <p class="text-red-500 font-medium text-center text-xs sm:text-sm mt-2.5 animate-in fade-in duration-150">
+            <p role="alert" class="text-red-700 font-medium text-center text-xs sm:text-sm mt-2.5">
               {{ errorMessage() }}
             </p>
           }
         </div>
       </form>
 
-      <!-- Separador discreto con 'o' -->
-      <div class="relative my-3.5">
-        <div class="absolute inset-0 flex items-center">
-          <div class="w-full border-t border-slate-200"></div>
-        </div>
-        <div class="relative flex justify-center text-xs font-semibold">
-          <span class="bg-white px-2.5 text-slate-400">
-            o
-          </span>
-        </div>
-      </div>
-
-      <!-- Botón Secundario: Acceso Demo (h-10) -->
-      <button
-        type="button"
-        (click)="onAccesoDemo()"
-        class="w-full h-10 rounded-[10px] border border-slate-300 text-slate-600 hover:text-slate-900 hover:bg-slate-50 active:scale-[0.98] transition-all duration-150 text-xs sm:text-sm font-semibold focus:outline-none cursor-pointer flex items-center justify-center"
-        aria-label="Acceso Demo"
-      >
-        Acceso Demo
-      </button>
+      @if (developmentLoginEnabled) {
+        <div class="my-4 border-t border-slate-200" aria-hidden="true"></div>
+        <button
+          type="button"
+          (click)="onDevelopmentLogin()"
+          [disabled]="isLoading()"
+          class="flex h-11 w-full items-center justify-center rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-unsm-green-dark disabled:opacity-60 disabled:cursor-wait"
+        >
+          Acceso de desarrollo
+        </button>
+      }
     </div>
   </section>
 
@@ -204,14 +191,14 @@
     <!-- Parte Inferior: Universidad Nacional de San Martín abajo y v1.0.0 oit unsm a la derecha -->
     <div class="relative z-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-4">
       <div>
-        <p class="text-2xl xl:text-3xl font-extrabold text-[#00c540] tracking-wide uppercase drop-shadow-sm font-sans">
+        <p
+          class="text-2xl xl:text-3xl font-extrabold text-[#00c540] tracking-wide uppercase drop-shadow-sm font-sans"
+        >
           UNIVERSIDAD NACIONAL DE SAN MARTÍN
         </p>
       </div>
       <div class="text-right shrink-0">
-        <span class="text-xs font-mono text-white/75 tracking-wider">
-          v1.0.0 oit unsm
-        </span>
+        <span class="text-xs font-mono text-white/75 tracking-wider"> v1.0.0 oit unsm </span>
       </div>
     </div>
   </section>

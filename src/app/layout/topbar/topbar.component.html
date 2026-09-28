@@ -1,16 +1,16 @@
 <header
-  class="sticky top-0 z-30 flex items-center justify-between h-16 px-4 md:px-6 bg-white border-b border-slate-200 select-none shadow-2xs relative"
+  class="sticky top-0 z-30 flex items-center justify-between h-16 px-4 md:px-6 bg-white border-b border-slate-200 select-none shadow-2xs"
   role="banner"
 >
   <!-- Barra de acento institucional superior (invertida: amarillo -> celeste -> verde) -->
   <div
-    class="absolute top-0 inset-x-0 h-[2.5px] bg-gradient-to-r from-[#FFE800]/80 via-[#00A0DF] to-[#007A30] pointer-events-none"
+    class="absolute top-0 inset-x-0 h-0.5 bg-linear-to-r from-unsm-yellow/80 via-unsm-cyan to-unsm-green-dark pointer-events-none"
     aria-hidden="true"
   ></div>
 
   <!-- Barra de acento institucional inferior (sutil de 2px) -->
   <div
-    class="absolute -bottom-px inset-x-0 h-[2px] bg-gradient-to-r from-[#007A30] via-[#00A0DF] to-[#FFE800]/80 pointer-events-none"
+    class="absolute -bottom-px inset-x-0 h-0.5 bg-linear-to-r from-unsm-green-dark via-unsm-cyan to-unsm-yellow/80 pointer-events-none"
     aria-hidden="true"
   ></div>
 
@@ -20,7 +20,7 @@
     <button
       type="button"
       (click)="toggleMobileSidebar()"
-      class="lg:hidden p-2 -ml-1 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-[#00A0DF]"
+      class="lg:hidden p-2 -ml-1 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-unsm-cyan"
       aria-label="Alternar menú de navegación"
     >
       <svg lucideMenu class="size-6"></svg>
@@ -28,7 +28,7 @@
 
     <!-- Barra de acento vertical institucional (verde a celeste) -->
     <div
-      class="w-1 h-5 rounded-full bg-gradient-to-b from-[#00953B] to-[#00A0DF] hidden sm:block shrink-0"
+      class="w-1 h-5 rounded-full bg-linear-to-b from-unsm-green to-unsm-cyan hidden sm:block shrink-0"
       aria-hidden="true"
     ></div>
 
@@ -44,7 +44,7 @@
     <button
       type="button"
       (click)="toggleProfileMenu($event)"
-      class="group flex items-center gap-2.5 p-1 md:px-2 rounded-lg outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2"
+      class="group flex items-center gap-2.5 p-1 md:px-2 rounded-lg outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-unsm-cyan focus-visible:ring-offset-2"
       [attr.aria-expanded]="isProfileMenuOpen()"
       aria-haspopup="true"
       aria-label="Menú de usuario"
@@ -52,9 +52,12 @@
       <!-- Ícono de Perfil con indicador de estado en línea -->
       <div class="relative">
         <div
-          class="size-8.5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 border border-slate-200/90 shadow-2xs group-hover:border-[#00A0DF]/60 transition-colors"
+          class="size-8.5 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 border border-slate-200/90 shadow-2xs group-hover:border-unsm-cyan/60 transition-colors"
         >
-          <svg lucideUser class="size-4.5 text-slate-600 group-hover:text-slate-800 transition-colors"></svg>
+          <svg
+            lucideUser
+            class="size-4.5 text-slate-600 group-hover:text-slate-800 transition-colors"
+          ></svg>
         </div>
         <span
           class="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-emerald-500 ring-2 ring-white"
@@ -63,7 +66,9 @@
       </div>
 
       <!-- Solo Usuario (sin rol) -->
-      <span class="hidden md:inline text-xs font-semibold text-slate-800 group-hover:text-slate-900 transition-colors truncate max-w-[180px]">
+      <span
+        class="hidden md:inline text-xs font-semibold text-slate-800 group-hover:text-slate-900 transition-colors truncate max-w-45"
+      >
         {{ authService.userFullName() || authService.username() || 'Usuario' }}
       </span>
 
@@ -77,23 +82,25 @@
     <!-- Menú Desplegable Flotante de Perfil -->
     @if (isProfileMenuOpen()) {
       <div
-        class="absolute right-4 md:right-6 top-16 mt-1 w-64 rounded-2xl bg-white border border-slate-200 shadow-xl shadow-slate-900/10 p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+        class="absolute right-4 md:right-6 top-16 mt-1 w-64 rounded-2xl bg-white border border-slate-200 shadow-xl shadow-slate-900/10 p-1.5 z-50"
         role="menu"
         aria-orientation="vertical"
       >
         <!-- Encabezado del Dropdown con superficie sutil -->
-        <div class="p-3 rounded-xl bg-gradient-to-br from-[#E8F7EE]/60 via-slate-50/70 to-white border border-slate-100 mb-1">
+        <div
+          class="p-3 rounded-xl bg-linear-to-br from-unsm-green-light/60 via-slate-50/70 to-white border border-slate-100 mb-1"
+        >
           <div class="flex items-center gap-2.5">
             <div
-              class="size-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-2xs text-[#007A30]"
+              class="size-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-2xs text-unsm-green-dark"
             >
-              <svg lucideUser class="size-4.5 text-[#007A30]"></svg>
+              <svg lucideUser class="size-4.5 text-unsm-green-dark"></svg>
             </div>
             <div class="min-w-0 flex-1">
               <p class="text-xs font-bold text-slate-900 truncate leading-snug">
                 {{ authService.userFullName() || 'Usuario en Sesión' }}
               </p>
-              <p class="text-[11px] text-slate-500 truncate leading-tight mt-0.5">
+              <p class="text-xs text-slate-500 truncate leading-tight mt-0.5">
                 &#64;{{ authService.username() }}
               </p>
             </div>
@@ -101,7 +108,7 @@
 
           <!-- Rol alineado a la derecha sin punto celeste -->
           <div class="mt-2.5 pt-2 border-t border-slate-200/60 flex items-center justify-end">
-            <span class="text-[10px] font-bold text-slate-700 uppercase tracking-wider truncate">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider truncate">
               {{ authService.userProfile() || 'Usuario' }}
             </span>
           </div>
@@ -113,13 +120,13 @@
           <button
             type="button"
             (click)="closeProfileMenu()"
-            class="group w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 hover:bg-gradient-to-l hover:from-[#00A0DF]/12 hover:via-[#00A0DF]/5 hover:to-transparent rounded-lg transition-all outline-none cursor-pointer text-left"
+            class="group w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 hover:bg-linear-to-l hover:from-unsm-cyan/12 hover:via-unsm-cyan/5 hover:to-transparent rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-unsm-cyan cursor-pointer text-left"
             role="menuitem"
           >
             <div
-              class="size-7 rounded-md bg-[#00A0DF] text-white flex items-center justify-center shrink-0 shadow-2xs"
+              class="size-7 rounded-md bg-unsm-cyan text-white flex items-center justify-center shrink-0 shadow-2xs"
             >
-              <svg lucideUser class="size-3.5 text-white stroke-[2.5]"></svg>
+              <svg lucideUser class="size-3.5 text-white stroke-2"></svg>
             </div>
             <span class="font-medium text-slate-700 group-hover:text-slate-900 transition-colors">
               Perfil
@@ -133,13 +140,13 @@
           <button
             type="button"
             (click)="logout()"
-            class="group w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-semibold text-unsm-red hover:bg-gradient-to-l hover:from-unsm-red/12 hover:via-unsm-red/5 hover:to-transparent rounded-lg transition-all outline-none focus-visible:ring-2 focus-visible:ring-unsm-red cursor-pointer text-left"
+            class="group w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-semibold text-unsm-red hover:bg-linear-to-l hover:from-unsm-red/12 hover:via-unsm-red/5 hover:to-transparent rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-unsm-red cursor-pointer text-left"
             role="menuitem"
           >
             <div
               class="size-7 rounded-md bg-unsm-red text-white flex items-center justify-center shrink-0 shadow-2xs"
             >
-              <svg lucideLogOut class="size-3.5 text-white stroke-[2.5]"></svg>
+              <svg lucideLogOut class="size-3.5 text-white stroke-2"></svg>
             </div>
             <span>Cerrar Sesión</span>
           </button>
