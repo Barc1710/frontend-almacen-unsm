@@ -16,14 +16,16 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       switch (error.status) {
         case 401: {
-          // 401 Unauthorized: Limpia el almacenamiento de sesión y redirige al login
-          authService.clearSession();
+          // 401 Unauthorized: Si es una petición protegida rechazada, limpia sesión y redirige
+          if (!req.url.includes('/auth/login')) {
+            authService.clearSession();
 
-          const currentUrl = router.url;
-          if (!currentUrl.includes('/login')) {
-            void router.navigate(['/login'], {
-              queryParams: { returnUrl: currentUrl },
-            });
+            const currentUrl = router.url;
+            if (!currentUrl.includes('/login')) {
+              void router.navigate(['/auth/login'], {
+                queryParams: { returnUrl: currentUrl },
+              });
+            }
           }
           break;
         }
@@ -42,7 +44,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           if (isInactive) {
             console.warn('[403 Forbidden] Cuenta inactiva detectada. Limpiando sesión.');
             authService.clearSession();
-            void router.navigate(['/login'], {
+            void router.navigate(['/auth/login'], {
               queryParams: { error: 'account_inactive' },
             });
           } else {

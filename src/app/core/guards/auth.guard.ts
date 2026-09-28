@@ -15,7 +15,7 @@ export const authGuard: CanActivateFn = (route, state) => {
 
   // Verificación de sesión activa
   if (!authService.isAuthenticated()) {
-    return router.createUrlTree(['/login'], {
+    return router.createUrlTree(['/auth/login'], {
       queryParams: { returnUrl: state.url },
     });
   }
@@ -60,7 +60,7 @@ export function moduleGuard(codigoModuloRequerido: string): CanActivateFn {
     const router = inject(Router);
 
     if (!authService.isAuthenticated()) {
-      return router.createUrlTree(['/login']);
+      return router.createUrlTree(['/auth/login']);
     }
 
     if (authService.isAdmin() || authService.hasModule(codigoModuloRequerido)) {

@@ -20,8 +20,8 @@ export interface JwtResponse {
   readonly nombre: string;
   /** Perfil o rol asignado (ej. 'ADMINISTRADOR', etc.) */
   readonly perfil: string;
-  /** Bandera que indica si el usuario debe cambiar su clave obligatoriamente */
-  readonly debeCambiarClave: boolean;
+  /** Bandera opcional que indica si el usuario debe cambiar su clave obligatoriamente */
+  readonly debeCambiarClave?: boolean;
 }
 
 /**
@@ -71,13 +71,11 @@ export function isJwtResponse(value: unknown): value is JwtResponse {
     return false;
   }
   const candidate = value as Record<string, unknown>;
-  return (
-    typeof candidate['token'] === 'string' &&
-    typeof candidate['usuario'] === 'string' &&
-    typeof candidate['nombre'] === 'string' &&
-    typeof candidate['perfil'] === 'string' &&
-    typeof candidate['debeCambiarClave'] === 'boolean'
-  );
+  const hasToken =
+    typeof candidate['token'] === 'string' || typeof candidate['accessToken'] === 'string';
+  const hasUsuario =
+    typeof candidate['usuario'] === 'string' || typeof candidate['username'] === 'string';
+  return hasToken && hasUsuario;
 }
 
 /**

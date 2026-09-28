@@ -35,7 +35,7 @@ describe('authGuard', () => {
 
     expect(result instanceof UrlTree).toBe(true);
     const urlTree = result as UrlTree;
-    expect(urlTree.toString()).toContain('/login');
+    expect(urlTree.toString()).toContain('/auth/login');
     expect(urlTree.queryParams['returnUrl']).toBe('/articulos');
   });
 

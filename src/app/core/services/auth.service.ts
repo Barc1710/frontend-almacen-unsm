@@ -58,8 +58,13 @@ export class AuthService {
   login(credentials: LoginRequest): Observable<ApiResponse<JwtResponse>> {
     return this.http.post<ApiResponse<JwtResponse>>(`${this.apiUrl}/auth/login`, credentials).pipe(
       tap((response) => {
+        const rawData = getApiResponseData(response);
         const jwtData =
-          getApiResponseData(response) ?? (isJwtResponse(response) ? response : null);
+          rawData && typeof rawData === 'object'
+            ? (rawData as JwtResponse)
+            : isJwtResponse(response)
+              ? response
+              : null;
         if (jwtData) {
           this.establecerSesion(jwtData);
         }
@@ -115,8 +120,79 @@ export class AuthService {
   logout(redirect: boolean = true): void {
     this.clearSession();
     if (redirect) {
-      void this.router.navigate(['/login']);
+      void this.router.navigate(['/auth/login']);
     }
+  }
+
+  /**
+   * Genera una sesión simulada de pruebas en sessionStorage con perfil Administrador
+   * y módulos básicos habilitados, redirigiendo inmediatamente al dashboard principal ('/').
+   */
+  iniciarSesionDemo(): void {
+    const demoJwt: JwtResponse = {
+      token: 'demo-token-unsm-almacen-2026',
+      usuario: 'admin.demo',
+      nombre: 'Administrador Demo - UNSM',
+      perfil: 'ADMINISTRADOR',
+      debeCambiarClave: false,
+    };
+
+    const demoModules: ModuloResponse[] = [
+      {
+        id: 1,
+        codigo: 'DASHBOARD',
+        nombre: 'Dashboard Principal',
+        url: '/dashboard',
+        icono: 'DASHBOARD',
+        orden: 1,
+      },
+      {
+        id: 2,
+        codigo: 'ARTICULOS',
+        nombre: 'Catálogo de Bienes',
+        url: '/articulos',
+        icono: 'ARTICULOS',
+        orden: 2,
+      },
+      {
+        id: 3,
+        codigo: 'KARDEX',
+        nombre: 'Control de Inventario',
+        url: '/kardex',
+        icono: 'KARDEX',
+        orden: 3,
+      },
+      {
+        id: 4,
+        codigo: 'INGRESOS',
+        nombre: 'Entradas de Almacén',
+        url: '/ingresos',
+        icono: 'INGRESOS',
+        orden: 4,
+      },
+      {
+        id: 5,
+        codigo: 'EGRESOS',
+        nombre: 'Despachos y Salidas',
+        url: '/egresos',
+        icono: 'EGRESOS',
+        orden: 5,
+      },
+      {
+        id: 6,
+        codigo: 'SOLICITUDES',
+        nombre: 'Pedidos y PECOSA',
+        url: '/solicitudes',
+        icono: 'SOLICITUDES',
+        orden: 6,
+      },
+    ];
+
+    this.establecerSesion(demoJwt);
+    this._modules.set(demoModules);
+    this.persistirEnStorage(STORAGE_KEYS.MODULES, JSON.stringify(demoModules));
+
+    void this.router.navigate(['/']);
   }
 
   /**
@@ -137,21 +213,33 @@ export class AuthService {
   /**
    * Establece internamente la sesión a partir de la respuesta JWT.
    */
-  private establecerSesion(jwt: JwtResponse): void {
+  private establecerSesion(jwt: JwtResponse | Record<string, unknown>): void {
+    const raw = jwt as Record<string, unknown>;
+    const token = (raw['token'] ?? raw['accessToken'] ?? raw['jwt'] ?? '') as string;
+    const usuario = (raw['usuario'] ?? raw['username'] ?? raw['sub'] ?? '') as string;
+    const nombre = (raw['nombre'] ?? raw['fullName'] ?? raw['name'] ?? usuario) as string;
+    const perfil = (raw['perfil'] ?? raw['role'] ?? raw['rol'] ?? 'USUARIO') as string;
+    const debeCambiarClave = Boolean(raw['debeCambiarClave']);
+
+    if (!token) {
+      console.warn('[AuthService] No se encontró token en la respuesta de autenticación:', jwt);
+      return;
+    }
+
     const user: AuthUser = {
-      usuario: jwt.usuario,
-      nombre: jwt.nombre,
-      perfil: jwt.perfil,
-      debeCambiarClave: jwt.debeCambiarClave,
+      usuario,
+      nombre,
+      perfil,
+      debeCambiarClave,
     };
 
-    this._token.set(jwt.token);
+    this._token.set(token);
     this._currentUser.set(user);
-    this._debeCambiarClave.set(jwt.debeCambiarClave);
+    this._debeCambiarClave.set(debeCambiarClave);
 
-    this.persistirEnStorage(STORAGE_KEYS.TOKEN, jwt.token);
+    this.persistirEnStorage(STORAGE_KEYS.TOKEN, token);
     this.persistirEnStorage(STORAGE_KEYS.USER, JSON.stringify(user));
-    this.persistirEnStorage(STORAGE_KEYS.DEBE_CAMBIAR_CLAVE, String(jwt.debeCambiarClave));
+    this.persistirEnStorage(STORAGE_KEYS.DEBE_CAMBIAR_CLAVE, String(debeCambiarClave));
   }
 
   // Métodos auxiliares seguros para recuperación inicial desde sessionStorage
