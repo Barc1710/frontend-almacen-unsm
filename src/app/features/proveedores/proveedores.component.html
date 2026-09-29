@@ -1,0 +1,483 @@
+<section class="mx-auto max-w-7xl space-y-6" aria-labelledby="suppliers-title">
+  <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 id="suppliers-title" class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+        Proveedores
+      </h1>
+      <p class="mt-1 text-sm text-slate-500">Consulta y encuentra rápidamente a tus proveedores.</p>
+    </div>
+
+    <button
+      type="button"
+      (click)="openCreateDialog($event)"
+      class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#007A30] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#006025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2"
+    >
+      <svg lucidePlus class="size-4" aria-hidden="true"></svg>
+      Nuevo proveedor
+    </button>
+  </header>
+
+  @if (successMessage(); as message) {
+    <p
+      class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+      role="status"
+    >
+      {{ message }}
+    </p>
+  }
+
+  @if (!puedeModificar()) {
+    <p
+      class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+      role="status"
+    >
+      Editar y eliminar se habilitarán para cuentas reales cuando el backend tenga esas operaciones.
+    </p>
+  }
+
+  <section
+    class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+    aria-label="Listado de proveedores"
+  >
+    <div
+      class="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+    >
+      <div>
+        <h2 class="font-semibold text-slate-900">Lista de Proveedores</h2>
+        <p class="mt-1 text-sm text-slate-500">Mostrando hasta 10 proveedores por página.</p>
+      </div>
+
+      <label class="relative block w-full sm:max-w-xs">
+        <span class="sr-only">Filtrar los proveedores de esta página por RUC, razón social o correo</span>
+        <svg
+          lucideSearch
+          class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+          aria-hidden="true"
+        ></svg>
+        <input
+          type="search"
+          [value]="search()"
+          (input)="onSearchChange($event)"
+          placeholder="Filtrar esta página..."
+          class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-500 focus:border-[#00A0DF] focus:bg-white focus:ring-2 focus:ring-[#00A0DF]/20"
+        />
+      </label>
+    </div>
+
+    @if (errorMessage(); as message) {
+      <div
+        class="m-5 flex flex-col items-start gap-4 rounded-xl border border-red-200 bg-red-50 p-4 sm:flex-row sm:items-center sm:justify-between"
+        role="alert"
+      >
+        <p class="text-sm text-red-800">{{ message }}</p>
+        <button
+          type="button"
+          (click)="retry()"
+          class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-red-800 ring-1 ring-red-200 transition hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+        >
+          <svg lucideRefreshCw class="size-4" aria-hidden="true"></svg>
+          Reintentar
+        </button>
+      </div>
+    } @else {
+      <div
+        #tableRegion
+        class="overflow-x-auto"
+        [attr.aria-busy]="loading()"
+        tabindex="0"
+        role="region"
+        aria-label="Tabla de proveedores, desplazable horizontalmente"
+      >
+        <table class="w-full min-w-[900px] text-left text-sm">
+          <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <tr>
+              <th scope="col" class="w-16 px-5 py-4 sm:px-6">N.º</th>
+              <th scope="col" class="px-4 py-4">Nombre</th>
+              <th scope="col" class="px-4 py-4">Dirección</th>
+              <th scope="col" class="w-32 px-4 py-4">RUC</th>
+              <th scope="col" class="w-32 px-4 py-4">Teléfono</th>
+              <th scope="col" class="px-4 py-4">
+                <div class="flex justify-end">
+                  Acciones
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @if (loading()) {
+              <tr>
+                <td colspan="6" class="px-6 py-16 text-center text-sm text-slate-500" role="status">
+                  Cargando proveedores...
+                </td>
+              </tr>
+            } @else if (proveedoresFiltrados().length === 0) {
+              <tr>
+                <td colspan="6" class="px-6 py-16 text-center">
+                  <p class="font-medium text-slate-700">
+                    No se encontraron proveedores en esta página.
+                  </p>
+                  <p class="mt-1 text-sm text-slate-500">Prueba con otro RUC o razón social.</p>
+                </td>
+              </tr>
+            } @else {
+              @for (
+                proveedor of proveedoresFiltrados();
+                track trackProveedor(proveedor);
+                let index = $index
+              ) {
+                <tr class="transition-colors hover:bg-emerald-50/40">
+                  <td class="px-5 py-4 font-medium tabular-nums text-slate-500 sm:px-6">
+                    {{ page() * pageSize + index + 1 }}
+                  </td>
+                  <td class="px-4 py-4">
+                    <div class="flex items-center gap-3">
+                      <span
+                        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-sm font-bold text-[#007A30]"
+                        aria-hidden="true"
+                      >
+                        {{ razonSocialDe(proveedor).charAt(0).toLocaleUpperCase() }}
+                      </span>
+                      <span class="font-semibold text-slate-900">{{
+                        razonSocialDe(proveedor)
+                      }}</span>
+                    </div>
+                  </td>
+                  <td
+                    class="max-w-64 truncate px-4 py-4 text-slate-500"
+                    [title]="proveedor.direccion || ''"
+                  >
+                    {{ proveedor.direccion || '—' }}
+                  </td>
+                  <td class="px-4 py-4 font-medium tabular-nums text-slate-700">
+                    {{ rucDe(proveedor) }}
+                  </td>
+                  <td class="px-4 py-4 tabular-nums text-slate-600">
+                    {{ proveedor.telefono || '—' }}
+                  </td>
+                  <td class="px-4 py-4">
+                    <div class="flex justify-end gap-1">
+                      <button
+                        type="button"
+                        (click)="openEditDialog(proveedor, $event)"
+                        [disabled]="!puedeModificar()"
+                        [title]="
+                          puedeModificar()
+                            ? 'Editar proveedor'
+                            : 'La edición estará disponible cuando el backend lo admita'
+                        "
+                        [attr.aria-label]="'Editar a ' + razonSocialDe(proveedor)"
+                        class="flex size-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-sky-50 hover:text-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <svg lucidePencil class="size-4" aria-hidden="true"></svg>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="requestDelete(proveedor, $event)"
+                        [disabled]="!puedeModificar()"
+                        [title]="
+                          puedeModificar()
+                            ? 'Eliminar proveedor'
+                            : 'La eliminación estará disponible cuando el backend lo admita'
+                        "
+                        [attr.aria-label]="'Eliminar a ' + razonSocialDe(proveedor)"
+                        class="flex size-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <svg lucideTrash2 class="size-4" aria-hidden="true"></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <footer
+        class="flex flex-col gap-4 border-t border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+      >
+        <p class="text-sm text-slate-500" aria-live="polite">
+          @if (hayFiltro()) {
+            {{ resumenFiltro() }}
+          } @else if (totalElements() > 0) {
+            Página {{ page() + 1 }} de {{ totalPages() }}
+            <span class="mx-1 text-slate-300" aria-hidden="true">·</span>
+            {{ firstItem() }}–{{ lastItem() }} de {{ totalElements() }} proveedores
+          } @else if (!loading()) {
+            No hay proveedores registrados.
+          } @else {
+            Preparando listado...
+          }
+        </p>
+
+        <nav class="flex items-center justify-end gap-1.5" aria-label="Paginación de proveedores">
+          <button
+            type="button"
+            (click)="loadPreviousPage()"
+            [disabled]="loading() || page() === 0"
+            class="inline-flex size-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Página anterior"
+          >
+            <svg lucideChevronLeft class="size-4" aria-hidden="true"></svg>
+          </button>
+          @for (indicator of pageIndicators(); track $index) {
+            @if (indicator === 'ellipsis') {
+              <span class="px-1 text-sm text-slate-400" aria-hidden="true">…</span>
+            } @else {
+              <button
+                type="button"
+                (click)="goToPage(indicator)"
+                [disabled]="loading()"
+                [attr.aria-current]="page() === indicator ? 'page' : null"
+                [attr.aria-label]="'Ir a la página ' + (indicator + 1)"
+                class="inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:cursor-not-allowed"
+                [class.bg-slate-800]="page() === indicator"
+                [class.text-white]="page() === indicator"
+                [class.text-slate-700]="page() !== indicator"
+                [class.hover:bg-slate-100]="page() !== indicator"
+                [class.opacity-40]="loading() && page() !== indicator"
+              >
+                {{ indicator + 1 }}
+              </button>
+            }
+          }
+          <button
+            type="button"
+            (click)="loadNextPage()"
+            [disabled]="loading() || page() + 1 >= totalPages()"
+            class="inline-flex size-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Página siguiente"
+          >
+            <svg lucideChevronRight class="size-4" aria-hidden="true"></svg>
+          </button>
+        </nav>
+      </footer>
+    }
+  </section>
+
+  @if (isCreateDialogOpen()) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/45 p-4 backdrop-blur-sm"
+      (click)="closeCreateDialog()"
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-supplier-title"
+        class="my-auto w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl sm:p-8"
+        (click)="$event.stopPropagation()"
+        (keydown.tab)="trapFocus($event)"
+      >
+        <div class="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h2 id="new-supplier-title" class="text-xl font-bold text-slate-900">
+              {{ selectedProveedor() ? 'Editar proveedor' : 'Registrar nuevo proveedor' }}
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+              {{
+                selectedProveedor()
+                  ? 'Actualiza la información del proveedor.'
+                  : 'Completa los datos para agregarlo al directorio.'
+              }}
+            </p>
+          </div>
+          <button
+            type="button"
+            (click)="closeCreateDialog()"
+            [disabled]="isSaving()"
+            class="flex size-9 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:opacity-50"
+            aria-label="Cerrar formulario"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+
+        @if (createErrorMessage(); as message) {
+          <p
+            class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+            role="alert"
+          >
+            {{ message }}
+          </p>
+        }
+
+        <form [formGroup]="proveedorForm" (ngSubmit)="submitProveedor()" class="space-y-4">
+          <div>
+            <label for="new-supplier-ruc" class="mb-1.5 block text-sm font-medium text-slate-700">
+              RUC <span class="text-red-600" aria-hidden="true">*</span>
+            </label>
+            <input
+              #rucField
+              id="new-supplier-ruc"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              maxlength="11"
+              formControlName="ruc"
+              required
+              aria-describedby="new-supplier-ruc-hint"
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#00A0DF] focus:ring-2 focus:ring-[#00A0DF]/20"
+            />
+            <p id="new-supplier-ruc-hint" class="mt-1 text-xs text-slate-500">
+              Ingresa los 11 dígitos del RUC.
+            </p>
+            @if (proveedorForm.controls.ruc.touched && proveedorForm.controls.ruc.invalid) {
+              <p class="mt-1 text-xs text-red-700" role="alert">
+                El RUC debe tener exactamente 11 dígitos.
+              </p>
+            }
+          </div>
+
+          <div>
+            <label for="new-supplier-name" class="mb-1.5 block text-sm font-medium text-slate-700">
+              Razón social <span class="text-red-600" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="new-supplier-name"
+              type="text"
+              autocomplete="organization"
+              maxlength="120"
+              formControlName="razonSocial"
+              required
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#00A0DF] focus:ring-2 focus:ring-[#00A0DF]/20"
+            />
+            @if (proveedorForm.controls.razonSocial.touched && proveedorForm.controls.razonSocial.invalid) {
+              <p class="mt-1 text-xs text-red-700" role="alert">Ingresa la razón social del proveedor.</p>
+            }
+          </div>
+
+          <div>
+            <label for="new-supplier-address" class="mb-1.5 block text-sm font-medium text-slate-700">
+              Dirección
+            </label>
+            <input
+              id="new-supplier-address"
+              type="text"
+              autocomplete="street-address"
+              maxlength="200"
+              formControlName="direccion"
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#00A0DF] focus:ring-2 focus:ring-[#00A0DF]/20"
+            />
+          </div>
+
+          <div>
+            <label for="new-supplier-phone" class="mb-1.5 block text-sm font-medium text-slate-700">
+              Teléfono
+            </label>
+            <input
+              id="new-supplier-phone"
+              type="tel"
+              autocomplete="tel"
+              maxlength="20"
+              formControlName="telefono"
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#00A0DF] focus:ring-2 focus:ring-[#00A0DF]/20"
+            />
+          </div>
+
+          <div>
+            <label for="new-supplier-email" class="mb-1.5 block text-sm font-medium text-slate-700">
+              Correo electrónico
+            </label>
+            <input
+              id="new-supplier-email"
+              type="email"
+              autocomplete="email"
+              maxlength="160"
+              formControlName="correo"
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#00A0DF] focus:ring-2 focus:ring-[#00A0DF]/20"
+            />
+            @if (proveedorForm.controls.correo.touched && proveedorForm.controls.correo.invalid) {
+              <p class="mt-1 text-xs text-red-700" role="alert">
+                Ingresa un correo electrónico válido.
+              </p>
+            }
+          </div>
+
+          <div
+            class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end"
+          >
+            <button
+              type="button"
+              (click)="closeCreateDialog()"
+              [disabled]="isSaving()"
+              class="min-h-11 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              [disabled]="isSaving()"
+              class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#007A30] px-4 text-sm font-semibold text-white hover:bg-[#006025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
+            >
+              @if (!selectedProveedor()) {
+                <svg lucidePlus class="size-4" aria-hidden="true"></svg>
+              }
+              {{
+                isSaving()
+                  ? 'Guardando...'
+                  : selectedProveedor()
+                    ? 'Guardar cambios'
+                    : 'Guardar proveedor'
+              }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  }
+
+  @if (proveedorToDelete(); as proveedor) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm"
+      (click)="cancelDelete()"
+    >
+      <section
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-supplier-title"
+        aria-describedby="delete-supplier-description"
+        class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+        (click)="$event.stopPropagation()"
+        (keydown.tab)="trapFocus($event)"
+      >
+        <h2 id="delete-supplier-title" class="text-lg font-bold text-slate-900">
+          ¿Eliminar este proveedor?
+        </h2>
+        <p id="delete-supplier-description" class="mt-2 text-sm leading-6 text-slate-600">
+          Se eliminará a <span class="font-semibold">{{ razonSocialDe(proveedor) }}</span> (RUC
+          {{ rucDe(proveedor) }}). Esta acción no se puede deshacer.
+        </p>
+
+        @if (deleteErrorMessage(); as message) {
+          <p
+            class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+            role="alert"
+          >
+            {{ message }}
+          </p>
+        }
+
+        <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            #cancelDeleteButton
+            id="delete-cancel-button"
+            type="button"
+            (click)="cancelDelete()"
+            [disabled]="isSaving()"
+            class="min-h-11 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="confirmDelete()"
+            [disabled]="isSaving()"
+            class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-red-700 px-4 text-sm font-semibold text-white hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
+          >
+            {{ isSaving() ? 'Eliminando...' : 'Sí, eliminar' }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</section>

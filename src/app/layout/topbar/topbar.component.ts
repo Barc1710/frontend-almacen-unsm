@@ -1,10 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
-import {
-  LucideChevronDown,
-  LucideLogOut,
-  LucideMenu,
-  LucideUser,
-} from '@lucide/angular';
+import { computed, Component, inject, signal } from '@angular/core';
+import { LucideChevronDown, LucideLogOut, LucideMenu, LucideUser } from '@lucide/angular';
 import { AuthService } from '../../core/services';
 import { LayoutService } from '../layout.service';
 
@@ -25,6 +20,14 @@ export class TopbarComponent {
    * Estado de visibilidad del menú emergente de perfil de usuario.
    */
   readonly isProfileMenuOpen = signal<boolean>(false);
+
+  /**
+   * Iniciales del usuario para el avatar del perfil.
+   */
+  readonly userInitials = computed<string>(() => {
+    const initials = this.authService.userFullName().trim().slice(0, 2).toUpperCase();
+    return initials || 'U';
+  });
 
   /**
    * Alterna la visibilidad del menú de perfil.

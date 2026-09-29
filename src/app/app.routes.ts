@@ -47,12 +47,14 @@ export const routes: Routes = [
       {
         path: 'mantenimiento/proveedores',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+          import('./features/proveedores/proveedores.component').then(
+            (m) => m.ProveedoresComponent,
+          ),
       },
       {
         path: 'mantenimiento/clientes',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+          import('./features/clientes/clientes.component').then((m) => m.ClientesComponent),
       },
       {
         path: 'seguridad/usuarios',

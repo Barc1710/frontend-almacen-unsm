@@ -64,7 +64,7 @@ describe('errorInterceptor', () => {
     );
 
     expect(authServiceSpy.clearSession).toHaveBeenCalled();
-    expect(routerSpy.navigate).toHaveBeenCalledWith(['/login'], {
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/auth/login'], {
       queryParams: { returnUrl: '/articulos' },
     });
   });
@@ -83,7 +83,7 @@ describe('errorInterceptor', () => {
     );
 
     expect(authServiceSpy.clearSession).toHaveBeenCalled();
-    expect(routerSpy.navigate).toHaveBeenCalledWith(['/login'], {
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/auth/login'], {
       queryParams: { error: 'account_inactive' },
     });
   });

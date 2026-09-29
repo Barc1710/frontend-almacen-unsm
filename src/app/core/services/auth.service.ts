@@ -20,6 +20,8 @@ const STORAGE_KEYS = {
   DEBE_CAMBIAR_CLAVE: 'almacen_debe_cambiar_clave',
 } as const;
 
+const DEMO_TOKEN = 'demo-token-unsm-almacen-2026';
+
 @Service()
 export class AuthService {
   private readonly http = inject(HttpClient);
@@ -41,6 +43,7 @@ export class AuthService {
 
   // Selectores computados (Derived State)
   readonly isAuthenticated = computed<boolean>(() => !!this._token());
+  readonly isDemoMode = computed<boolean>(() => this._token() === DEMO_TOKEN);
   readonly username = computed<string>(() => this._currentUser()?.usuario ?? '');
   readonly userFullName = computed<string>(() => this._currentUser()?.nombre ?? '');
   readonly userProfile = computed<string>(() => this._currentUser()?.perfil ?? '');
@@ -130,7 +133,7 @@ export class AuthService {
    */
   iniciarSesionDemo(): void {
     const demoJwt: JwtResponse = {
-      token: 'demo-token-unsm-almacen-2026',
+      token: DEMO_TOKEN,
       usuario: 'admin.demo',
       nombre: 'Administrador Demo - UNSM',
       perfil: 'ADMINISTRADOR',
@@ -185,6 +188,14 @@ export class AuthService {
         url: '/solicitudes',
         icono: 'SOLICITUDES',
         orden: 6,
+      },
+      {
+        id: 7,
+        codigo: 'CLIENTES',
+        nombre: 'Clientes',
+        url: '/mantenimiento/clientes',
+        icono: 'CLIENTES',
+        orden: 7,
       },
     ];
 

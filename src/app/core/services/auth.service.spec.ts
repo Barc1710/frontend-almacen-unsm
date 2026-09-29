@@ -28,6 +28,7 @@ describe('AuthService', () => {
 
   it('debe inicializarse en estado no autenticado cuando el storage está vacío', () => {
     expect(service.isAuthenticated()).toBe(false);
+    expect(service.isDemoMode()).toBe(false);
     expect(service.token()).toBeNull();
     expect(service.currentUser()).toBeNull();
     expect(service.modules()).toEqual([]);
@@ -59,10 +60,19 @@ describe('AuthService', () => {
     req.flush(mockResponse);
 
     expect(service.isAuthenticated()).toBe(true);
+    expect(service.isDemoMode()).toBe(false);
     expect(service.token()).toBe('jwt.token.xyz');
     expect(service.username()).toBe('admin');
     expect(service.isAdmin()).toBe(true);
     expect(service.debeCambiarClave()).toBe(true);
+  });
+
+  it('debe reconocer la sesión demo sin confundirla con una sesión real', () => {
+    service.iniciarSesionDemo();
+
+    expect(service.isAuthenticated()).toBe(true);
+    expect(service.isDemoMode()).toBe(true);
+    expect(service.hasModule('CLIENTES')).toBe(true);
   });
 
   it('debe permitir cambiar la bandera debeCambiarClave mediante setDebeCambiarClave', () => {

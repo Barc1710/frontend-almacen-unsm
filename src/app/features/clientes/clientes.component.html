@@ -1,0 +1,490 @@
+<section class="mx-auto max-w-7xl space-y-6" aria-labelledby="clients-title">
+  <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 id="clients-title" class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+        Clientes
+      </h1>
+      <p class="mt-1 text-sm text-slate-500">Consulta y encuentra rápidamente a tus clientes.</p>
+    </div>
+
+    <button
+      type="button"
+      (click)="openCreateDialog($event)"
+      class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#007A30] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#006025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2"
+    >
+      <svg lucidePlus class="size-4" aria-hidden="true"></svg>
+      Nuevo cliente
+    </button>
+  </header>
+
+  @if (successMessage(); as message) {
+    <p
+      class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+      role="status"
+    >
+      {{ message }}
+    </p>
+  }
+
+  @if (!puedeModificar()) {
+    <p
+      class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+      role="status"
+    >
+      Editar y eliminar se habilitarán para cuentas reales cuando el backend tenga esas operaciones.
+    </p>
+  }
+
+  <section
+    class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+    aria-label="Listado de clientes"
+  >
+    <div
+      class="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+    >
+      <div>
+        <h2 class="font-semibold text-slate-900">Directorio de clientes</h2>
+        <p class="mt-1 text-sm text-slate-500">Mostrando hasta 10 clientes por página.</p>
+      </div>
+
+      <label class="relative block w-full sm:max-w-xs">
+        <span class="sr-only">Filtrar los clientes de esta página por DNI, nombre o correo</span>
+        <svg
+          lucideSearch
+          class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+          aria-hidden="true"
+        ></svg>
+        <input
+          type="search"
+          [value]="search()"
+          (input)="onSearchChange($event)"
+          placeholder="Filtrar esta página..."
+          class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-500 focus:border-[#00A0DF] focus:bg-white focus:ring-2 focus:ring-[#00A0DF]/20"
+        />
+      </label>
+    </div>
+
+    @if (errorMessage(); as message) {
+      <div
+        class="m-5 flex flex-col items-start gap-4 rounded-xl border border-red-200 bg-red-50 p-4 sm:flex-row sm:items-center sm:justify-between"
+        role="alert"
+      >
+        <p class="text-sm text-red-800">{{ message }}</p>
+        <button
+          type="button"
+          (click)="retry()"
+          class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-red-800 ring-1 ring-red-200 transition hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+        >
+          <svg lucideRefreshCw class="size-4" aria-hidden="true"></svg>
+          Reintentar
+        </button>
+      </div>
+    } @else {
+      <div
+        #tableRegion
+        class="overflow-x-auto"
+        [attr.aria-busy]="loading()"
+        tabindex="0"
+        role="region"
+        aria-label="Tabla de clientes, desplazable horizontalmente"
+      >
+        <table class="w-full min-w-[900px] text-left text-sm">
+          <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <tr>
+              <th scope="col" class="w-16 px-5 py-4 sm:px-6">N.º</th>
+              <th scope="col" class="w-32 px-4 py-4">DNI</th>
+              <th scope="col" class="px-4 py-4">Cliente</th>
+              <th scope="col" class="px-4 py-4">Dirección</th>
+              <th scope="col" class="px-4 py-4">Teléfono</th>
+              <th scope="col" class="px-4 py-4">Correo</th>
+              <th scope="col" class="px-4 py-4">
+                <div class="flex justify-end">
+                  Acciones
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @if (loading()) {
+              <tr>
+                <td colspan="7" class="px-6 py-16 text-center text-sm text-slate-500" role="status">
+                  Cargando clientes...
+                </td>
+              </tr>
+            } @else if (clientesFiltrados().length === 0) {
+              <tr>
+                <td colspan="7" class="px-6 py-16 text-center">
+                  <p class="font-medium text-slate-700">
+                    No se encontraron clientes en esta página.
+                  </p>
+                  <p class="mt-1 text-sm text-slate-500">Prueba con otro DNI o nombre.</p>
+                </td>
+              </tr>
+            } @else {
+              @for (
+                cliente of clientesFiltrados();
+                track trackCliente(cliente);
+                let index = $index
+              ) {
+                <tr class="transition-colors hover:bg-emerald-50/40">
+                  <td class="px-5 py-4 font-medium tabular-nums text-slate-500 sm:px-6">
+                    {{ page() * pageSize + index + 1 }}
+                  </td>
+                  <td class="px-4 py-4 font-medium tabular-nums text-slate-700">
+                    {{ dniDe(cliente) }}
+                  </td>
+                  <td class="px-4 py-4">
+                    <div class="flex items-center gap-3">
+                      <span
+                        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-sm font-bold text-[#007A30]"
+                        aria-hidden="true"
+                      >
+                        {{ nombreCompleto(cliente).charAt(0).toLocaleUpperCase() }}
+                      </span>
+                      <span class="font-semibold text-slate-900">{{
+                        nombreCompleto(cliente)
+                      }}</span>
+                    </div>
+                  </td>
+                  <td
+                    class="max-w-64 truncate px-4 py-4 text-slate-500"
+                    [title]="cliente.direccion || ''"
+                  >
+                    {{ cliente.direccion || '—' }}
+                  </td>
+                  <td class="px-4 py-4 tabular-nums text-slate-600">
+                    {{ cliente.telefono || '—' }}
+                  </td>
+                  <td
+                    class="max-w-56 truncate px-4 py-4 text-slate-600"
+                    [title]="cliente.correo || ''"
+                  >
+                    {{ cliente.correo || '—' }}
+                  </td>
+                  <td class="px-4 py-4">
+                    <div class="flex justify-end gap-1">
+                      <button
+                        type="button"
+                        (click)="openEditDialog(cliente, $event)"
+                        [disabled]="!puedeModificar()"
+                        [title]="
+                          puedeModificar()
+                            ? 'Editar cliente'
+                            : 'La edición estará disponible cuando el backend lo admita'
+                        "
+                        [attr.aria-label]="'Editar a ' + nombreCompleto(cliente)"
+                        class="flex size-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-sky-50 hover:text-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <svg lucidePencil class="size-4" aria-hidden="true"></svg>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="requestDelete(cliente, $event)"
+                        [disabled]="!puedeModificar()"
+                        [title]="
+                          puedeModificar()
+                            ? 'Eliminar cliente'
+                            : 'La eliminación estará disponible cuando el backend lo admita'
+                        "
+                        [attr.aria-label]="'Eliminar a ' + nombreCompleto(cliente)"
+                        class="flex size-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <svg lucideTrash2 class="size-4" aria-hidden="true"></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <footer
+        class="flex flex-col gap-4 border-t border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+      >
+        <p class="text-sm text-slate-500" aria-live="polite">
+          @if (hayFiltro()) {
+            {{ resumenFiltro() }}
+          } @else if (totalElements() > 0) {
+            Página {{ page() + 1 }} de {{ totalPages() }}
+            <span class="mx-1 text-slate-300" aria-hidden="true">·</span>
+            {{ firstItem() }}–{{ lastItem() }} de {{ totalElements() }} clientes
+          } @else if (!loading()) {
+            No hay clientes registrados.
+          } @else {
+            Preparando listado...
+          }
+        </p>
+
+        <nav class="flex items-center justify-end gap-1.5" aria-label="Paginación de clientes">
+          <button
+            type="button"
+            (click)="loadPreviousPage()"
+            [disabled]="loading() || page() === 0"
+            class="inline-flex size-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Página anterior"
+          >
+            <svg lucideChevronLeft class="size-4" aria-hidden="true"></svg>
+          </button>
+          @for (indicator of pageIndicators(); track $index) {
+            @if (indicator === 'ellipsis') {
+              <span class="px-1 text-sm text-slate-400" aria-hidden="true">…</span>
+            } @else {
+              <button
+                type="button"
+                (click)="goToPage(indicator)"
+                [disabled]="loading()"
+                [attr.aria-current]="page() === indicator ? 'page' : null"
+                [attr.aria-label]="'Ir a la página ' + (indicator + 1)"
+                class="inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:cursor-not-allowed"
+                [class.bg-slate-800]="page() === indicator"
+                [class.text-white]="page() === indicator"
+                [class.text-slate-700]="page() !== indicator"
+                [class.hover:bg-slate-100]="page() !== indicator"
+                [class.opacity-40]="loading() && page() !== indicator"
+              >
+                {{ indicator + 1 }}
+              </button>
+            }
+          }
+          <button
+            type="button"
+            (click)="loadNextPage()"
+            [disabled]="loading() || page() + 1 >= totalPages()"
+            class="inline-flex size-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition hover:bg-slate-200 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Página siguiente"
+          >
+            <svg lucideChevronRight class="size-4" aria-hidden="true"></svg>
+          </button>
+        </nav>
+      </footer>
+    }
+  </section>
+
+  @if (isCreateDialogOpen()) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/45 p-4 backdrop-blur-sm"
+      (click)="closeCreateDialog()"
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-client-title"
+        class="my-auto w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl sm:p-8"
+        (click)="$event.stopPropagation()"
+        (keydown.tab)="trapFocus($event)"
+      >
+        <div class="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h2 id="new-client-title" class="text-xl font-bold text-slate-900">
+              {{ selectedCliente() ? 'Editar cliente' : 'Registrar nuevo cliente' }}
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+              {{
+                selectedCliente()
+                  ? 'Actualiza la información del cliente.'
+                  : 'Completa los datos para agregarlo al directorio.'
+              }}
+            </p>
+          </div>
+          <button
+            type="button"
+            (click)="closeCreateDialog()"
+            [disabled]="isSaving()"
+            class="flex size-9 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:opacity-50"
+            aria-label="Cerrar formulario"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+
+        @if (createErrorMessage(); as message) {
+          <p
+            class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+            role="alert"
+          >
+            {{ message }}
+          </p>
+        }
+
+        <form [formGroup]="clienteForm" (ngSubmit)="submitCliente()" class="space-y-4">
+          <div>
+            <label for="new-client-dni" class="mb-1.5 block text-sm font-medium text-slate-700">
+              DNI <span class="text-red-600" aria-hidden="true">*</span>
+            </label>
+            <input
+              #dniField
+              id="new-client-dni"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              maxlength="8"
+              formControlName="dni"
+              required
+              aria-describedby="new-client-dni-hint"
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#00A0DF] focus:ring-2 focus:ring-[#00A0DF]/20"
+            />
+            <p id="new-client-dni-hint" class="mt-1 text-xs text-slate-500">
+              Ingresa los 8 dígitos del DNI.
+            </p>
+            @if (clienteForm.controls.dni.touched && clienteForm.controls.dni.invalid) {
+              <p class="mt-1 text-xs text-red-700" role="alert">
+                El DNI debe tener exactamente 8 dígitos.
+              </p>
+            }
+          </div>
+
+          <div>
+            <label for="new-client-name" class="mb-1.5 block text-sm font-medium text-slate-700">
+              Nombre completo <span class="text-red-600" aria-hidden="true">*</span>
+            </label>
+            <input
+              id="new-client-name"
+              type="text"
+              autocomplete="name"
+              maxlength="120"
+              formControlName="nombre"
+              required
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#00A0DF] focus:ring-2 focus:ring-[#00A0DF]/20"
+            />
+            @if (clienteForm.controls.nombre.touched && clienteForm.controls.nombre.invalid) {
+              <p class="mt-1 text-xs text-red-700" role="alert">Ingresa el nombre del cliente.</p>
+            }
+          </div>
+
+          <div>
+            <label for="new-client-address" class="mb-1.5 block text-sm font-medium text-slate-700">
+              Dirección
+            </label>
+            <input
+              id="new-client-address"
+              type="text"
+              autocomplete="street-address"
+              maxlength="200"
+              formControlName="direccion"
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#00A0DF] focus:ring-2 focus:ring-[#00A0DF]/20"
+            />
+          </div>
+
+          <div>
+            <label for="new-client-phone" class="mb-1.5 block text-sm font-medium text-slate-700">
+              Teléfono
+            </label>
+            <input
+              id="new-client-phone"
+              type="tel"
+              autocomplete="tel"
+              maxlength="20"
+              formControlName="telefono"
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#00A0DF] focus:ring-2 focus:ring-[#00A0DF]/20"
+            />
+          </div>
+
+          <div>
+            <label for="new-client-email" class="mb-1.5 block text-sm font-medium text-slate-700">
+              Correo electrónico
+            </label>
+            <input
+              id="new-client-email"
+              type="email"
+              autocomplete="email"
+              maxlength="160"
+              formControlName="correo"
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#00A0DF] focus:ring-2 focus:ring-[#00A0DF]/20"
+            />
+            @if (clienteForm.controls.correo.touched && clienteForm.controls.correo.invalid) {
+              <p class="mt-1 text-xs text-red-700" role="alert">
+                Ingresa un correo electrónico válido.
+              </p>
+            }
+          </div>
+
+          <div
+            class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end"
+          >
+            <button
+              type="button"
+              (click)="closeCreateDialog()"
+              [disabled]="isSaving()"
+              class="min-h-11 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              [disabled]="isSaving()"
+              class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#007A30] px-4 text-sm font-semibold text-white hover:bg-[#006025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
+            >
+              @if (!selectedCliente()) {
+                <svg lucidePlus class="size-4" aria-hidden="true"></svg>
+              }
+              {{
+                isSaving()
+                  ? 'Guardando...'
+                  : selectedCliente()
+                    ? 'Guardar cambios'
+                    : 'Guardar cliente'
+              }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  }
+
+  @if (clienteToDelete(); as cliente) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm"
+      (click)="cancelDelete()"
+    >
+      <section
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-client-title"
+        aria-describedby="delete-client-description"
+        class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+        (click)="$event.stopPropagation()"
+        (keydown.tab)="trapFocus($event)"
+      >
+        <h2 id="delete-client-title" class="text-lg font-bold text-slate-900">
+          ¿Eliminar este cliente?
+        </h2>
+        <p id="delete-client-description" class="mt-2 text-sm leading-6 text-slate-600">
+          Se eliminará a <span class="font-semibold">{{ nombreCompleto(cliente) }}</span> (DNI
+          {{ dniDe(cliente) }}). Esta acción no se puede deshacer.
+        </p>
+
+        @if (deleteErrorMessage(); as message) {
+          <p
+            class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+            role="alert"
+          >
+            {{ message }}
+          </p>
+        }
+
+        <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            #cancelDeleteButton
+            id="delete-cancel-button"
+            type="button"
+            (click)="cancelDelete()"
+            [disabled]="isSaving()"
+            class="min-h-11 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="confirmDelete()"
+            [disabled]="isSaving()"
+            class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-red-700 px-4 text-sm font-semibold text-white hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
+          >
+            {{ isSaving() ? 'Eliminando...' : 'Sí, eliminar' }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</section>
