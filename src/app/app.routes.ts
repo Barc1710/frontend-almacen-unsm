@@ -7,6 +7,11 @@ const loadAccessStatus = () =>
 const loadDashboard = () =>
   import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent);
 
+const loadInventario = () =>
+  import('./features/articulos/pages/articulos-list/articulos-list.component').then(
+    (m) => m.ArticulosListComponent,
+  );
+
 export const routes: Routes = [
   {
     path: 'auth/login',
@@ -24,6 +29,8 @@ export const routes: Routes = [
       { path: '', pathMatch: 'full', canActivate: [landingGuard], loadComponent: loadAccessStatus },
       { path: 'sin-acceso', loadComponent: loadAccessStatus },
       { path: 'dashboard', canActivate: [moduleGuard()], loadComponent: loadDashboard },
+      { path: 'inventario', canActivate: [moduleGuard('INVENTARIO')], loadComponent: loadInventario },
+      { path: 'articulos', pathMatch: 'full', redirectTo: 'inventario' },
       { path: 'cambiar-clave', pathMatch: 'full', redirectTo: '' },
       // Rutas dinámicas universales para módulos y submódulos cargados desde la base de datos
       { path: ':modulo', canActivate: [moduleGuard()], loadComponent: loadDashboard },
