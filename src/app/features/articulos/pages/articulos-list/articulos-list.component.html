@@ -1,5 +1,5 @@
 <div class="space-y-6">
-  <!-- Cabecera del Módulo -->
+  <!-- Cabecera -->
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div class="flex items-center gap-3.5">
       <div
@@ -27,10 +27,9 @@
     </div>
   </div>
 
-  <!-- Barra de Filtros Integrada -->
+  <!-- Barra de Filtros -->
   <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80">
     <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-      <!-- Búsqueda texto libre -->
       <div class="relative flex-1">
         <svg
           lucideSearch
@@ -47,7 +46,6 @@
         />
       </div>
 
-      <!-- Selector Familias -->
       <div class="w-full lg:w-60">
         <select
           [ngModel]="familiaFiltro()"
@@ -62,7 +60,6 @@
         </select>
       </div>
 
-      <!-- Selector Estado -->
       <div class="w-full lg:w-48">
         <select
           [ngModel]="estadoFiltro()"
@@ -76,7 +73,6 @@
         </select>
       </div>
 
-      <!-- Botones de Acción de Filtros -->
       <div class="flex items-center gap-2">
         <button
           type="button"
@@ -104,7 +100,7 @@
     </div>
   </div>
 
-  <!-- Contenedor de la Tabla -->
+  <!-- Tabla de Artículos -->
   <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
     <div class="overflow-x-auto min-h-80">
       <table class="w-full text-left text-sm text-slate-600 border-collapse">
@@ -141,12 +137,10 @@
           } @else {
             @for (art of articulos(); track art.id) {
               <tr class="hover:bg-slate-50/60 transition-colors">
-                <!-- Código -->
                 <td class="py-3 px-4 font-mono font-semibold text-slate-900 whitespace-nowrap">
                   {{ art.codigo }}
                 </td>
 
-                <!-- Descripción & Detalle -->
                 <td class="py-3 px-4 min-w-\[200px\]">
                   <p class="font-medium text-slate-800 line-clamp-1">{{ art.descripcion }}</p>
                   @if (art.detalle) {
@@ -154,7 +148,6 @@
                   }
                 </td>
 
-                <!-- Familia -->
                 <td class="py-3 px-4 whitespace-nowrap">
                   <span
                     class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700"
@@ -163,13 +156,11 @@
                   </span>
                 </td>
 
-                <!-- Marca / Ubicación -->
                 <td class="py-3 px-4 whitespace-nowrap text-xs">
                   <p class="text-slate-700">{{ art.nombreMarca || '-' }}</p>
                   <p class="text-slate-400 mt-0.5">{{ art.nombreUbicacion || '-' }}</p>
                 </td>
 
-                <!-- Saldo Actual con alerta de Stock Crítico -->
                 <td class="py-3 px-4 text-right whitespace-nowrap">
                   @if (isSinStock(art)) {
                     <span
@@ -201,7 +192,6 @@
                   }
                 </td>
 
-                <!-- Operatividad (Activo/Inactivo) -->
                 <td class="py-3 px-4 text-center whitespace-nowrap">
                   <button
                     type="button"
@@ -228,7 +218,6 @@
                   </button>
                 </td>
 
-                <!-- Estado del Registro -->
                 <td class="py-3 px-4 text-center whitespace-nowrap">
                   @if (art.estado === '1') {
                     <span
@@ -245,10 +234,8 @@
                   }
                 </td>
 
-                <!-- Acciones -->
                 <td class="py-3 px-4 text-center whitespace-nowrap">
                   <div class="inline-flex items-center gap-1">
-                    <!-- Editar -->
                     <button
                       type="button"
                       (click)="abrirEditar(art)"
@@ -260,7 +247,6 @@
                       <svg lucidePencil class="size-4"></svg>
                     </button>
 
-                    <!-- Dar de baja lógica -->
                     @if (art.estado === '1') {
                       <button
                         type="button"
@@ -296,7 +282,7 @@
       </table>
     </div>
 
-    <!-- Paginador de Servidor -->
+    <!-- Paginación -->
     <div
       class="px-4 py-3 border-t border-slate-200/80 bg-slate-50/50 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-600"
     >
@@ -379,7 +365,7 @@
     </div>
   </div>
 
-  <!-- Modal de Formulario de Artículo -->
+  <!-- Modal de Formulario -->
   <app-articulo-form
     [visible]="modalVisible()"
     [articulo]="articuloSeleccionado()"

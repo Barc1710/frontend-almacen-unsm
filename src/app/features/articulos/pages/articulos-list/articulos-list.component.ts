@@ -16,6 +16,7 @@ import {
   LucideTrash,
   LucideTriangleAlert,
 } from '@lucide/angular';
+import { catchError, forkJoin, of } from 'rxjs';
 import Swal from 'sweetalert2';
 import { ArticuloFormComponent } from '../../components/articulo-form/articulo-form.component';
 import { Articulo, Familia, Marca, Ubicacion, UnidadMedida } from '../../models';
@@ -46,53 +47,40 @@ export class ArticulosListComponent implements OnInit {
   private readonly articuloService = inject(ArticuloService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly cargando = signal<boolean>(false);
+  readonly cargando = signal(false);
   readonly articulos = signal<Articulo[]>([]);
-  readonly totalElementos = signal<number>(0);
-  readonly totalPaginas = signal<number>(0);
-  readonly paginaActual = signal<number>(0);
-  readonly tamanioPagina = signal<number>(10);
+  readonly totalElementos = signal(0);
+  readonly totalPaginas = signal(0);
+  readonly paginaActual = signal(0);
+  readonly tamanioPagina = signal(10);
 
-  /**
-   * Genera la lista concisa de números de páginas y elipsis para la navegación (1 2 ... última).
-   */
-  readonly paginasNumeros = computed<(number | string)[]>(() => {
-    const total = this.totalPaginas();
-    const actual = this.paginaActual() + 1; // 1-indexed
-
-    if (total <= 0) return [];
-    if (total <= 3) {
-      return Array.from({ length: total }, (_, i) => i + 1);
-    }
-
-    if (actual <= 2) {
-      return [1, 2, '...', total];
-    }
-
-    if (actual >= total - 1) {
-      return [1, '...', total - 1, total];
-    }
-
-    return [1, '...', actual, '...', total];
-  });
-
-  // Filtros
-  readonly filtroTexto = signal<string>('');
+  readonly filtroTexto = signal('');
   readonly familiaFiltro = signal<number | null>(null);
-  readonly estadoFiltro = signal<string>('1'); // '1' = Vigentes por defecto
+  readonly estadoFiltro = signal('1');
 
-  // Catálogos auxiliares activos
   readonly familias = signal<Familia[]>([]);
   readonly marcas = signal<Marca[]>([]);
   readonly ubicaciones = signal<Ubicacion[]>([]);
   readonly unidadesMedida = signal<UnidadMedida[]>([]);
 
-  // Estado del modal de creación/edición
-  readonly modalVisible = signal<boolean>(false);
+  readonly modalVisible = signal(false);
   readonly articuloSeleccionado = signal<Articulo | null>(null);
-
-  // Operaciones en curso
   readonly procesandoFilaId = signal<number | null>(null);
+
+  /**
+   * Genera la navegación numérica con elipsis para la tabla de artículos.
+   */
+  readonly paginasNumeros = computed<(number | string)[]>(() => {
+    const total = this.totalPaginas();
+    const actual = this.paginaActual() + 1;
+
+    if (total <= 0) return [];
+    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
+
+    if (actual <= 3) return [1, 2, 3, '...', total];
+    if (actual >= total - 2) return [1, '...', total - 2, total - 1, total];
+    return [1, '...', actual, '...', total];
+  });
 
   ngOnInit(): void {
     this.cargarCatalogos();
@@ -100,36 +88,20 @@ export class ArticulosListComponent implements OnInit {
   }
 
   cargarCatalogos(): void {
-    this.articuloService
-      .listarFamiliasActivas()
+    forkJoin({
+      familias: this.articuloService.listarFamiliasActivas().pipe(catchError(() => of([]))),
+      marcas: this.articuloService.listarMarcasActivas().pipe(catchError(() => of([]))),
+      ubicaciones: this.articuloService.listarUbicacionesActivas().pipe(catchError(() => of([]))),
+      unidadesMedida: this.articuloService
+        .listarUnidadesMedidaActivas()
+        .pipe(catchError(() => of([]))),
+    })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (data) => this.familias.set(data),
-        error: () => this.familias.set([]),
-      });
-
-    this.articuloService
-      .listarMarcasActivas()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (data) => this.marcas.set(data),
-        error: () => this.marcas.set([]),
-      });
-
-    this.articuloService
-      .listarUbicacionesActivas()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (data) => this.ubicaciones.set(data),
-        error: () => this.ubicaciones.set([]),
-      });
-
-    this.articuloService
-      .listarUnidadesMedidaActivas()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (data) => this.unidadesMedida.set(data),
-        error: () => this.unidadesMedida.set([]),
+      .subscribe(({ familias, marcas, ubicaciones, unidadesMedida }) => {
+        this.familias.set(familias);
+        this.marcas.set(marcas);
+        this.ubicaciones.set(ubicaciones);
+        this.unidadesMedida.set(unidadesMedida);
       });
   }
 
@@ -228,14 +200,7 @@ export class ArticulosListComponent implements OnInit {
 
   onArticuloGuardado(_guardado: Articulo): void {
     this.cerrarModal();
-    void Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title: 'Artículo guardado con éxito',
-      showConfirmButton: false,
-      timer: 3000,
-    });
+    this.showToast('Artículo guardado con éxito');
     this.cargarArticulos();
   }
 
@@ -249,28 +214,11 @@ export class ArticulosListComponent implements OnInit {
         this.articulos.update((items) =>
           items.map((it) => (it.id === actualizado.id ? actualizado : it)),
         );
-        void Swal.fire({
-          toast: true,
-          position: 'top-end',
-          icon: 'success',
-          title: actualizado.activo ? 'Artículo activado' : 'Artículo desactivado',
-          showConfirmButton: false,
-          timer: 2500,
-        });
+        this.showToast(actualizado.activo ? 'Artículo activado' : 'Artículo desactivado');
       },
       error: () => {
         this.procesandoFilaId.set(null);
-        void Swal.fire({
-          icon: 'error',
-          title: 'Error de operación',
-          text: 'No se pudo alternar la operatividad del artículo.',
-          confirmButtonText: 'Entendido',
-          customClass: {
-            confirmButton:
-              'bg-unsm-green text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:opacity-95',
-          },
-          buttonsStyling: false,
-        });
+        this.showError('Error de operación', 'No se pudo alternar la operatividad del artículo.');
       },
     });
   }
@@ -306,36 +254,18 @@ export class ArticulosListComponent implements OnInit {
       this.articuloService.eliminar(articulo.id).subscribe({
         next: () => {
           this.procesandoFilaId.set(null);
-          void Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'Artículo dado de baja',
-            showConfirmButton: false,
-            timer: 3000,
-          });
+          this.showToast('Artículo dado de baja');
           this.cargarArticulos();
         },
         error: () => {
           this.procesandoFilaId.set(null);
-          void Swal.fire({
-            icon: 'error',
-            title: 'Error al dar de baja',
-            text: 'No se pudo desactivar el artículo en el sistema.',
-            confirmButtonText: 'Entendido',
-            customClass: {
-              confirmButton:
-                'bg-unsm-green text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:opacity-95',
-            },
-            buttonsStyling: false,
-          });
+          this.showError(
+            'Error al dar de baja',
+            'No se pudo desactivar el artículo en el sistema.',
+          );
         },
       });
     }
-  }
-
-  isStockCritico(articulo: Articulo): boolean {
-    return Number(articulo.saldo ?? 0) <= Number(articulo.cantidadMinima ?? 0);
   }
 
   isSinStock(articulo: Articulo): boolean {
@@ -344,7 +274,7 @@ export class ArticulosListComponent implements OnInit {
 
   isStockBajo(articulo: Articulo): boolean {
     const saldo = Number(articulo.saldo ?? 0);
-    return saldo > 0 && this.isStockCritico(articulo);
+    return saldo > 0 && saldo <= Number(articulo.cantidadMinima ?? 0);
   }
 
   formatCantidad(
@@ -352,17 +282,33 @@ export class ArticulosListComponent implements OnInit {
     permiteDecimales: boolean | null | undefined,
   ): string {
     const num = Number(valor ?? 0);
-    if (permiteDecimales) {
-      return num.toLocaleString('es-PE', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      });
-    }
-    return Math.floor(num).toLocaleString('es-PE');
+    return permiteDecimales
+      ? num.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+      : Math.floor(num).toLocaleString('es-PE');
   }
 
-  formatPrecio(valor: number | null | undefined): string {
-    const num = Number(valor ?? 0);
-    return `S/ ${num.toFixed(2)}`;
+  private showToast(title: string): void {
+    void Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title,
+      showConfirmButton: false,
+      timer: 2500,
+    });
+  }
+
+  private showError(title: string, text: string): void {
+    void Swal.fire({
+      icon: 'error',
+      title,
+      text,
+      confirmButtonText: 'Entendido',
+      customClass: {
+        confirmButton:
+          'bg-unsm-green text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:opacity-95',
+      },
+      buttonsStyling: false,
+    });
   }
 }

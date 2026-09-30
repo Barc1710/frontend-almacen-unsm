@@ -54,7 +54,7 @@ export class ArticuloFormComponent {
 
   readonly isEdit = computed(() => !!this.articulo());
 
-  readonly form: FormGroup<ArticuloForm> = new FormGroup<ArticuloForm>({
+  readonly form = new FormGroup<ArticuloForm>({
     codigo: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.maxLength(20)],
@@ -63,20 +63,12 @@ export class ArticuloFormComponent {
       nonNullable: true,
       validators: [Validators.required, Validators.maxLength(255)],
     }),
-    idFamilia: new FormControl<number | null>(null, {
-      validators: [Validators.required],
-    }),
-    idMarca: new FormControl<number | null>(null, {
-      validators: [Validators.required],
-    }),
-    idUbicacion: new FormControl<number | null>(null, {
-      validators: [Validators.required],
-    }),
-    idUnidadMedida: new FormControl<number | null>(null),
-    precio: new FormControl<number | null>(0, {
-      validators: [Validators.min(0)],
-    }),
-    cantidadMinima: new FormControl<number | null>(10, {
+    idFamilia: new FormControl(null, { validators: [Validators.required] }),
+    idMarca: new FormControl(null, { validators: [Validators.required] }),
+    idUbicacion: new FormControl(null, { validators: [Validators.required] }),
+    idUnidadMedida: new FormControl(null),
+    precio: new FormControl(0, { validators: [Validators.min(0)] }),
+    cantidadMinima: new FormControl(10, {
       validators: [Validators.required, Validators.min(0)],
     }),
     detalle: new FormControl('', {
@@ -182,55 +174,39 @@ export class ArticuloFormComponent {
     const raw = this.form.getRawValue();
     this.guardando.set(true);
 
-    if (this.isEdit()) {
-      const artActual = this.articulo();
-      if (!artActual) return;
+    const baseData = {
+      descripcion: raw.descripcion.trim(),
+      idFamilia: Number(raw.idFamilia),
+      idMarca: Number(raw.idMarca),
+      idUbicacion: Number(raw.idUbicacion),
+      idUnidadMedida: raw.idUnidadMedida ? Number(raw.idUnidadMedida) : null,
+      cantidadMinima: Number(raw.cantidadMinima),
+      detalle: raw.detalle.trim() || null,
+    };
 
-      const request: ArticuloUpdateRequest = {
-        descripcion: raw.descripcion.trim(),
-        idFamilia: Number(raw.idFamilia),
-        idMarca: Number(raw.idMarca),
-        idUbicacion: Number(raw.idUbicacion),
-        idUnidadMedida: raw.idUnidadMedida ? Number(raw.idUnidadMedida) : null,
-        precio: Number(raw.precio),
-        cantidadMinima: Number(raw.cantidadMinima),
-        detalle: raw.detalle.trim() || null,
-      };
+    const currentArt = this.articulo();
+    const save$ =
+      this.isEdit() && currentArt
+        ? this.articuloService.actualizar(currentArt.id, {
+            ...baseData,
+            precio: Number(raw.precio),
+          })
+        : this.articuloService.crear({
+            ...baseData,
+            codigo: raw.codigo.trim().toUpperCase(),
+            precio: 0.0,
+          });
 
-      this.articuloService.actualizar(artActual.id, request).subscribe({
-        next: (guardado) => {
-          this.guardando.set(false);
-          this.guardado.emit(guardado);
-        },
-        error: (err: unknown) => {
-          this.guardando.set(false);
-          this.handleSaveError(err);
-        },
-      });
-    } else {
-      const request: ArticuloCreateRequest = {
-        codigo: raw.codigo.trim().toUpperCase(),
-        descripcion: raw.descripcion.trim(),
-        idFamilia: Number(raw.idFamilia),
-        idMarca: Number(raw.idMarca),
-        idUbicacion: Number(raw.idUbicacion),
-        idUnidadMedida: raw.idUnidadMedida ? Number(raw.idUnidadMedida) : null,
-        precio: 0.0,
-        cantidadMinima: Number(raw.cantidadMinima),
-        detalle: raw.detalle.trim() || null,
-      };
-
-      this.articuloService.crear(request).subscribe({
-        next: (guardado) => {
-          this.guardando.set(false);
-          this.guardado.emit(guardado);
-        },
-        error: (err: unknown) => {
-          this.guardando.set(false);
-          this.handleSaveError(err);
-        },
-      });
-    }
+    save$.subscribe({
+      next: (guardado) => {
+        this.guardando.set(false);
+        this.guardado.emit(guardado);
+      },
+      error: (err: unknown) => {
+        this.guardando.set(false);
+        this.handleSaveError(err);
+      },
+    });
   }
 
   isFieldInvalid(field: keyof ArticuloForm): boolean {
@@ -242,28 +218,35 @@ export class ArticuloFormComponent {
     if (typeof err === 'object' && err !== null && 'status' in err) {
       const httpErr = err as { status?: number; error?: unknown };
       if (httpErr.status === 409) {
-        const errorBody = httpErr.error;
-        let conflictMsg = 'El código ingresado ya está asignado a otro artículo.';
-        if (typeof errorBody === 'object' && errorBody !== null) {
-          const cand = errorBody as { message?: string; mensaje?: string };
-          conflictMsg = cand.mensaje || cand.message || conflictMsg;
-        } else if (typeof errorBody === 'string' && errorBody.trim().length > 0) {
-          conflictMsg = errorBody;
-        }
-        this.conflictoCodigo.set(conflictMsg);
+        this.conflictoCodigo.set(
+          this.extractErrorMessage(
+            httpErr.error,
+            'El código ingresado ya está asignado a otro artículo.',
+          ),
+        );
         this.form.controls.codigo.markAsTouched();
         return;
       }
     }
 
-    let generalMsg = 'Ocurrió un error al procesar la solicitud.';
-    if (typeof err === 'object' && err !== null && 'error' in err) {
-      const errorBody = (err as { error?: unknown }).error;
-      if (typeof errorBody === 'object' && errorBody !== null) {
-        const cand = errorBody as { message?: string; mensaje?: string };
-        generalMsg = cand.mensaje || cand.message || generalMsg;
-      }
+    const errorBody =
+      typeof err === 'object' && err !== null && 'error' in err
+        ? (err as { error?: unknown }).error
+        : err;
+
+    this.errorGeneral.set(
+      this.extractErrorMessage(errorBody, 'Ocurrió un error al procesar la solicitud.'),
+    );
+  }
+
+  private extractErrorMessage(errorBody: unknown, fallback: string): string {
+    if (typeof errorBody === 'string' && errorBody.trim().length > 0) {
+      return errorBody;
     }
-    this.errorGeneral.set(generalMsg);
+    if (typeof errorBody === 'object' && errorBody !== null) {
+      const cand = errorBody as { message?: string; mensaje?: string };
+      return cand.mensaje || cand.message || fallback;
+    }
+    return fallback;
   }
 }

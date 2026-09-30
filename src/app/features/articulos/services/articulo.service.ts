@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
-import { catchError, map, Observable, of, shareReplay, throwError } from 'rxjs';
+import { catchError, map, Observable, shareReplay, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   ApiResponse,
@@ -32,43 +32,35 @@ export class ArticuloService {
   listar(filtros: ArticuloFiltros = {}): Observable<PageResponse<Articulo>> {
     let params = new HttpParams();
 
-    if (filtros.filtro && filtros.filtro.trim().length > 0) {
-      params = params.set('filtro', filtros.filtro.trim());
-    }
-    if (filtros.codigo && filtros.codigo.trim().length > 0) {
-      params = params.set('codigo', filtros.codigo.trim());
-    }
-    if (filtros.descripcion && filtros.descripcion.trim().length > 0) {
-      params = params.set('descripcion', filtros.descripcion.trim());
-    }
-    if (filtros.idFamilia !== undefined && filtros.idFamilia !== null) {
-      params = params.set('idFamilia', filtros.idFamilia.toString());
-    }
-    if (filtros.estado && filtros.estado.trim().length > 0) {
-      params = params.set('estado', filtros.estado.trim());
-    }
+    const append = (key: string, val: string | number | undefined | null) => {
+      if (val !== undefined && val !== null) {
+        const text = String(val).trim();
+        if (text) params = params.set(key, text);
+      }
+    };
+
+    append('filtro', filtros.filtro);
+    append('codigo', filtros.codigo);
+    append('descripcion', filtros.descripcion);
+    append('idFamilia', filtros.idFamilia);
+    append('estado', filtros.estado);
+    append('sort', filtros.sort);
 
     const page = filtros.page ?? 0;
     const size = filtros.size ?? 10;
-    params = params.set('page', page.toString());
-    params = params.set('size', size.toString());
-
-    if (filtros.sort) {
-      params = params.set('sort', filtros.sort);
-    }
+    params = params.set('page', page.toString()).set('size', size.toString());
 
     return this.http.get<unknown>(`${this.apiUrl}/articulos`, { params }).pipe(
       map((response) => {
-        if (isPageResponse<Articulo>(response)) {
-          return response;
-        }
+        if (isPageResponse<Articulo>(response)) return response;
+
         const data =
           typeof response === 'object' && response !== null
             ? getApiResponseData(response as ApiResponse<PageResponse<Articulo>>)
             : undefined;
 
-        if (!data) {
-          return {
+        return (
+          data ?? {
             content: [],
             page,
             number: page,
@@ -78,9 +70,8 @@ export class ArticuloService {
             first: true,
             last: true,
             empty: true,
-          };
-        }
-        return data;
+          }
+        );
       }),
     );
   }
@@ -103,6 +94,7 @@ export class ArticuloService {
         if (typeof res === 'object' && res !== null) {
           const data = getApiResponseData(res as ApiResponse<string>);
           if (typeof data === 'string') return data;
+
           const cand = res as Record<string, unknown>;
           if (typeof cand['codigo'] === 'string') return cand['codigo'];
           if (typeof cand['siguienteCodigo'] === 'string') return cand['siguienteCodigo'];
@@ -151,88 +143,73 @@ export class ArticuloService {
   }
 
   listarUnidadesMedidaActivas(): Observable<UnidadMedida[]> {
-    if (!this.unidadesMedidaCache$) {
-      this.unidadesMedidaCache$ = this.http
-        .get<unknown>(`${this.apiUrl}/unidades-medida/activas`)
-        .pipe(
-          map((res) => this.extractList<UnidadMedida>(res)),
-          catchError(() =>
-            this.http
-              .get<unknown>(`${this.apiUrl}/unidades-medida?size=200`)
-              .pipe(map((res) => this.extractList<UnidadMedida>(res))),
-          ),
-          catchError((err) => {
-            this.unidadesMedidaCache$ = undefined;
-            return throwError(() => err);
-          }),
-          shareReplay({ bufferSize: 1, refCount: false }),
-        );
-    }
-    return this.unidadesMedidaCache$;
+    return (this.unidadesMedidaCache$ ??= this.fetchCatalog<UnidadMedida>(
+      '/unidades-medida/activas',
+      '/unidades-medida?size=200',
+      () => {
+        this.unidadesMedidaCache$ = undefined;
+      },
+    ));
   }
 
   listarFamiliasActivas(): Observable<Familia[]> {
-    if (!this.familiasCache$) {
-      this.familiasCache$ = this.http.get<unknown>(`${this.apiUrl}/familias/activos`).pipe(
-        map((res) => this.extractList<Familia>(res)),
-        catchError(() =>
-          this.http
-            .get<unknown>(`${this.apiUrl}/familias?size=200`)
-            .pipe(map((res) => this.extractList<Familia>(res))),
-        ),
-        catchError((err) => {
-          this.familiasCache$ = undefined;
-          return throwError(() => err);
-        }),
-        shareReplay({ bufferSize: 1, refCount: false }),
-      );
-    }
-    return this.familiasCache$;
+    return (this.familiasCache$ ??= this.fetchCatalog<Familia>(
+      '/familias/activos',
+      '/familias?size=200',
+      () => {
+        this.familiasCache$ = undefined;
+      },
+    ));
   }
 
   listarMarcasActivas(): Observable<Marca[]> {
-    if (!this.marcasCache$) {
-      this.marcasCache$ = this.http.get<unknown>(`${this.apiUrl}/marcas/activos`).pipe(
-        map((res) => this.extractList<Marca>(res)),
-        catchError(() =>
-          this.http
-            .get<unknown>(`${this.apiUrl}/marcas?size=200`)
-            .pipe(map((res) => this.extractList<Marca>(res))),
-        ),
-        catchError((err) => {
-          this.marcasCache$ = undefined;
-          return throwError(() => err);
-        }),
-        shareReplay({ bufferSize: 1, refCount: false }),
-      );
-    }
-    return this.marcasCache$;
+    return (this.marcasCache$ ??= this.fetchCatalog<Marca>(
+      '/marcas/activos',
+      '/marcas?size=200',
+      () => {
+        this.marcasCache$ = undefined;
+      },
+    ));
   }
 
   listarUbicacionesActivas(): Observable<Ubicacion[]> {
-    if (!this.ubicacionesCache$) {
-      this.ubicacionesCache$ = this.http.get<unknown>(`${this.apiUrl}/ubicaciones/activos`).pipe(
-        map((res) => this.extractList<Ubicacion>(res)),
-        catchError(() =>
-          this.http
-            .get<unknown>(`${this.apiUrl}/ubicaciones?size=200`)
-            .pipe(map((res) => this.extractList<Ubicacion>(res))),
-        ),
-        catchError((err) => {
-          this.ubicacionesCache$ = undefined;
-          return throwError(() => err);
-        }),
-        shareReplay({ bufferSize: 1, refCount: false }),
-      );
-    }
-    return this.ubicacionesCache$;
+    return (this.ubicacionesCache$ ??= this.fetchCatalog<Ubicacion>(
+      '/ubicaciones/activos',
+      '/ubicaciones?size=200',
+      () => {
+        this.ubicacionesCache$ = undefined;
+      },
+    ));
+  }
+
+  /**
+   * Carga catálogos auxiliares con fallback paginado y shareReplay resiliente ante errores.
+   */
+  private fetchCatalog<T>(
+    activeUrl: string,
+    fallbackUrl: string,
+    resetCache: () => void,
+  ): Observable<T[]> {
+    return this.http.get<unknown>(`${this.apiUrl}${activeUrl}`).pipe(
+      map((res) => this.extractList<T>(res)),
+      catchError(() =>
+        this.http
+          .get<unknown>(`${this.apiUrl}${fallbackUrl}`)
+          .pipe(map((res) => this.extractList<T>(res))),
+      ),
+      catchError((err) => {
+        resetCache();
+        return throwError(() => err);
+      }),
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
   }
 
   private extractList<T>(res: unknown): T[] {
     if (!res) return [];
     if (Array.isArray(res)) return res as T[];
     if (isPageResponse<T>(res)) return res.content;
-    if (typeof res === 'object' && res !== null) {
+    if (typeof res === 'object') {
       const data = getApiResponseData(res as ApiResponse<T[] | PageResponse<T>>);
       if (!data) return [];
       if (Array.isArray(data)) return data;
