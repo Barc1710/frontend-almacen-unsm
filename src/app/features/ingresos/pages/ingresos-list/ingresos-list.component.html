@@ -1,0 +1,435 @@
+<div class="space-y-6">
+  <!-- Cabecera del Módulo -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex items-center gap-3.5">
+      <div
+        class="size-12 rounded-2xl bg-unsm-green/10 text-unsm-green flex items-center justify-center shrink-0 border border-unsm-green/20 shadow-2xs"
+      >
+        <svg lucideTruck class="size-6"></svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Ingresos al Almacén</h1>
+        <p class="text-sm text-slate-500 mt-0.5">
+          Compras, recepción de bienes y control de órdenes de compra
+        </p>
+      </div>
+    </div>
+
+    <div>
+      <button
+        type="button"
+        (click)="abrirNuevoIngreso()"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-unsm-green hover:bg-unsm-green-dark active:scale-[0.98] text-white text-sm font-semibold shadow-sm transition-all duration-150 cursor-pointer"
+      >
+        <svg lucidePlus class="size-4"></svg>
+        <span>Registrar Ingreso</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Barra de Filtros -->
+  <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 space-y-3">
+    <!-- Fila 1: Búsqueda y Proveedor -->
+    <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+      <!-- Búsqueda por N° de Ingreso -->
+      <div class="relative flex-1 min-w-[200px]">
+        <svg
+          lucideSearch
+          class="size-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+        ></svg>
+        <input
+          type="text"
+          [ngModel]="filtroTexto()"
+          (ngModelChange)="filtroTexto.set($event)"
+          (keyup.enter)="onBuscarTexto()"
+          placeholder="Buscar por N° de Ingreso..."
+          aria-label="Buscar por N° de Ingreso"
+          class="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
+        />
+      </div>
+
+      <!-- Selector de Proveedores -->
+      <div class="w-full md:w-72">
+        <select
+          [ngModel]="proveedorFiltro()"
+          (ngModelChange)="onCambioProveedor($event)"
+          aria-label="Filtrar por proveedor"
+          class="w-full h-10 px-3 rounded-xl border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+        >
+          <option [ngValue]="null">Todos los proveedores</option>
+          @for (prov of proveedores(); track prov.id) {
+            <option [ngValue]="prov.id">
+              {{ prov.razonSocial }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          type="button"
+          (click)="onBuscarTexto()"
+          class="px-4 h-10 rounded-xl bg-unsm-cyan hover:brightness-95 active:scale-[0.98] text-white text-sm font-semibold transition-all shadow-xs cursor-pointer flex items-center gap-2 outline-none focus:ring-2 focus:ring-unsm-cyan/40"
+        >
+          <svg lucideSearch class="size-4"></svg>
+          <span>Buscar</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="onLimpiarFiltros()"
+          title="Limpiar filtros"
+          aria-label="Limpiar filtros"
+          class="p-2.5 h-10 w-10 flex items-center justify-center rounded-xl bg-unsm-yellow hover:brightness-95 active:scale-[0.98] text-slate-900 border border-yellow-300 transition-all shadow-xs cursor-pointer outline-none focus:ring-2 focus:ring-unsm-yellow/40"
+        >
+          <svg
+            lucideRefreshCw
+            class="size-4 text-slate-900"
+            [class.animate-spin]="cargando()"
+          ></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Fila 2: Período Temporal Fijo y Estable (Sin saltos de diseño) -->
+    <div
+      class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-100"
+    >
+      <!-- Selector de Período con Botones Segmentados -->
+      <div class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80 self-start sm:self-auto">
+        <button
+          type="button"
+          (click)="onCambioPeriodo('hoy')"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+          [class.bg-white]="periodoFiltro() === 'hoy'"
+          [class.text-slate-900]="periodoFiltro() === 'hoy'"
+          [class.shadow-2xs]="periodoFiltro() === 'hoy'"
+          [class.text-slate-600]="periodoFiltro() !== 'hoy'"
+          [class.hover:text-slate-900]="periodoFiltro() !== 'hoy'"
+        >
+          Hoy
+        </button>
+
+        <button
+          type="button"
+          (click)="onCambioPeriodo('todos')"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+          [class.bg-white]="periodoFiltro() === 'todos'"
+          [class.text-slate-900]="periodoFiltro() === 'todos'"
+          [class.shadow-2xs]="periodoFiltro() === 'todos'"
+          [class.text-slate-600]="periodoFiltro() !== 'todos'"
+          [class.hover:text-slate-900]="periodoFiltro() !== 'todos'"
+        >
+          Todo el tiempo
+        </button>
+
+        <button
+          type="button"
+          (click)="onCambioPeriodo('intervalo')"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+          [class.bg-white]="periodoFiltro() === 'intervalo'"
+          [class.text-slate-900]="periodoFiltro() === 'intervalo'"
+          [class.shadow-2xs]="periodoFiltro() === 'intervalo'"
+          [class.text-slate-600]="periodoFiltro() !== 'intervalo'"
+          [class.hover:text-slate-900]="periodoFiltro() !== 'intervalo'"
+        >
+          Rango de fechas
+        </button>
+      </div>
+
+      <!-- Cuadro de Fechas Fijo y Estable -->
+      <div
+        class="flex items-center gap-2.5 h-9 px-3 rounded-xl border border-slate-300 bg-white text-xs text-slate-700 transition-all focus-within:ring-2 focus-within:ring-unsm-green/20 focus-within:border-unsm-green self-stretch sm:self-auto shadow-2xs"
+        [class.opacity-40]="periodoFiltro() !== 'intervalo'"
+        [class.pointer-events-none]="periodoFiltro() !== 'intervalo'"
+      >
+        <label for="fechaDesdeFiltro" class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer">Desde:</label>
+        <input
+          id="fechaDesdeFiltro"
+          type="date"
+          [ngModel]="fechaDesde()"
+          (ngModelChange)="fechaDesde.set($event); onCambioFechas()"
+          (click)="abrirSelectorFecha($event)"
+          [disabled]="periodoFiltro() !== 'intervalo'"
+          aria-label="Fecha inicial del intervalo"
+          class="h-7 px-1.5 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
+        />
+        <span class="text-slate-300 select-none font-light">|</span>
+        <label for="fechaHastaFiltro" class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer">Hasta:</label>
+        <input
+          id="fechaHastaFiltro"
+          type="date"
+          [ngModel]="fechaHasta()"
+          (ngModelChange)="fechaHasta.set($event); onCambioFechas()"
+          (click)="abrirSelectorFecha($event)"
+          [disabled]="periodoFiltro() !== 'intervalo'"
+          aria-label="Fecha final del intervalo"
+          class="h-7 px-1.5 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Comprobantes de Ingreso -->
+  <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
+    <div class="overflow-x-auto min-h-80">
+      <table class="w-full text-left text-sm text-slate-600 border-collapse">
+        <thead class="bg-slate-50/80 text-xs font-semibold text-slate-700 border-b border-slate-200">
+          <tr>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">N° de Ingreso</th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Proveedor</th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Fecha Recepción</th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Recepcionado por</th>
+            <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">
+              Total Ítems
+            </th>
+            <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">Estado</th>
+            <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @if (cargando()) {
+            <tr>
+              <td colspan="7" class="py-16 text-center text-slate-500">
+                <div class="flex flex-col items-center justify-center gap-2">
+                  <svg lucideLoader2 class="size-8 text-unsm-green animate-spin"></svg>
+                  <p class="text-sm font-medium">Cargando comprobantes de ingreso...</p>
+                </div>
+              </td>
+            </tr>
+          } @else {
+            @for (ing of ingresos(); track ing.id) {
+              <tr
+                class="hover:bg-slate-50/60 transition-colors"
+                [class.opacity-80]="ing.estado === '0'"
+                [class.bg-slate-50/40]="ing.estado === '0'"
+              >
+                <!-- N° Orden de Compra / Ingreso -->
+                <td
+                  class="py-3 px-4 font-mono font-semibold whitespace-nowrap"
+                  [class.text-slate-900]="ing.estado !== '0'"
+                  [class.text-slate-400]="ing.estado === '0'"
+                  [class.line-through]="ing.estado === '0'"
+                >
+                  {{ ing.numeroOrden || '-' }}
+                </td>
+
+                <!-- Proveedor -->
+                <td class="py-3 px-4 min-w-56">
+                  <p class="font-medium text-slate-800 line-clamp-1" [title]="ing.nombreProveedor || '-'">
+                    {{ ing.nombreProveedor || 'Proveedor no especificado' }}
+                  </p>
+                  @if (ing.rucProveedor) {
+                    <p class="text-xs text-slate-400 font-mono mt-0.5">RUC: {{ ing.rucProveedor }}</p>
+                  }
+                </td>
+
+                <!-- Fecha de Recepción -->
+                <td class="py-3 px-4 whitespace-nowrap text-xs">
+                  <div class="flex items-center gap-1.5 text-slate-700">
+                    <svg lucideCalendar class="size-3.5 text-slate-400 shrink-0"></svg>
+                    <span>{{ ing.fecha | date: 'dd/MM/yyyy' }}</span>
+                  </div>
+                </td>
+
+                <!-- Recepcionado por -->
+                <td class="py-3 px-4 whitespace-nowrap text-xs">
+                  <div class="flex items-center gap-1.5 text-slate-700">
+                    <svg lucideUser class="size-3.5 text-slate-400 shrink-0"></svg>
+                    <span class="font-medium text-slate-800">{{ ing.nombreUsuario || ing.usuarioRecepcion || 'Almacén Central' }}</span>
+                  </div>
+                </td>
+
+                <!-- Total de Ítems -->
+                <td class="py-3 px-4 text-center whitespace-nowrap">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">
+                    {{ (ing.totalItems && ing.totalItems > 0) ? ing.totalItems : 1 }} {{ ((ing.totalItems && ing.totalItems > 0) ? ing.totalItems : 1) === 1 ? 'ítem' : 'ítems' }}
+                  </span>
+                </td>
+
+                <!-- Estado del Comprobante -->
+                <td class="py-3 px-4 text-center whitespace-nowrap">
+                  @if (ing.estado === '0') {
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700">
+                      Anulado
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
+                      Registrado
+                    </span>
+                  }
+                </td>
+
+                <!-- Acciones -->
+                <td class="py-3 px-4 text-center whitespace-nowrap">
+                  <div class="inline-flex items-center gap-1">
+                    <button
+                      type="button"
+                      (click)="verDetalle(ing)"
+                      [disabled]="cargandoDetalleId() === ing.id"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-cyan hover:bg-unsm-cyan/10 transition-colors cursor-pointer disabled:opacity-40"
+                      title="Ver detalle del comprobante"
+                      aria-label="Ver detalle del comprobante"
+                    >
+                      @if (cargandoDetalleId() === ing.id) {
+                        <svg lucideLoader2 class="size-4 animate-spin text-unsm-cyan"></svg>
+                      } @else {
+                        <svg lucideEye class="size-4"></svg>
+                      }
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="descargarPdf(ing)"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer"
+                      title="Generar comprobante PDF"
+                      aria-label="Generar comprobante PDF"
+                    >
+                      <svg lucideFileDown class="size-4"></svg>
+                    </button>
+
+                    @if (ing.estado === '1') {
+                      <button
+                        type="button"
+                        (click)="anularIngreso(ing)"
+                        [disabled]="anulandoId() === ing.id"
+                        class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-40"
+                        title="Anular comprobante y revertir existencias"
+                        aria-label="Anular comprobante de ingreso"
+                      >
+                        @if (anulandoId() === ing.id) {
+                          <svg lucideLoader2 class="size-4 animate-spin text-rose-600"></svg>
+                        } @else {
+                          <svg lucideBan class="size-4"></svg>
+                        }
+                      </button>
+                    } @else {
+                      <span
+                        class="p-1.5 text-slate-300 cursor-not-allowed select-none inline-flex"
+                        title="Comprobante ya anulado"
+                      >
+                        <svg lucideBan class="size-4 opacity-30"></svg>
+                      </span>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="py-16 text-center text-slate-400">
+                  <div class="flex flex-col items-center justify-center gap-2">
+                    <svg lucideTruck class="size-10 text-slate-300"></svg>
+                    <p class="text-sm font-medium text-slate-500">
+                      No se encontraron registros de ingreso
+                    </p>
+                    <p class="text-xs text-slate-400">
+                      Intente modificar el filtro de fechas o registre un nuevo comprobante.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div
+      class="px-4 py-3 border-t border-slate-200/80 bg-slate-50/50 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-600"
+    >
+      <div class="flex items-center gap-2">
+        <span>Mostrar</span>
+        <select
+          [ngModel]="tamanioPagina()"
+          (ngModelChange)="cambiarTamanio($event)"
+          aria-label="Cantidad de ingresos por página"
+          class="h-8 px-2 rounded-lg border border-slate-300 text-xs bg-white text-slate-700 outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green cursor-pointer transition-colors"
+        >
+          <option [ngValue]="10">10</option>
+          <option [ngValue]="20">20</option>
+          <option [ngValue]="50">50</option>
+        </select>
+        <span>ingresos por página</span>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
+        <span>
+          Total:
+          <strong class="text-slate-800 font-semibold">{{ totalElementos() }}</strong> registros
+        </span>
+
+        @if (totalPaginas() > 0) {
+          <div class="inline-flex items-center gap-1">
+            <button
+              type="button"
+              (click)="cambiarPagina(paginaActual() - 1)"
+              [disabled]="paginaActual() === 0 || cargando()"
+              class="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-300 bg-white hover:bg-slate-100 hover:text-unsm-cyan disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              title="Página anterior"
+              aria-label="Página anterior"
+            >
+              <svg lucideChevronLeft class="size-4"></svg>
+            </button>
+
+            @for (item of paginasNumeros(); track $index) {
+              @if (item === '...') {
+                <span
+                  class="h-8 min-w-8 px-1 flex items-center justify-center text-slate-400 font-medium select-none"
+                >
+                  ...
+                </span>
+              } @else {
+                <button
+                  type="button"
+                  (click)="irAPagina(item)"
+                  [disabled]="cargando()"
+                  class="h-8 min-w-8 px-2.5 flex items-center justify-center rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                  [class.bg-unsm-cyan]="item === paginaActual() + 1"
+                  [class.text-white]="item === paginaActual() + 1"
+                  [class.shadow-xs]="item === paginaActual() + 1"
+                  [class.border]="item !== paginaActual() + 1"
+                  [class.border-slate-300]="item !== paginaActual() + 1"
+                  [class.bg-white]="item !== paginaActual() + 1"
+                  [class.text-slate-700]="item !== paginaActual() + 1"
+                  [class.hover:bg-slate-100]="item !== paginaActual() + 1"
+                  [class.hover:text-slate-900]="item !== paginaActual() + 1"
+                  [attr.aria-current]="item === paginaActual() + 1 ? 'page' : null"
+                >
+                  {{ item }}
+                </button>
+              }
+            }
+
+            <button
+              type="button"
+              (click)="cambiarPagina(paginaActual() + 1)"
+              [disabled]="paginaActual() >= totalPaginas() - 1 || cargando()"
+              class="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-300 bg-white hover:bg-slate-100 hover:text-unsm-cyan disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              title="Página siguiente"
+              aria-label="Página siguiente"
+            >
+              <svg lucideChevronRight class="size-4"></svg>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Registro de Ingreso -->
+  <app-ingreso-form-modal
+    [visible]="modalRegistroVisible()"
+    [proveedores]="proveedores()"
+    (cerrar)="cerrarModalRegistro()"
+    (guardado)="onIngresoGuardado($event)"
+  ></app-ingreso-form-modal>
+
+  <!-- Modal de Detalle / Visualización de Ingreso -->
+  <app-ingreso-detalle-modal
+    [visible]="modalDetalleVisible()"
+    [ingreso]="ingresoDetalle()"
+    (cerrar)="cerrarModalDetalle()"
+  ></app-ingreso-detalle-modal>
+</div>

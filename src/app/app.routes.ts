@@ -12,6 +12,11 @@ const loadInventario = () =>
     (m) => m.ArticulosListComponent,
   );
 
+const loadIngresos = () =>
+  import('./features/ingresos/pages/ingresos-list/ingresos-list.component').then(
+    (m) => m.IngresosListComponent,
+  );
+
 export const routes: Routes = [
   {
     path: 'auth/login',
@@ -31,6 +36,7 @@ export const routes: Routes = [
       { path: 'dashboard', canActivate: [moduleGuard()], loadComponent: loadDashboard },
       { path: 'inventario', canActivate: [moduleGuard('INVENTARIO')], loadComponent: loadInventario },
       { path: 'articulos', pathMatch: 'full', redirectTo: 'inventario' },
+      { path: 'ingresos', canActivate: [moduleGuard('INGRESOS')], loadComponent: loadIngresos },
       { path: 'cambiar-clave', pathMatch: 'full', redirectTo: '' },
       // Rutas dinámicas universales para módulos y submódulos cargados desde la base de datos
       { path: ':modulo', canActivate: [moduleGuard()], loadComponent: loadDashboard },
