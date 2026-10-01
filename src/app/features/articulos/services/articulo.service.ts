@@ -44,6 +44,9 @@ export class ArticuloService {
     append('descripcion', filtros.descripcion);
     append('idFamilia', filtros.idFamilia);
     append('estado', filtros.estado);
+    if (filtros.soloConStock !== undefined) {
+      append('soloConStock', String(filtros.soloConStock));
+    }
     append('sort', filtros.sort);
 
     const page = filtros.page ?? 0;
