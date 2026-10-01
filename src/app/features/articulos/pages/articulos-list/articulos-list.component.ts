@@ -1,10 +1,8 @@
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import {
   LucideBoxes,
-  LucideChevronLeft,
-  LucideChevronRight,
   LucideLoader2,
   LucidePackage,
   LucidePencil,
@@ -17,7 +15,8 @@ import {
   LucideTriangleAlert,
 } from '@lucide/angular';
 import { catchError, forkJoin, of } from 'rxjs';
-import Swal from 'sweetalert2';
+import { NotificationService } from '../../../../core';
+import { PaginationComponent } from '../../../../shared';
 import { ArticuloFormComponent } from '../../components/articulo-form/articulo-form.component';
 import { Articulo, Familia, Marca, Ubicacion, UnidadMedida } from '../../models';
 import { ArticuloService } from '../../services';
@@ -27,6 +26,7 @@ import { ArticuloService } from '../../services';
   imports: [
     FormsModule,
     ArticuloFormComponent,
+    PaginationComponent,
     LucideBoxes,
     LucidePlus,
     LucideSearch,
@@ -38,13 +38,12 @@ import { ArticuloService } from '../../services';
     LucideTriangleAlert,
     LucidePackage,
     LucideLoader2,
-    LucideChevronLeft,
-    LucideChevronRight,
   ],
   templateUrl: './articulos-list.component.html',
 })
 export class ArticulosListComponent implements OnInit {
   private readonly articuloService = inject(ArticuloService);
+  private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly cargando = signal(false);
@@ -66,21 +65,6 @@ export class ArticulosListComponent implements OnInit {
   readonly modalVisible = signal(false);
   readonly articuloSeleccionado = signal<Articulo | null>(null);
   readonly procesandoFilaId = signal<number | null>(null);
-
-  /**
-   * Genera la navegación numérica con elipsis para la tabla de artículos.
-   */
-  readonly paginasNumeros = computed<(number | string)[]>(() => {
-    const total = this.totalPaginas();
-    const actual = this.paginaActual() + 1;
-
-    if (total <= 0) return [];
-    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
-
-    if (actual <= 3) return [1, 2, 3, '...', total];
-    if (actual >= total - 2) return [1, '...', total - 2, total - 1, total];
-    return [1, '...', actual, '...', total];
-  });
 
   ngOnInit(): void {
     this.cargarCatalogos();
@@ -171,12 +155,6 @@ export class ArticulosListComponent implements OnInit {
     }
   }
 
-  irAPagina(pagina: number | string): void {
-    if (typeof pagina === 'number') {
-      this.cambiarPagina(pagina - 1);
-    }
-  }
-
   cambiarTamanio(nuevoTamanio: number): void {
     this.tamanioPagina.set(nuevoTamanio);
     this.paginaActual.set(0);
@@ -200,7 +178,7 @@ export class ArticulosListComponent implements OnInit {
 
   onArticuloGuardado(_guardado: Articulo): void {
     this.cerrarModal();
-    this.showToast('Artículo guardado con éxito');
+    this.notificationService.toast('Artículo guardado con éxito');
     this.cargarArticulos();
   }
 
@@ -214,11 +192,16 @@ export class ArticulosListComponent implements OnInit {
         this.articulos.update((items) =>
           items.map((it) => (it.id === actualizado.id ? actualizado : it)),
         );
-        this.showToast(actualizado.activo ? 'Artículo activado' : 'Artículo desactivado');
+        this.notificationService.toast(
+          actualizado.activo ? 'Artículo activado' : 'Artículo desactivado',
+        );
       },
       error: () => {
         this.procesandoFilaId.set(null);
-        this.showError('Error de operación', 'No se pudo alternar la operatividad del artículo.');
+        this.notificationService.error(
+          'Error de operación',
+          'No se pudo alternar la operatividad del artículo.',
+        );
       },
     });
   }
@@ -230,23 +213,19 @@ export class ArticulosListComponent implements OnInit {
     const cantidadFormateada = this.formatCantidad(articulo.saldo, articulo.permiteDecimales);
     const unidad = articulo.simboloUnidadMedida ? ` ${articulo.simboloUnidadMedida}` : '';
 
-    const resultado = await Swal.fire({
+    const resultado = await this.notificationService.confirm({
       title: '¿Dar de baja artículo?',
       text: tieneStock
         ? `¡ADVERTENCIA! Este artículo aún cuenta con existencias (${cantidadFormateada}${unidad}). ¿Desea darlo de baja de todos modos?`
         : `El artículo "${articulo.codigo} - ${articulo.descripcion}" pasará a estado inactivo.`,
       icon: tieneStock ? 'warning' : 'question',
-      showCancelButton: true,
       confirmButtonText: 'Sí, dar de baja',
       cancelButtonText: 'Cancelar',
       focusCancel: tieneStock,
-      customClass: {
-        confirmButton:
-          'bg-unsm-red text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:opacity-90 ml-2',
-        cancelButton:
-          'bg-slate-200 hover:bg-slate-300 text-slate-800 px-4 py-2 rounded-lg font-medium mr-2',
-      },
-      buttonsStyling: false,
+      confirmButtonClass:
+        'bg-unsm-red text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:opacity-90 ml-2 cursor-pointer',
+      cancelButtonClass:
+        'bg-slate-200 hover:bg-slate-300 text-slate-800 px-4 py-2 rounded-lg font-medium mr-2 cursor-pointer',
     });
 
     if (resultado.isConfirmed) {
@@ -254,12 +233,12 @@ export class ArticulosListComponent implements OnInit {
       this.articuloService.eliminar(articulo.id).subscribe({
         next: () => {
           this.procesandoFilaId.set(null);
-          this.showToast('Artículo dado de baja');
+          this.notificationService.toast('Artículo dado de baja');
           this.cargarArticulos();
         },
         error: () => {
           this.procesandoFilaId.set(null);
-          this.showError(
+          this.notificationService.error(
             'Error al dar de baja',
             'No se pudo desactivar el artículo en el sistema.',
           );
@@ -285,30 +264,5 @@ export class ArticulosListComponent implements OnInit {
     return permiteDecimales
       ? num.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
       : Math.floor(num).toLocaleString('es-PE');
-  }
-
-  private showToast(title: string): void {
-    void Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title,
-      showConfirmButton: false,
-      timer: 2500,
-    });
-  }
-
-  private showError(title: string, text: string): void {
-    void Swal.fire({
-      icon: 'error',
-      title,
-      text,
-      confirmButtonText: 'Entendido',
-      customClass: {
-        confirmButton:
-          'bg-unsm-green text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:opacity-95',
-      },
-      buttonsStyling: false,
-    });
   }
 }
