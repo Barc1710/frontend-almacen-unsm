@@ -182,19 +182,30 @@
           <div class="rounded-xl border border-slate-200 overflow-visible shadow-2xs">
             <div class="overflow-visible">
               <table class="w-full text-left text-sm text-slate-600 border-collapse">
-                <thead class="bg-slate-50 text-xs font-semibold text-slate-700 border-b border-slate-200">
+                <thead
+                  class="bg-slate-50 text-xs font-semibold text-slate-700 border-b border-slate-200"
+                >
                   <tr>
                     <th scope="col" class="py-3 px-3.5 w-12 text-center">#</th>
                     <th scope="col" class="py-3 px-3.5 min-w-80 font-semibold text-slate-700">
                       Artículo
                     </th>
-                    <th scope="col" class="py-3 px-3.5 w-28 text-center font-semibold text-slate-700">
+                    <th
+                      scope="col"
+                      class="py-3 px-3.5 w-28 text-center font-semibold text-slate-700"
+                    >
                       U.M.
                     </th>
-                    <th scope="col" class="py-3 px-3.5 w-44 text-right font-semibold text-slate-700">
+                    <th
+                      scope="col"
+                      class="py-3 px-3.5 w-44 text-right font-semibold text-slate-700"
+                    >
                       Cantidad Recibida
                     </th>
-                    <th scope="col" class="py-3 px-3.5 w-16 text-center font-semibold text-slate-700">
+                    <th
+                      scope="col"
+                      class="py-3 px-3.5 w-16 text-center font-semibold text-slate-700"
+                    >
                       Acción
                     </th>
                   </tr>
@@ -214,13 +225,20 @@
                       <!-- Artículo / Búsqueda predictiva integrada como select -->
                       <td class="py-2.5 px-3.5 relative">
                         @if (fila.articulo) {
-                          <div class="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200">
+                          <div
+                            class="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200"
+                          >
                             <div class="min-w-0 flex-1">
                               <div class="flex items-center gap-2">
-                                <span class="font-mono text-xs font-bold text-slate-900 bg-white px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
+                                <span
+                                  class="font-mono text-xs font-bold text-slate-900 bg-white px-1.5 py-0.5 rounded border border-slate-200 shrink-0"
+                                >
                                   {{ fila.codigoArticulo }}
                                 </span>
-                                <span class="text-xs font-semibold text-slate-800 truncate" [title]="fila.descripcionArticulo">
+                                <span
+                                  class="text-xs font-semibold text-slate-800 truncate"
+                                  [title]="fila.descripcionArticulo"
+                                >
                                   {{ fila.descripcionArticulo }}
                                 </span>
                               </div>
@@ -254,7 +272,9 @@
                                 [class.border-unsm-red]="fila.errorArticulo"
                                 [class.border-slate-300]="!fila.errorArticulo"
                               />
-                              <div class="absolute right-2.5 text-slate-400 pointer-events-none flex items-center">
+                              <div
+                                class="absolute right-2.5 text-slate-400 pointer-events-none flex items-center"
+                              >
                                 @if (fila.buscando) {
                                   <svg lucideLoader2 class="size-3.5 animate-spin"></svg>
                                 } @else {
@@ -280,7 +300,9 @@
                                   >
                                     <div class="min-w-0">
                                       <div class="flex items-center gap-2">
-                                        <span class="font-mono text-xs font-bold text-slate-900 group-hover:text-unsm-green-dark">
+                                        <span
+                                          class="font-mono text-xs font-bold text-slate-900 group-hover:text-unsm-green-dark"
+                                        >
                                           {{ sug.codigo }}
                                         </span>
                                         <span class="text-xs text-slate-700 truncate">
@@ -288,13 +310,17 @@
                                         </span>
                                       </div>
                                     </div>
-                                    <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 shrink-0">
+                                    <span
+                                      class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 shrink-0"
+                                    >
                                       {{ sug.simboloUnidadMedida || 'UND' }}
                                     </span>
                                   </button>
                                 }
                               </div>
-                            } @else if (fila.mostrarSugerencias && fila.busquedaTexto.trim().length > 0) {
+                            } @else if (
+                              fila.mostrarSugerencias && fila.busquedaTexto.trim().length > 0
+                            ) {
                               <div
                                 class="absolute left-0 right-0 z-50 mt-1 p-3 bg-white rounded-xl shadow-2xl border border-slate-200 text-xs text-slate-500 text-center"
                               >
@@ -307,7 +333,9 @@
 
                       <!-- Unidad de Medida -->
                       <td class="py-2.5 px-3.5 text-center pt-3.5">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700">
+                        <span
+                          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700"
+                        >
                           {{ fila.simboloUnidadMedida || 'UND' }}
                         </span>
                       </td>
@@ -358,7 +386,9 @@
                   }
 
                   <!-- Botón rápido para seguir añadiendo filas directamente al pie de los artículos -->
-                  <tr class="border-t border-slate-100 bg-slate-50/30 hover:bg-slate-50/70 transition-colors">
+                  <tr
+                    class="border-t border-slate-100 bg-slate-50/30 hover:bg-slate-50/70 transition-colors"
+                  >
                     <td colspan="5" class="py-2.5 px-3.5">
                       <button
                         type="button"

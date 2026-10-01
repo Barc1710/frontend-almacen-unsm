@@ -94,7 +94,10 @@ export class IngresoService {
     return this.http.get<unknown>(`${this.apiUrl}/ingresos/${id}`).pipe(
       map((res) => {
         if (typeof res === 'object' && res !== null) {
-          const data = (getApiResponseData(res as ApiResponse<unknown>) || res) as Record<string, unknown>;
+          const data = (getApiResponseData(res as ApiResponse<unknown>) || res) as Record<
+            string,
+            unknown
+          >;
           if (data && typeof data === 'object') {
             return this.normalizarIngresoConDetalles(data);
           }
@@ -111,7 +114,10 @@ export class IngresoService {
     return this.http.post<unknown>(`${this.apiUrl}/ingresos/${id}/anular`, {}).pipe(
       map((res) => {
         if (typeof res === 'object' && res !== null) {
-          const data = (getApiResponseData(res as ApiResponse<unknown>) || res) as Record<string, unknown>;
+          const data = (getApiResponseData(res as ApiResponse<unknown>) || res) as Record<
+            string,
+            unknown
+          >;
           if (data && typeof data === 'object') {
             return this.normalizarIngresoConDetalles(data);
           }
@@ -140,7 +146,10 @@ export class IngresoService {
     return this.http.post<unknown>(`${this.apiUrl}/ingresos`, payload).pipe(
       map((res) => {
         if (typeof res === 'object' && res !== null) {
-          const data = (getApiResponseData(res as ApiResponse<unknown>) || res) as Record<string, unknown>;
+          const data = (getApiResponseData(res as ApiResponse<unknown>) || res) as Record<
+            string,
+            unknown
+          >;
           if (data && typeof data === 'object') {
             return this.normalizarIngresoConDetalles(data);
           }
@@ -240,10 +249,12 @@ export class IngresoService {
    * Normaliza los datos de un ingreso para consumo uniforme en la UI.
    */
   private normalizarIngreso(raw: Record<string, unknown>): Ingreso {
-    const rawNumeroCompleto = typeof raw['numeroCompleto'] === 'string' ? raw['numeroCompleto'] : null;
+    const rawNumeroCompleto =
+      typeof raw['numeroCompleto'] === 'string' ? raw['numeroCompleto'] : null;
     const prefijo = typeof raw['prefijo'] === 'string' ? raw['prefijo'] : null;
     const correlativo = typeof raw['correlativo'] === 'number' ? raw['correlativo'] : null;
-    const numeroOrdenCompra = typeof raw['numeroOrdenCompra'] === 'string' ? raw['numeroOrdenCompra'] : null;
+    const numeroOrdenCompra =
+      typeof raw['numeroOrdenCompra'] === 'string' ? raw['numeroOrdenCompra'] : null;
     const rawNumeroOrden = typeof raw['numeroOrden'] === 'string' ? raw['numeroOrden'] : null;
 
     const numeroCompleto =
@@ -267,13 +278,16 @@ export class IngresoService {
 
     const id = Number(raw['id']);
     const idProveedor = Number(raw['idProveedor']);
-    const razonSocialProveedor = typeof raw['razonSocialProveedor'] === 'string' ? raw['razonSocialProveedor'] : null;
-    const nombreProveedor = typeof raw['nombreProveedor'] === 'string' ? raw['nombreProveedor'] : null;
+    const razonSocialProveedor =
+      typeof raw['razonSocialProveedor'] === 'string' ? raw['razonSocialProveedor'] : null;
+    const nombreProveedor =
+      typeof raw['nombreProveedor'] === 'string' ? raw['nombreProveedor'] : null;
     const rucProveedor = typeof raw['rucProveedor'] === 'string' ? raw['rucProveedor'] : null;
     const fecha = typeof raw['fecha'] === 'string' ? raw['fecha'] : '';
     const idUsuario = typeof raw['idUsuario'] === 'number' ? raw['idUsuario'] : null;
     const nombreUsuario = typeof raw['nombreUsuario'] === 'string' ? raw['nombreUsuario'] : null;
-    const usuarioRecepcion = typeof raw['usuarioRecepcion'] === 'string' ? raw['usuarioRecepcion'] : null;
+    const usuarioRecepcion =
+      typeof raw['usuarioRecepcion'] === 'string' ? raw['usuarioRecepcion'] : null;
     const descripcion = typeof raw['descripcion'] === 'string' ? raw['descripcion'] : null;
     const observacion = typeof raw['observacion'] === 'string' ? raw['observacion'] : null;
     const estado = typeof raw['estado'] === 'string' ? raw['estado'] : '1';
@@ -312,12 +326,28 @@ export class IngresoService {
       ? (raw['detalles'] as Record<string, unknown>[])
       : [];
 
-    const unidadesDecimales = ['KG', 'KGM', 'L', 'LTR', 'GL', 'GLL', 'GAL', 'M', 'MTR', 'M2', 'MTK', 'M3'];
+    const unidadesDecimales = [
+      'KG',
+      'KGM',
+      'L',
+      'LTR',
+      'GL',
+      'GLL',
+      'GAL',
+      'M',
+      'MTR',
+      'M2',
+      'MTK',
+      'M3',
+    ];
     const detalles = detallesRaw.map((d) => {
-      const simbolo = String(d['simboloUnidadMedida'] || d['unidadMedida'] || d['simbolo'] || 'UND');
+      const simbolo = String(
+        d['simboloUnidadMedida'] || d['unidadMedida'] || d['simbolo'] || 'UND',
+      );
       const permiteDec =
         d['permiteDecimales'] === true ||
-        (d['permiteDecimales'] !== false && unidadesDecimales.includes(simbolo.toUpperCase().trim()));
+        (d['permiteDecimales'] !== false &&
+          unidadesDecimales.includes(simbolo.toUpperCase().trim()));
 
       return {
         id: typeof d['id'] === 'number' ? d['id'] : undefined,
@@ -328,7 +358,7 @@ export class IngresoService {
         permiteDecimales: permiteDec,
         cantidad: Number(d['cantidad']) || 0,
         precioUnitario: 0, // Precios en 0
-        subtotal: 0,       // Precios en 0
+        subtotal: 0, // Precios en 0
       };
     });
 

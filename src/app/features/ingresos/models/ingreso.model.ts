@@ -128,5 +128,7 @@ export function isIngreso(value: unknown): value is Ingreso {
  * Type guard para validar si un objeto corresponde a un IngresoConDetalles.
  */
 export function isIngresoConDetalles(value: unknown): value is IngresoConDetalles {
-  return isIngreso(value) && Array.isArray((value as unknown as Record<string, unknown>)['detalles']);
+  return (
+    isIngreso(value) && Array.isArray((value as unknown as Record<string, unknown>)['detalles'])
+  );
 }

@@ -1,12 +1,10 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import {
   LucideBan,
   LucideCalendar,
-  LucideChevronLeft,
-  LucideChevronRight,
   LucideEye,
   LucideFileDown,
   LucideLoader2,
@@ -17,11 +15,9 @@ import {
   LucideUser,
 } from '@lucide/angular';
 import { catchError, of } from 'rxjs';
-import Swal from 'sweetalert2';
-import {
-  IngresoDetalleModalComponent,
-  IngresoFormModalComponent,
-} from '../../components';
+import { NotificationService, obtenerFechaHoy } from '../../../../core';
+import { PaginationComponent } from '../../../../shared';
+import { IngresoDetalleModalComponent, IngresoFormModalComponent } from '../../components';
 import { Ingreso, IngresoConDetalles, Proveedor } from '../../models';
 import { IngresoService } from '../../services';
 
@@ -30,6 +26,7 @@ import { IngresoService } from '../../services';
   imports: [
     FormsModule,
     DatePipe,
+    PaginationComponent,
     IngresoFormModalComponent,
     IngresoDetalleModalComponent,
     LucideTruck,
@@ -40,8 +37,6 @@ import { IngresoService } from '../../services';
     LucideFileDown,
     LucideBan,
     LucideLoader2,
-    LucideChevronLeft,
-    LucideChevronRight,
     LucideCalendar,
     LucideUser,
   ],
@@ -70,6 +65,7 @@ import { IngresoService } from '../../services';
 })
 export class IngresosListComponent implements OnInit {
   private readonly ingresoService = inject(IngresoService);
+  private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly cargando = signal<boolean>(false);
@@ -80,8 +76,8 @@ export class IngresosListComponent implements OnInit {
   readonly tamanioPagina = signal<number>(10);
 
   readonly periodoFiltro = signal<'hoy' | 'todos' | 'intervalo'>('hoy');
-  readonly fechaDesde = signal<string>(this.obtenerFechaHoy());
-  readonly fechaHasta = signal<string>(this.obtenerFechaHoy());
+  readonly fechaDesde = signal<string>(obtenerFechaHoy());
+  readonly fechaHasta = signal<string>(obtenerFechaHoy());
   readonly proveedorFiltro = signal<number | null>(null);
   readonly filtroTexto = signal<string>('');
 
@@ -92,21 +88,6 @@ export class IngresosListComponent implements OnInit {
   readonly ingresoDetalle = signal<IngresoConDetalles | null>(null);
   readonly cargandoDetalleId = signal<number | null>(null);
   readonly anulandoId = signal<number | null>(null);
-
-  /**
-   * Genera la navegación numérica con elipsis para la tabla de ingresos.
-   */
-  readonly paginasNumeros = computed<(number | string)[]>(() => {
-    const total = this.totalPaginas();
-    const actual = this.paginaActual() + 1;
-
-    if (total <= 0) return [];
-    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
-
-    if (actual <= 3) return [1, 2, 3, '...', total];
-    if (actual >= total - 2) return [1, '...', total - 2, total - 1, total];
-    return [1, '...', actual, '...', total];
-  });
 
   ngOnInit(): void {
     this.cargarCatalogos();
@@ -132,7 +113,7 @@ export class IngresosListComponent implements OnInit {
     let fechaFin: string | undefined = undefined;
 
     if (this.periodoFiltro() === 'hoy') {
-      const hoy = this.obtenerFechaHoy();
+      const hoy = obtenerFechaHoy();
       fechaInicio = hoy;
       fechaFin = hoy;
     } else if (this.periodoFiltro() === 'intervalo') {
@@ -187,14 +168,14 @@ export class IngresosListComponent implements OnInit {
   onCambioPeriodo(periodo: 'hoy' | 'todos' | 'intervalo'): void {
     this.periodoFiltro.set(periodo);
     if (periodo === 'hoy') {
-      this.fechaDesde.set(this.obtenerFechaHoy());
-      this.fechaHasta.set(this.obtenerFechaHoy());
+      this.fechaDesde.set(obtenerFechaHoy());
+      this.fechaHasta.set(obtenerFechaHoy());
     } else if (periodo === 'todos') {
       this.fechaDesde.set('');
       this.fechaHasta.set('');
     } else if (periodo === 'intervalo') {
-      if (!this.fechaDesde()) this.fechaDesde.set(this.obtenerFechaHoy());
-      if (!this.fechaHasta()) this.fechaHasta.set(this.obtenerFechaHoy());
+      if (!this.fechaDesde()) this.fechaDesde.set(obtenerFechaHoy());
+      if (!this.fechaHasta()) this.fechaHasta.set(obtenerFechaHoy());
     }
     this.paginaActual.set(0);
     this.cargarIngresos();
@@ -218,8 +199,8 @@ export class IngresosListComponent implements OnInit {
   onLimpiarFiltros(): void {
     this.filtroTexto.set('');
     this.periodoFiltro.set('hoy');
-    this.fechaDesde.set(this.obtenerFechaHoy());
-    this.fechaHasta.set(this.obtenerFechaHoy());
+    this.fechaDesde.set(obtenerFechaHoy());
+    this.fechaHasta.set(obtenerFechaHoy());
     this.proveedorFiltro.set(null);
     this.paginaActual.set(0);
     this.cargarIngresos();
@@ -229,12 +210,6 @@ export class IngresosListComponent implements OnInit {
     if (nuevaPagina >= 0 && nuevaPagina < this.totalPaginas()) {
       this.paginaActual.set(nuevaPagina);
       this.cargarIngresos();
-    }
-  }
-
-  irAPagina(pagina: number | string): void {
-    if (typeof pagina === 'number') {
-      this.cambiarPagina(pagina - 1);
     }
   }
 
@@ -254,7 +229,7 @@ export class IngresosListComponent implements OnInit {
 
   onIngresoGuardado(_guardado: IngresoConDetalles): void {
     this.cerrarModalRegistro();
-    this.showToast('Ingreso registrado con éxito');
+    this.notificationService.toast('Ingreso registrado con éxito');
     this.cargarIngresos();
   }
 
@@ -270,7 +245,7 @@ export class IngresosListComponent implements OnInit {
       },
       error: () => {
         this.cargandoDetalleId.set(null);
-        this.showError(
+        this.notificationService.error(
           'Error de consulta',
           'No se pudo cargar el detalle del comprobante de ingreso.',
         );
@@ -284,7 +259,7 @@ export class IngresosListComponent implements OnInit {
   }
 
   descargarPdf(ingreso: Ingreso): void {
-    this.showToast(`Comprobante ${ingreso.numeroOrden} preparado`);
+    this.notificationService.toast(`Comprobante ${ingreso.numeroOrden} preparado`);
   }
 
   anularIngreso(ingreso: Ingreso): void {
@@ -292,70 +267,37 @@ export class IngresosListComponent implements OnInit {
       return;
     }
 
-    void Swal.fire({
-      title: '¿Anular comprobante?',
-      text: `¿Desea anular el ingreso ${ingreso.numeroOrden}? Se revertirán las existencias en almacén.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, anular',
-      cancelButtonText: 'Cancelar',
-      customClass: {
-        confirmButton:
+    void this.notificationService
+      .confirm({
+        title: '¿Anular comprobante?',
+        text: `¿Desea anular el ingreso ${ingreso.numeroOrden}? Se revertirán las existencias en almacén.`,
+        icon: 'warning',
+        confirmButtonText: 'Sí, anular',
+        cancelButtonText: 'Cancelar',
+        confirmButtonClass:
           'bg-rose-600 hover:bg-rose-700 text-white font-semibold px-4 py-2 rounded-xl text-sm shadow-xs transition-colors cursor-pointer',
-        cancelButton:
+        cancelButtonClass:
           'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm border border-slate-300 ml-2 transition-colors cursor-pointer',
-      },
-      buttonsStyling: false,
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.anulandoId.set(ingreso.id);
-        this.ingresoService.anular(ingreso.id).subscribe({
-          next: () => {
-            this.anulandoId.set(null);
-            this.showToast('Comprobante anulado y existencias revertidas con éxito');
-            this.cargarIngresos();
-          },
-          error: (err: unknown) => {
-            this.anulandoId.set(null);
-            const mensaje = this.extraerMensaje(err, 'No fue posible anular el comprobante.');
-            this.showError('No se pudo anular el ingreso', mensaje);
-          },
-        });
-      }
-    });
-  }
-
-  private obtenerFechaHoy(): string {
-    const hoy = new Date();
-    const anio = hoy.getFullYear();
-    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
-    const dia = String(hoy.getDate()).padStart(2, '0');
-    return `${anio}-${mes}-${dia}`;
-  }
-
-  private showToast(title: string): void {
-    void Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title,
-      showConfirmButton: false,
-      timer: 2500,
-    });
-  }
-
-  private showError(title: string, text: string): void {
-    void Swal.fire({
-      icon: 'error',
-      title,
-      text,
-      confirmButtonText: 'Entendido',
-      customClass: {
-        confirmButton:
-          'bg-unsm-green text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:opacity-95',
-      },
-      buttonsStyling: false,
-    });
+      })
+      .then((result) => {
+        if (result.isConfirmed) {
+          this.anulandoId.set(ingreso.id);
+          this.ingresoService.anular(ingreso.id).subscribe({
+            next: () => {
+              this.anulandoId.set(null);
+              this.notificationService.toast(
+                'Comprobante anulado y existencias revertidas con éxito',
+              );
+              this.cargarIngresos();
+            },
+            error: (err: unknown) => {
+              this.anulandoId.set(null);
+              const mensaje = this.extraerMensaje(err, 'No fue posible anular el comprobante.');
+              this.notificationService.error('No se pudo anular el ingreso', mensaje);
+            },
+          });
+        }
+      });
   }
 
   private extraerMensaje(errorBody: unknown, fallback: string): string {

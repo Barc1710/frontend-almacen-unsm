@@ -1,7 +1,23 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, computed, DestroyRef, effect, inject, input, OnInit, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  OnInit,
+  output,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormControl,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import {
   LucideAlertCircle,
   LucideChevronDown,
@@ -14,6 +30,7 @@ import {
   LucideX,
 } from '@lucide/angular';
 import { catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap } from 'rxjs';
+import { obtenerFechaHoy } from '../../../../core';
 import { Articulo } from '../../../articulos/models';
 import { IngresoConDetalles, IngresoCreateRequest, Proveedor } from '../../models';
 import { IngresoService } from '../../services';
@@ -155,7 +172,7 @@ export class IngresoFormModalComponent implements OnInit {
     idProveedor: new FormControl<number | null>(null, {
       validators: [Validators.required],
     }),
-    fecha: new FormControl<string>(this.obtenerFechaHoy(), {
+    fecha: new FormControl<string>(obtenerFechaHoy(), {
       nonNullable: true,
       validators: [Validators.required],
     }),
@@ -340,7 +357,20 @@ export class IngresoFormModalComponent implements OnInit {
     fila.simboloUnidadMedida = articulo.simboloUnidadMedida || 'UND';
 
     // Determinar si permite decimales de forma robusta por bandera o catálogo de unidad de medida
-    const unidadesDecimales = ['KG', 'KGM', 'L', 'LTR', 'GL', 'GLL', 'GAL', 'M', 'MTR', 'M2', 'MTK', 'M3'];
+    const unidadesDecimales = [
+      'KG',
+      'KGM',
+      'L',
+      'LTR',
+      'GL',
+      'GLL',
+      'GAL',
+      'M',
+      'MTR',
+      'M2',
+      'MTK',
+      'M3',
+    ];
     const simbolo = (articulo.simboloUnidadMedida || '').toUpperCase().trim();
     fila.permiteDecimales =
       articulo.permiteDecimales === true ||
@@ -522,7 +552,7 @@ export class IngresoFormModalComponent implements OnInit {
 
     this.cabeceraForm.reset({
       idProveedor: null,
-      fecha: this.obtenerFechaHoy(),
+      fecha: obtenerFechaHoy(),
       observacion: '',
     });
 
@@ -544,9 +574,9 @@ export class IngresoFormModalComponent implements OnInit {
           const limpio = termino.trim();
           if (limpio.length >= 2 && fila.sugerencias.length === 0) {
             fila.buscando = true;
-            return this.ingresoService.buscarArticulosParaIngreso(limpio).pipe(
-              catchError(() => of([])),
-            );
+            return this.ingresoService
+              .buscarArticulosParaIngreso(limpio)
+              .pipe(catchError(() => of([])));
           }
           return of([]);
         }),
@@ -588,13 +618,5 @@ export class IngresoFormModalComponent implements OnInit {
       return cand.mensaje || cand.message || cand.error || fallback;
     }
     return fallback;
-  }
-
-  private obtenerFechaHoy(): string {
-    const hoy = new Date();
-    const anio = hoy.getFullYear();
-    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
-    const dia = String(hoy.getDate()).padStart(2, '0');
-    return `${anio}-${mes}-${dia}`;
   }
 }

@@ -16,14 +16,21 @@
       >
         <div class="flex items-center gap-2.5">
           <h3 id="modal-detalle-title" class="text-lg font-bold text-slate-800">
-            Detalle del Ingreso <span class="font-mono text-sm text-slate-500 font-semibold ml-1">{{ ingreso()?.numeroOrden }}</span>
+            Detalle del Ingreso
+            <span class="font-mono text-sm text-slate-500 font-semibold ml-1">{{
+              ingreso()?.numeroOrden
+            }}</span>
           </h3>
           @if (ingreso()?.estado === '0') {
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200">
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200"
+            >
               ANULADO
             </span>
           } @else {
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200"
+            >
               REGISTRADO
             </span>
           }
@@ -42,10 +49,13 @@
       <!-- Contenido / Información de Cabecera y Grilla -->
       <div class="p-6 overflow-y-auto flex-1 space-y-6">
         @if (ingreso()?.estado === '0') {
-          <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2.5">
+          <div
+            class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2.5"
+          >
             <svg lucideCircleAlert class="size-4.5 text-rose-600 shrink-0"></svg>
             <p>
-              <strong>Comprobante Anulado:</strong> Este comprobante de ingreso ha sido anulado. Sus existencias fueron revertidas y descontadas automáticamente del inventario general.
+              <strong>Comprobante Anulado:</strong> Este comprobante de ingreso ha sido anulado. Sus
+              existencias fueron revertidas y descontadas automáticamente del inventario general.
             </p>
           </div>
         }
@@ -53,7 +63,9 @@
         <!-- Ficha de Datos Principales -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
-            <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+            <div
+              class="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
+            >
               <svg lucideTag class="size-3.5 text-unsm-green"></svg>
               <span>N° de Ingreso</span>
             </div>
@@ -61,25 +73,38 @@
               {{ ingreso()?.numeroOrden }}
             </p>
             @if (ingreso()?.numeroOrdenCompra) {
-              <p class="text-xs font-mono text-slate-400 mt-0.5">O.C.: {{ ingreso()?.numeroOrdenCompra }}</p>
+              <p class="text-xs font-mono text-slate-400 mt-0.5">
+                O.C.: {{ ingreso()?.numeroOrdenCompra }}
+              </p>
             }
           </div>
 
-          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 min-w-0 flex flex-col justify-start">
-            <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+          <div
+            class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 min-w-0 flex flex-col justify-start"
+          >
+            <div
+              class="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
+            >
               <svg lucideBuilding2 class="size-3.5 text-unsm-cyan shrink-0"></svg>
               <span>Proveedor</span>
             </div>
-            <p class="text-sm font-semibold text-slate-900 break-words whitespace-normal leading-snug" [title]="ingreso()?.nombreProveedor || '-'">
+            <p
+              class="text-sm font-semibold text-slate-900 .break-words whitespace-normal leading-snug"
+              [title]="ingreso()?.nombreProveedor || '-'"
+            >
               {{ ingreso()?.nombreProveedor || 'Proveedor no especificado' }}
             </p>
             @if (ingreso()?.rucProveedor) {
-              <p class="text-xs font-mono text-slate-500 mt-1">RUC: {{ ingreso()?.rucProveedor }}</p>
+              <p class="text-xs font-mono text-slate-500 mt-1">
+                RUC: {{ ingreso()?.rucProveedor }}
+              </p>
             }
           </div>
 
           <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
-            <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+            <div
+              class="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
+            >
               <svg lucideCalendar class="size-3.5 text-unsm-green-dark"></svg>
               <span>Fecha Recepción</span>
             </div>
@@ -89,7 +114,9 @@
           </div>
 
           <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
-            <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+            <div
+              class="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
+            >
               <svg lucideUser class="size-3.5 text-slate-600"></svg>
               <span>Recepcionado por</span>
             </div>
@@ -114,20 +141,29 @@
               <span>Artículos y Bienes Recepcionados</span>
             </h4>
             <span class="text-xs text-slate-500">
-              Total renglones: <strong class="text-slate-800 font-semibold">{{ totalArticulos() }}</strong>
+              Total renglones:
+              <strong class="text-slate-800 font-semibold">{{ totalArticulos() }}</strong>
             </span>
           </div>
 
           <div class="rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
             <div class="overflow-x-auto">
               <table class="w-full text-left text-sm text-slate-600 border-collapse">
-                <thead class="bg-slate-50 text-xs font-semibold text-slate-700 border-b border-slate-200">
+                <thead
+                  class="bg-slate-50 text-xs font-semibold text-slate-700 border-b border-slate-200"
+                >
                   <tr>
                     <th scope="col" class="py-3 px-3.5 text-center w-12">#</th>
                     <th scope="col" class="py-3 px-3.5 font-semibold text-slate-700">Código</th>
-                    <th scope="col" class="py-3 px-3.5 font-semibold text-slate-700 min-w-56">Descripción</th>
-                    <th scope="col" class="py-3 px-3.5 text-center font-semibold text-slate-700">U.M.</th>
-                    <th scope="col" class="py-3 px-3.5 text-right font-semibold text-slate-700">Cantidad</th>
+                    <th scope="col" class="py-3 px-3.5 font-semibold text-slate-700 min-w-56">
+                      Descripción
+                    </th>
+                    <th scope="col" class="py-3 px-3.5 text-center font-semibold text-slate-700">
+                      U.M.
+                    </th>
+                    <th scope="col" class="py-3 px-3.5 text-right font-semibold text-slate-700">
+                      Cantidad
+                    </th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -136,18 +172,26 @@
                       <td class="py-3 px-3.5 text-center text-xs font-medium text-slate-400">
                         {{ $index + 1 }}
                       </td>
-                      <td class="py-3 px-3.5 font-mono font-semibold text-slate-900 whitespace-nowrap">
+                      <td
+                        class="py-3 px-3.5 font-mono font-semibold text-slate-900 whitespace-nowrap"
+                      >
                         {{ item.codigoArticulo }}
                       </td>
                       <td class="py-3 px-3.5">
-                        <p class="font-medium text-slate-800 line-clamp-1">{{ item.descripcionArticulo }}</p>
+                        <p class="font-medium text-slate-800 line-clamp-1">
+                          {{ item.descripcionArticulo }}
+                        </p>
                       </td>
                       <td class="py-3 px-3.5 text-center whitespace-nowrap">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-700">
+                        <span
+                          class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-700"
+                        >
                           {{ item.simboloUnidadMedida || 'UND' }}
                         </span>
                       </td>
-                      <td class="py-3 px-3.5 text-right font-semibold text-slate-900 whitespace-nowrap tabular-nums">
+                      <td
+                        class="py-3 px-3.5 text-right font-semibold text-slate-900 whitespace-nowrap tabular-nums"
+                      >
                         {{ formatCantidad(item.cantidad, item.permiteDecimales) }}
                       </td>
                     </tr>
@@ -163,14 +207,14 @@
             </div>
 
             <!-- Resumen Informativo al pie de la tabla -->
-            <div class="bg-slate-50/80 px-4 py-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <div
+              class="bg-slate-50/80 px-4 py-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
+            >
               <span class="text-slate-500">
                 Resumen de existencias recepcionadas e incorporadas al almacén
               </span>
               <div class="flex items-center gap-4">
-                <span class="text-slate-600 font-medium">
-                  Total de Unidades Físicas:
-                </span>
+                <span class="text-slate-600 font-medium"> Total de Unidades Físicas: </span>
                 <span class="text-base font-bold text-unsm-green-dark tabular-nums">
                   {{ totalUnidadesBienes() }}
                 </span>
