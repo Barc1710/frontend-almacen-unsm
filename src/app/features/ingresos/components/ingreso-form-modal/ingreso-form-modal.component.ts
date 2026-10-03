@@ -168,8 +168,6 @@ export class IngresoFormModalComponent implements OnInit {
   readonly guardando = signal<boolean>(false);
   readonly errorGeneral = signal<string | null>(null);
   readonly alertaDuplicado = signal<string | null>(null);
-  readonly proximoCorrelativo = signal<string>('');
-  readonly cargandoCorrelativo = signal<boolean>(false);
 
   readonly catalogoArticulos = signal<Articulo[]>([]);
   readonly encargadosAlmacen = signal<EncargadoAlmacen[]>([]);
@@ -278,20 +276,6 @@ export class IngresoFormModalComponent implements OnInit {
           a.descripcion.localeCompare(b.descripcion, 'es', { sensitivity: 'base' }),
         );
         this.catalogoArticulos.set(ordenados);
-      });
-  }
-
-  cargarProximoCorrelativo(): void {
-    this.cargandoCorrelativo.set(true);
-    this.ingresoService
-      .obtenerSiguienteNumero()
-      .pipe(
-        catchError(() => of('')),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((numero) => {
-        this.proximoCorrelativo.set(numero);
-        this.cargandoCorrelativo.set(false);
       });
   }
 
@@ -616,7 +600,6 @@ export class IngresoFormModalComponent implements OnInit {
 
     this.filas.set([]);
     this.agregarFila();
-    this.cargarProximoCorrelativo();
   }
 
   private conectarBusquedaFila(fila: FilaDetalle): void {

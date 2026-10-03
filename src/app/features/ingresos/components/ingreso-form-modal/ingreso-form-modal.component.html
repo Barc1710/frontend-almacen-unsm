@@ -1,35 +1,39 @@
 @if (visible()) {
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto"
+    class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs p-3 sm:p-6"
     (click)="onBackdropClick($event)"
     role="dialog"
     aria-modal="true"
     [attr.aria-labelledby]="'modal-registro-ingreso-title'"
   >
     <div
-      class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-5xl my-auto overflow-visible relative flex flex-col max-h-[92vh]"
-      (click)="$event.stopPropagation()"
+      class="min-h-full flex items-center justify-center py-4 sm:py-6"
+      (click)="onBackdropClick($event)"
     >
-      <!-- Cabecera de la Modal -->
       <div
-        class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 rounded-t-2xl shrink-0"
+        class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-5xl my-auto overflow-visible relative"
+        (click)="$event.stopPropagation()"
       >
-        <h3 id="modal-registro-ingreso-title" class="text-lg font-bold text-slate-800">
-          Nuevo Ingreso
-        </h3>
-        <button
-          type="button"
-          (click)="onCerrar()"
-          [disabled]="guardando()"
-          class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer disabled:opacity-50"
-          aria-label="Cerrar modal"
+        <!-- Cabecera de la Modal -->
+        <div
+          class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 rounded-t-2xl"
         >
-          <svg lucideX class="size-5"></svg>
-        </button>
-      </div>
+          <h3 id="modal-registro-ingreso-title" class="text-lg font-bold text-slate-800">
+            Nuevo Ingreso
+          </h3>
+          <button
+            type="button"
+            (click)="onCerrar()"
+            [disabled]="guardando()"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer disabled:opacity-50"
+            aria-label="Cerrar modal"
+          >
+            <svg lucideX class="size-5"></svg>
+          </button>
+        </div>
 
-      <!-- Contenido de la Modal -->
-      <div class="p-6 overflow-visible flex-1 space-y-4">
+        <!-- Contenido de la Modal -->
+        <div class="p-6 overflow-visible space-y-4">
         <!-- Banner de Error General -->
         @if (errorGeneral()) {
           <div
@@ -66,9 +70,10 @@
           class="space-y-4"
           novalidate
         >
+          <!-- Fila 1: Proveedor y Fecha de Recepción -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <!-- Selector de Proveedor -->
-            <div>
+            <div class="sm:col-span-2">
               <label
                 for="idProveedor"
                 class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
@@ -94,30 +99,6 @@
               }
             </div>
 
-            <!-- N° de Ingreso -->
-            <div>
-              <label
-                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
-              >
-                N° de Ingreso
-              </label>
-              <div class="relative flex items-center">
-                <input
-                  type="text"
-                  [value]="proximoCorrelativo() || 'Cargando...'"
-                  readonly
-                  tabindex="-1"
-                  aria-label="Número de ingreso correlativo"
-                  class="w-full h-10 px-3 rounded-lg border border-slate-300 bg-slate-100 text-sm font-mono font-bold text-slate-800 outline-none select-none cursor-not-allowed"
-                />
-                @if (cargandoCorrelativo()) {
-                  <div class="absolute right-3 text-slate-400">
-                    <svg lucideLoader2 class="size-4 animate-spin"></svg>
-                  </div>
-                }
-              </div>
-            </div>
-
             <!-- Fecha de Ingreso -->
             <div>
               <label
@@ -139,7 +120,10 @@
                 <p class="text-xs text-unsm-red mt-1">La fecha es obligatoria</p>
               }
             </div>
+          </div>
 
+          <!-- Fila 2: Encargado de Almacén y Jefe USG -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- Encargado de Almacén (Firmante Almacén) -->
             <div>
               <label
@@ -168,7 +152,7 @@
             </div>
 
             <!-- Jefe USG (Firmante Jefatura) -->
-            <div class="sm:col-span-2">
+            <div>
               <label
                 for="idJefe"
                 class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
@@ -193,24 +177,24 @@
                 <p class="text-xs text-unsm-red mt-1">El jefe de USG es requerido</p>
               }
             </div>
+          </div>
 
-            <!-- Observación -->
-            <div class="sm:col-span-3">
-              <label
-                for="observacion"
-                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
-              >
-                Observación
-              </label>
-              <textarea
-                id="observacion"
-                rows="2"
-                maxlength="255"
-                placeholder="Observación o nota adicional del ingreso (opcional)..."
-                formControlName="observacion"
-                class="w-full p-3 rounded-lg border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green resize-none"
-              ></textarea>
-            </div>
+          <!-- Fila 3: Observación -->
+          <div>
+            <label
+              for="observacion"
+              class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+            >
+              Observación
+            </label>
+            <textarea
+              id="observacion"
+              rows="2"
+              maxlength="255"
+              placeholder="Observación o nota adicional del ingreso (opcional)..."
+              formControlName="observacion"
+              class="w-full p-3 rounded-lg border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green resize-none"
+            ></textarea>
           </div>
         </form>
 
@@ -235,30 +219,30 @@
           <!-- Tabla de Renglones -->
           <div class="rounded-xl border border-slate-200 overflow-visible shadow-2xs">
             <div class="overflow-visible">
-              <table class="w-full text-left text-sm text-slate-600 border-collapse">
+              <table class="w-full text-left text-sm text-slate-600 border-collapse table-fixed">
                 <thead
                   class="bg-slate-50 text-xs font-semibold text-slate-700 border-b border-slate-200"
                 >
                   <tr>
-                    <th scope="col" class="py-3 px-3.5 w-12 text-center">#</th>
-                    <th scope="col" class="py-3 px-3.5 min-w-80 font-semibold text-slate-700">
+                    <th scope="col" class="py-3 px-3.5 w-12 text-center shrink-0">#</th>
+                    <th scope="col" class="py-3 px-3.5 font-semibold text-slate-700">
                       Artículo
                     </th>
                     <th
                       scope="col"
-                      class="py-3 px-3.5 w-28 text-center font-semibold text-slate-700"
+                      class="py-3 px-3.5 w-28 text-center font-semibold text-slate-700 shrink-0"
                     >
                       U.M.
                     </th>
                     <th
                       scope="col"
-                      class="py-3 px-3.5 w-44 text-right font-semibold text-slate-700"
+                      class="py-3 px-3.5 w-44 text-right font-semibold text-slate-700 shrink-0"
                     >
                       Cantidad Recibida
                     </th>
                     <th
                       scope="col"
-                      class="py-3 px-3.5 w-16 text-center font-semibold text-slate-700"
+                      class="py-3 px-3.5 w-16 text-center font-semibold text-slate-700 shrink-0"
                     >
                       Acción
                     </th>
@@ -272,25 +256,25 @@
                       [class.z-40]="fila.mostrarSugerencias"
                     >
                       <!-- Número de Renglón -->
-                      <td class="py-3 px-3.5 text-center text-xs font-medium text-slate-400 pt-4">
+                      <td class="py-3 px-3.5 text-center text-xs font-medium text-slate-400 pt-4 w-12">
                         {{ idx + 1 }}
                       </td>
 
-                      <!-- Artículo / Búsqueda predictiva integrada como select -->
-                      <td class="py-2.5 px-3.5 relative">
+                      <!-- Artículo / Búsqueda predictiva integrada como select (max-w-0 para truncamiento estricto) -->
+                      <td class="py-2.5 px-3.5 relative max-w-0">
                         @if (fila.articulo) {
                           <div
-                            class="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200"
+                            class="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200 w-full min-w-0"
                           >
                             <div class="min-w-0 flex-1">
-                              <div class="flex items-center gap-2">
+                              <div class="flex items-center gap-2 min-w-0">
                                 <span
                                   class="font-mono text-xs font-bold text-slate-900 bg-white px-1.5 py-0.5 rounded border border-slate-200 shrink-0"
                                 >
                                   {{ fila.codigoArticulo }}
                                 </span>
                                 <span
-                                  class="text-xs font-semibold text-slate-800 truncate"
+                                  class="text-xs font-semibold text-slate-800 truncate block min-w-0 flex-1"
                                   [title]="fila.descripcionArticulo"
                                 >
                                   {{ fila.descripcionArticulo }}
@@ -308,8 +292,8 @@
                             </button>
                           </div>
                         } @else {
-                          <div class="relative">
-                            <div class="relative flex items-center">
+                          <div class="relative w-full min-w-0">
+                            <div class="relative flex items-center w-full min-w-0">
                               <svg
                                 lucideSearch
                                 class="size-3.5 text-slate-400 absolute left-3 pointer-events-none"
@@ -344,7 +328,7 @@
                             <!-- Menú flotante de resultados predictivos tipo combobox -->
                             @if (fila.mostrarSugerencias && fila.sugerencias.length > 0) {
                               <div
-                                class="absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto bg-white rounded-xl shadow-2xl border border-slate-200 divide-y divide-slate-100 ring-1 ring-black/5"
+                                class="absolute left-0 z-50 mt-1 w-[480px] max-w-[90vw] max-h-60 overflow-y-auto bg-white rounded-xl shadow-2xl border border-slate-200 divide-y divide-slate-100 ring-1 ring-black/5"
                               >
                                 @for (sug of fila.sugerencias; track sug.id) {
                                   <button
@@ -352,20 +336,18 @@
                                     (mousedown)="seleccionarArticulo(fila, sug)"
                                     class="w-full text-left p-2.5 hover:bg-unsm-green-light/50 transition-colors flex items-center justify-between gap-3 cursor-pointer group"
                                   >
-                                    <div class="min-w-0">
-                                      <div class="flex items-center gap-2">
-                                        <span
-                                          class="font-mono text-xs font-bold text-slate-900 group-hover:text-unsm-green-dark"
-                                        >
-                                          {{ sug.codigo }}
-                                        </span>
-                                        <span class="text-xs text-slate-700 truncate">
-                                          {{ sug.descripcion }}
-                                        </span>
-                                      </div>
+                                    <div class="min-w-0 flex items-center gap-2 flex-1">
+                                      <span
+                                        class="font-mono text-xs font-bold text-slate-900 group-hover:text-unsm-green-dark bg-slate-50 px-2 py-0.5 rounded border border-slate-200 shrink-0 w-24 text-center"
+                                      >
+                                        {{ sug.codigo }}
+                                      </span>
+                                      <span class="text-xs text-slate-700 truncate" [title]="sug.descripcion">
+                                        {{ sug.descripcion }}
+                                      </span>
                                     </div>
                                     <span
-                                      class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 shrink-0"
+                                      class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 shrink-0 min-w-16 text-right tabular-nums"
                                     >
                                       {{ sug.simboloUnidadMedida || 'UND' }}
                                     </span>
@@ -376,7 +358,7 @@
                               fila.mostrarSugerencias && fila.busquedaTexto.trim().length > 0
                             ) {
                               <div
-                                class="absolute left-0 right-0 z-50 mt-1 p-3 bg-white rounded-xl shadow-2xl border border-slate-200 text-xs text-slate-500 text-center"
+                                class="absolute left-0 z-50 mt-1 w-[480px] max-w-[90vw] p-3 bg-white rounded-xl shadow-2xl border border-slate-200 text-xs text-slate-500 text-center"
                               >
                                 No se encontraron artículos que coincidan con la búsqueda.
                               </div>
@@ -386,7 +368,7 @@
                       </td>
 
                       <!-- Unidad de Medida -->
-                      <td class="py-2.5 px-3.5 text-center pt-3.5">
+                      <td class="py-2.5 px-3.5 text-center pt-3.5 w-28">
                         <span
                           class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700"
                         >
@@ -424,7 +406,7 @@
                       </td>
 
                       <!-- Botón Eliminar Fila -->
-                      <td class="py-2.5 px-3.5 text-center pt-3">
+                      <td class="py-2.5 px-3.5 text-center pt-3 w-16">
                         <button
                           type="button"
                           (click)="eliminarFila(idx)"
@@ -484,7 +466,7 @@
 
       <!-- Pie de la Modal -->
       <div
-        class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50/70 rounded-b-2xl shrink-0"
+        class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50/70 rounded-b-2xl"
       >
         <button
           type="button"
@@ -512,4 +494,5 @@
       </div>
     </div>
   </div>
+</div>
 }
