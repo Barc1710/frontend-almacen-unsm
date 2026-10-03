@@ -41,7 +41,7 @@
 
         <!-- Contenido de la Modal -->
         <div class="p-6 overflow-visible space-y-4">
-          <!-- Selector de Tipo de Operación: Despacho vs Baja -->
+          <!-- Selector de Tipo de Operación: Despacho vs Dar de baja -->
           @if (esAdministrador()) {
             <div class="flex items-center gap-2">
               <div
@@ -72,7 +72,7 @@
                   [class.text-slate-600]="!esOperacionBaja()"
                   [class.hover:text-red-700]="!esOperacionBaja()"
                 >
-                  Bajas por Deterioro
+                  Dar de baja
                 </button>
               </div>
             </div>
@@ -114,63 +114,63 @@
             class="space-y-4"
             novalidate
           >
-            <!-- Fila 1: Cliente y Área (selección explícita para toda operación) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <!-- Cliente -->
-              <div>
-                <label
-                  for="idClienteSelect"
-                  class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
-                >
-                  Cliente <span class="text-red-700">*</span>
-                </label>
-                <select
-                  id="idClienteSelect"
-                  formControlName="idCliente"
-                  class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
-                  [class.border-unsm-red]="isFieldInvalid('idCliente')"
-                  [class.border-slate-300]="!isFieldInvalid('idCliente')"
-                >
-                  <option [ngValue]="null">Seleccionar cliente</option>
-                  @for (c of clientes(); track c.id) {
-                    <option [ngValue]="c.id">
-                      {{ c.nombre }} {{ c.dni ? '(' + c.dni + ')' : '' }}
-                    </option>
-                  }
-                </select>
-                @if (isFieldInvalid('idCliente')) {
-                  <p class="text-xs text-red-700 mt-1">Debe seleccionar un cliente</p>
-                }
-              </div>
-
-              <!-- Área de Destino -->
-              <div>
-                <label
-                  for="idAreaSelect"
-                  class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
-                >
-                  Área de Destino <span class="text-red-700">*</span>
-                </label>
-                <select
-                  id="idAreaSelect"
-                  formControlName="idArea"
-                  class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
-                  [class.border-unsm-red]="isFieldInvalid('idArea')"
-                  [class.border-slate-300]="!isFieldInvalid('idArea')"
-                >
-                  <option [ngValue]="null">Seleccionar área</option>
-                  @for (a of areas(); track a.id) {
-                    <option [ngValue]="a.id">{{ a.nombre }}</option>
-                  }
-                </select>
-                @if (isFieldInvalid('idArea')) {
-                  <p class="text-xs text-red-700 mt-1">Debe seleccionar el área de destino</p>
-                }
-              </div>
-            </div>
-
             @if (!esOperacionBaja()) {
-              <!-- Fila 2: Ambiente (Cuadro de texto de una sola línea) -->
+              <!-- Fila 1: Cliente y Área de Destino -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Cliente -->
+                <div>
+                  <label
+                    for="idClienteSelect"
+                    class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
+                    Cliente <span class="text-red-700">*</span>
+                  </label>
+                  <select
+                    id="idClienteSelect"
+                    formControlName="idCliente"
+                    class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                    [class.border-unsm-red]="isFieldInvalid('idCliente')"
+                    [class.border-slate-300]="!isFieldInvalid('idCliente')"
+                  >
+                    <option [ngValue]="null">Seleccionar cliente</option>
+                    @for (c of clientes(); track c.id) {
+                      <option [ngValue]="c.id">
+                        {{ c.nombre }} {{ c.dni ? '(' + c.dni + ')' : '' }}
+                      </option>
+                    }
+                  </select>
+                  @if (isFieldInvalid('idCliente')) {
+                    <p class="text-xs text-red-700 mt-1">Debe seleccionar un cliente</p>
+                  }
+                </div>
+
+                <!-- Área de Destino -->
+                <div>
+                  <label
+                    for="idAreaSelect"
+                    class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
+                    Área de Destino <span class="text-red-700">*</span>
+                  </label>
+                  <select
+                    id="idAreaSelect"
+                    formControlName="idArea"
+                    class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                    [class.border-unsm-red]="isFieldInvalid('idArea')"
+                    [class.border-slate-300]="!isFieldInvalid('idArea')"
+                  >
+                    <option [ngValue]="null">Seleccionar área</option>
+                    @for (a of areas(); track a.id) {
+                      <option [ngValue]="a.id">{{ a.nombre }}</option>
+                    }
+                  </select>
+                  @if (isFieldInvalid('idArea')) {
+                    <p class="text-xs text-red-700 mt-1">Debe seleccionar el área de destino</p>
+                  }
+                </div>
+              </div>
+
+              <!-- Fila 2: Ambiente -->
               <div>
                 <label
                   for="ambienteInput"
@@ -182,92 +182,122 @@
                   id="ambienteInput"
                   type="text"
                   formControlName="ambiente"
+                  placeholder="Ej. Aula Magna, Pabellón A, Laboratorio de Cómputo..."
                   class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white"
                 />
               </div>
+
+              <!-- Fila 3: Encargado y Encargado de Almacén -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Encargado -->
+                <div>
+                  <label
+                    for="idEncargadoSelect"
+                    class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
+                    Encargado <span class="text-red-700">*</span>
+                  </label>
+                  <select
+                    id="idEncargadoSelect"
+                    formControlName="idEncargado"
+                    class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                    [class.border-unsm-red]="isFieldInvalid('idEncargado')"
+                    [class.border-slate-300]="!isFieldInvalid('idEncargado')"
+                  >
+                    <option [ngValue]="null">Seleccionar encargado</option>
+                    @for (enc of encargados(); track enc.id) {
+                      <option [ngValue]="enc.id">
+                        {{ enc.siglaProfesion ? enc.siglaProfesion + ' ' : ''
+                        }}{{ enc.nombreCompleto || enc.nombres + ' ' + enc.apellidos }}
+                      </option>
+                    }
+                  </select>
+                  @if (isFieldInvalid('idEncargado')) {
+                    <p class="text-xs text-red-700 mt-1">Debe seleccionar el encargado</p>
+                  }
+                </div>
+
+                <!-- Encargado de Almacén -->
+                <div>
+                  <label
+                    for="idEncargadoAlmacenSelect"
+                    class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
+                    Encargado de Almacén <span class="text-red-700">*</span>
+                  </label>
+                  <select
+                    id="idEncargadoAlmacenSelect"
+                    formControlName="idEncargadoAlmacen"
+                    class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                    [class.border-unsm-red]="isFieldInvalid('idEncargadoAlmacen')"
+                    [class.border-slate-300]="!isFieldInvalid('idEncargadoAlmacen')"
+                  >
+                    <option [ngValue]="null">Seleccionar encargado de almacén</option>
+                    @for (alm of encargadosAlmacenActivos(); track alm.id) {
+                      <option [ngValue]="alm.id">
+                        {{ alm.nombre }}{{ alm.esTitular ? ' (Titular)' : '' }}
+                      </option>
+                    }
+                  </select>
+                  @if (isFieldInvalid('idEncargadoAlmacen')) {
+                    <p class="text-xs text-red-700 mt-1">Debe seleccionar el encargado de almacén</p>
+                  }
+                </div>
+              </div>
             } @else {
-              <!-- Motivo obligatorio para la baja -->
-              <div>
-                <label
-                  for="motivoBajaInput"
-                  class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
-                >
-                  Motivo de la Baja <span class="text-red-700">*</span>
-                </label>
-                <input
-                  id="motivoBajaInput"
-                  type="text"
-                  formControlName="ambiente"
-                  class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white"
-                  [class.border-unsm-red]="isFieldInvalid('ambiente')"
-                  [class.border-slate-300]="!isFieldInvalid('ambiente')"
-                />
-                @if (isFieldInvalid('ambiente')) {
-                  <p class="text-xs text-red-700 mt-1">
-                    El motivo o justificación de la baja es obligatorio
-                  </p>
-                }
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Motivo (2 columnas) -->
+                <div class="sm:col-span-2">
+                  <label
+                    for="motivoBajaInput"
+                    class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
+                    Motivo <span class="text-red-700">*</span>
+                  </label>
+                  <input
+                    id="motivoBajaInput"
+                    type="text"
+                    formControlName="motivoBaja"
+                    placeholder="Escriba el motivo de la baja..."
+                    class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white"
+                    [class.border-unsm-red]="isFieldInvalid('motivoBaja')"
+                    [class.border-slate-300]="!isFieldInvalid('motivoBaja')"
+                  />
+                  @if (isFieldInvalid('motivoBaja')) {
+                    <p class="text-xs text-red-700 mt-1">
+                      El motivo es obligatorio
+                    </p>
+                  }
+                </div>
+
+                <!-- Encargado de Almacén (1 columna) -->
+                <div>
+                  <label
+                    for="idEncargadoAlmacenBajaSelect"
+                    class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
+                    Encargado de Almacén <span class="text-red-700">*</span>
+                  </label>
+                  <select
+                    id="idEncargadoAlmacenBajaSelect"
+                    formControlName="idEncargadoAlmacen"
+                    class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                    [class.border-unsm-red]="isFieldInvalid('idEncargadoAlmacen')"
+                    [class.border-slate-300]="!isFieldInvalid('idEncargadoAlmacen')"
+                  >
+                    <option [ngValue]="null">Seleccionar encargado</option>
+                    @for (alm of encargadosAlmacenActivos(); track alm.id) {
+                      <option [ngValue]="alm.id">
+                        {{ alm.nombre }}{{ alm.esTitular ? ' (Titular)' : '' }}
+                      </option>
+                    }
+                  </select>
+                  @if (isFieldInvalid('idEncargadoAlmacen')) {
+                    <p class="text-xs text-red-700 mt-1">Debe seleccionar el encargado de almacén</p>
+                  }
+                </div>
               </div>
             }
-
-            <!-- Fila 3: Encargado y Encargado de Almacén -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <!-- Encargado -->
-              <div>
-                <label
-                  for="idEncargadoSelect"
-                  class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
-                >
-                  {{ esOperacionBaja() ? 'Autorizado por' : 'Encargado' }}
-                  <span class="text-red-700">*</span>
-                </label>
-                <select
-                  id="idEncargadoSelect"
-                  formControlName="idEncargado"
-                  class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
-                  [class.border-unsm-red]="isFieldInvalid('idEncargado')"
-                  [class.border-slate-300]="!isFieldInvalid('idEncargado')"
-                >
-                  <option [ngValue]="null">Seleccionar encargado</option>
-                  @for (enc of encargados(); track enc.id) {
-                    <option [ngValue]="enc.id">
-                      {{ enc.siglaProfesion ? enc.siglaProfesion + ' ' : ''
-                      }}{{ enc.nombreCompleto || enc.nombres + ' ' + enc.apellidos }}
-                    </option>
-                  }
-                </select>
-                @if (isFieldInvalid('idEncargado')) {
-                  <p class="text-xs text-red-700 mt-1">Debe seleccionar el encargado</p>
-                }
-              </div>
-
-              <!-- Encargado de Almacén -->
-              <div>
-                <label
-                  for="idEncargadoAlmacenSelect"
-                  class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
-                >
-                  Encargado de Almacén <span class="text-red-700">*</span>
-                </label>
-                <select
-                  id="idEncargadoAlmacenSelect"
-                  formControlName="idEncargadoAlmacen"
-                  class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
-                  [class.border-unsm-red]="isFieldInvalid('idEncargadoAlmacen')"
-                  [class.border-slate-300]="!isFieldInvalid('idEncargadoAlmacen')"
-                >
-                  <option [ngValue]="null">Seleccionar encargado de almacén</option>
-                  @for (alm of encargadosAlmacenActivos(); track alm.id) {
-                    <option [ngValue]="alm.id">
-                      {{ alm.nombre }}{{ alm.esTitular ? ' (Titular)' : '' }}
-                    </option>
-                  }
-                </select>
-                @if (isFieldInvalid('idEncargadoAlmacen')) {
-                  <p class="text-xs text-red-700 mt-1">Debe seleccionar el encargado de almacén</p>
-                }
-              </div>
-            </div>
           </form>
 
           <!-- Detalle Dinámico de Artículos -->

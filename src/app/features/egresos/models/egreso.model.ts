@@ -56,12 +56,12 @@ export interface EncargadoAlmacen {
  */
 export interface Egreso {
   readonly id: number;
-  readonly idCliente: number;
+  readonly idCliente?: number | null;
   readonly nombreCliente?: string | null;
   readonly idEncargado?: number | null;
   readonly nombreEncargado?: string | null;
   readonly nombreEncargadoLibre?: string | null;
-  readonly idArea: number;
+  readonly idArea?: number | null;
   readonly nombreArea?: string | null;
   readonly idEncargadoAlmacen: number;
   readonly nombreEncargadoAlmacen?: string | null;
@@ -72,6 +72,7 @@ export interface Egreso {
   readonly correlativo: number;
   readonly numeroCompleto: string; // ej. E26-0001
   readonly tipoEgreso: TipoEgreso | string;
+  readonly motivoBaja?: string | null;
   readonly fecha: string;
   readonly estado: string; // "1": ACTIVO, "0": ANULADO
   readonly total: number;
@@ -118,11 +119,12 @@ export interface DetalleEgresoRequest {
  * DTO de solicitud para el registro transaccional de un nuevo despacho o baja.
  */
 export interface EgresoCreateRequest {
-  readonly idCliente: number;
+  readonly idCliente?: number | null;
   readonly idEncargado?: number | null;
   readonly nombreEncargadoLibre?: string | null;
   readonly tipoEgreso: TipoEgreso;
-  readonly idArea: number;
+  readonly motivoBaja?: string | null;
+  readonly idArea?: number | null;
   readonly idEncargadoAlmacen: number;
   readonly ambiente?: string | null;
   readonly prefijo?: string | null;

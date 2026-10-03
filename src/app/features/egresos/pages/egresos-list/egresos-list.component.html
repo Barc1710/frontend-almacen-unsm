@@ -68,7 +68,7 @@
         >
           <option value="TODOS">Todos los tipos de egreso</option>
           <option value="DESPACHO_ORDINARIO">Despacho</option>
-          <option value="BAJA_DETERIORO">Bajas por Deterioro</option>
+          <option value="BAJA_DETERIORO">Dado de baja</option>
         </select>
       </div>
 
@@ -254,34 +254,40 @@
 
                 <!-- Destinatario / Cliente -->
                 <td class="py-3 px-4 min-w-52">
-                  <p
-                    class="font-medium text-slate-800 line-clamp-1"
-                    [title]="egr.nombreCliente || '-'"
-                  >
-                    {{ egr.nombreCliente || 'Destinatario no especificado' }}
-                  </p>
+                  @if (egr.tipoEgreso !== 'DESPACHO_ORDINARIO') {
+                    <span class="text-xs text-slate-400 italic">
+                      — (Baja interna)
+                    </span>
+                  } @else {
+                    <p
+                      class="font-medium text-slate-800 line-clamp-1"
+                      [title]="egr.nombreCliente || '-'"
+                    >
+                      {{ egr.nombreCliente || 'Destinatario no especificado' }}
+                    </p>
+                  }
                 </td>
 
                 <!-- Área de Destino -->
                 <td class="py-3 px-4 min-w-44">
-                  <span class="text-slate-700 truncate" [title]="egr.nombreArea || ''">{{
-                    egr.nombreArea || 'Área general'
-                  }}</span>
+                  @if (egr.tipoEgreso !== 'DESPACHO_ORDINARIO') {
+                    <span class="text-xs text-slate-600 truncate block" [title]="egr.motivoBaja || 'Baja interna de almacén'">
+                      {{ egr.motivoBaja || 'Baja interna' }}
+                    </span>
+                  } @else {
+                    <span class="text-slate-700 truncate block" [title]="egr.nombreArea || ''">{{
+                      egr.nombreArea || 'Área general'
+                    }}</span>
+                  }
                 </td>
 
                 <!-- Tipo de Egreso -->
                 <td class="py-3 px-4 whitespace-nowrap">
-                  @if (egr.tipoEgreso === 'BAJA_DETERIORO') {
+                  @if (egr.tipoEgreso !== 'DESPACHO_ORDINARIO') {
                     <span
                       class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700"
                     >
-                      Baja Deterioro
-                    </span>
-                  } @else if (egr.tipoEgreso === 'BAJA_VENCIMIENTO') {
-                    <span
-                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700"
-                    >
-                      Baja Vencimiento
+                      Dado de baja
                     </span>
                   } @else {
                     <span
@@ -343,6 +349,22 @@
                         <svg lucideLoader2 class="size-4 animate-spin text-unsm-cyan"></svg>
                       } @else {
                         <svg lucideEye class="size-4"></svg>
+                      }
+                    </button>
+
+                    <!-- Botón Ver / Imprimir Autorización de Salida en PDF -->
+                    <button
+                      type="button"
+                      (click)="abrirPdf(egr)"
+                      [disabled]="descargandoPdfId() === egr.id"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
+                      title="Ver autorización de salida PDF en nueva pestaña"
+                      aria-label="Ver autorización de salida PDF en nueva pestaña"
+                    >
+                      @if (descargandoPdfId() === egr.id) {
+                        <svg lucideLoader2 class="size-4 animate-spin text-rose-600"></svg>
+                      } @else {
+                        <svg lucideFileDown class="size-4"></svg>
                       }
                     </button>
 
@@ -423,5 +445,6 @@
     [visible]="modalDetalleVisible()"
     [egreso]="egresoDetalle()"
     (cerrar)="cerrarModalDetalle()"
+    (imprimir)="abrirPdf($event)"
   ></app-egreso-detalle-modal>
 </div>

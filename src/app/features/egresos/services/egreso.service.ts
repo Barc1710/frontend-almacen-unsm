@@ -120,14 +120,16 @@ export class EgresoService {
    * Registra transaccionalmente un nuevo despacho o baja con afectación al inventario.
    */
   registrar(request: EgresoCreateRequest): Observable<EgresoConDetalles> {
+    const esBaja = request.tipoEgreso && request.tipoEgreso !== 'DESPACHO_ORDINARIO';
     const payload = {
-      idCliente: Number(request.idCliente),
-      idEncargado: request.idEncargado ? Number(request.idEncargado) : null,
-      nombreEncargadoLibre: request.nombreEncargadoLibre?.trim() || null,
+      idCliente: !esBaja && request.idCliente != null ? Number(request.idCliente) : null,
+      idEncargado: !esBaja && request.idEncargado != null ? Number(request.idEncargado) : null,
+      nombreEncargadoLibre: !esBaja && request.nombreEncargadoLibre ? request.nombreEncargadoLibre.trim() : null,
       tipoEgreso: request.tipoEgreso || 'DESPACHO_ORDINARIO',
-      idArea: Number(request.idArea),
+      motivoBaja: esBaja && request.motivoBaja ? request.motivoBaja.trim() : null,
+      idArea: !esBaja && request.idArea != null ? Number(request.idArea) : null,
       idEncargadoAlmacen: Number(request.idEncargadoAlmacen),
-      ambiente: request.ambiente?.trim() || null,
+      ambiente: !esBaja && request.ambiente ? request.ambiente.trim() : null,
       prefijo: request.prefijo?.trim() || null,
       detalles: request.detalles.map((d) => ({
         idArticulo: Number(d.idArticulo),
@@ -169,6 +171,15 @@ export class EgresoService {
         throw new Error('Error al anular el comprobante de despacho');
       }),
     );
+  }
+
+  /**
+   * Descarga o abre la autorización de salida de materiales en formato PDF.
+   */
+  descargarPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/egresos/${id}/reporte-pdf`, {
+      responseType: 'blob',
+    });
   }
 
   /**

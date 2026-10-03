@@ -72,6 +72,7 @@ interface CabeceraEgresoForm {
   ambiente: FormControl<string>;
   idEncargado: FormControl<number | null>;
   idEncargadoAlmacen: FormControl<number | null>;
+  motivoBaja: FormControl<string>;
 }
 
 @Component({
@@ -136,6 +137,10 @@ export class EgresoFormModalComponent {
     idEncargadoAlmacen: new FormControl<number | null>(null, {
       validators: [Validators.required],
     }),
+    motivoBaja: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(255)],
+    }),
   });
 
   /**
@@ -183,7 +188,7 @@ export class EgresoFormModalComponent {
    * Indica si la operación seleccionada corresponde a una baja por deterioro.
    */
   readonly esOperacionBaja = computed(() => {
-    return this.tipoOperacion() === 'BAJA_DETERIORO';
+    return this.tipoOperacion() !== 'DESPACHO_ORDINARIO';
   });
 
   constructor() {
@@ -215,13 +220,38 @@ export class EgresoFormModalComponent {
     if (this.guardando() || (tipo !== 'DESPACHO_ORDINARIO' && !this.esAdministrador())) return;
     this.tipoOperacion.set(tipo);
     this.cabeceraForm.controls.tipoEgreso.setValue(tipo);
+
+    const isBaja = tipo !== 'DESPACHO_ORDINARIO';
+    const idCliente = this.cabeceraForm.controls.idCliente;
+    const idArea = this.cabeceraForm.controls.idArea;
+    const idEncargado = this.cabeceraForm.controls.idEncargado;
     const ambiente = this.cabeceraForm.controls.ambiente;
-    ambiente.setValidators(
-      tipo === 'DESPACHO_ORDINARIO'
-        ? [Validators.maxLength(100)]
-        : [Validators.required, Validators.pattern(/\S/), Validators.maxLength(100)],
-    );
+    const motivoBaja = this.cabeceraForm.controls.motivoBaja;
+
+    if (isBaja) {
+      idCliente.clearValidators();
+      idCliente.setValue(null);
+      idArea.clearValidators();
+      idArea.setValue(null);
+      idEncargado.clearValidators();
+      idEncargado.setValue(null);
+      ambiente.clearValidators();
+      ambiente.setValue('');
+      motivoBaja.setValidators([Validators.required, Validators.pattern(/\S/), Validators.maxLength(255)]);
+    } else {
+      idCliente.setValidators([Validators.required]);
+      idArea.setValidators([Validators.required]);
+      idEncargado.setValidators([Validators.required]);
+      ambiente.setValidators([Validators.maxLength(100)]);
+      motivoBaja.clearValidators();
+      motivoBaja.setValue('');
+    }
+
+    idCliente.updateValueAndValidity();
+    idArea.updateValueAndValidity();
+    idEncargado.updateValueAndValidity();
     ambiente.updateValueAndValidity();
+    motivoBaja.updateValueAndValidity();
   }
 
   agregarFila(): void {
@@ -488,14 +518,16 @@ export class EgresoFormModalComponent {
       cantidad: Number(f.cantidad),
     }));
 
+    const esBaja = this.esOperacionBaja();
     const request: EgresoCreateRequest = {
-      idCliente: Number(raw.idCliente),
-      idEncargado: raw.idEncargado ? Number(raw.idEncargado) : null,
+      idCliente: !esBaja && raw.idCliente ? Number(raw.idCliente) : null,
+      idEncargado: !esBaja && raw.idEncargado ? Number(raw.idEncargado) : null,
       nombreEncargadoLibre: null,
       tipoEgreso: this.tipoOperacion(),
-      idArea: Number(raw.idArea),
+      motivoBaja: esBaja ? (raw.motivoBaja?.trim() || null) : null,
+      idArea: !esBaja && raw.idArea ? Number(raw.idArea) : null,
       idEncargadoAlmacen: Number(raw.idEncargadoAlmacen),
-      ambiente: raw.ambiente.trim() || null,
+      ambiente: !esBaja && raw.ambiente ? raw.ambiente.trim() : null,
       prefijo: null,
       detalles: detallesRequest,
     };
@@ -543,9 +575,14 @@ export class EgresoFormModalComponent {
       ambiente: '',
       idEncargado: encargadoId,
       idEncargadoAlmacen: titularId,
+      motivoBaja: '',
     });
     this.cabeceraForm.controls.idCliente.setValidators([Validators.required]);
-    this.cabeceraForm.controls.idCliente.updateValueAndValidity();
+    this.cabeceraForm.controls.idArea.setValidators([Validators.required]);
+    this.cabeceraForm.controls.idEncargado.setValidators([Validators.required]);
+    this.cabeceraForm.controls.ambiente.setValidators([Validators.maxLength(100)]);
+    this.cabeceraForm.controls.motivoBaja.clearValidators();
+    this.cabeceraForm.updateValueAndValidity();
 
     this.filas.set([]);
     this.agregarFila();

@@ -7,6 +7,7 @@ import {
   LucideCircleAlert,
   LucideMapPin,
   LucidePackage,
+  LucidePrinter,
   LucideTag,
   LucideUser,
   LucideX,
@@ -29,6 +30,7 @@ import { EgresoConDetalles } from '../../models';
     LucideUser,
     LucideBuilding2,
     LucideMapPin,
+    LucidePrinter,
   ],
   templateUrl: './egreso-detalle-modal.component.html',
 })
@@ -37,6 +39,7 @@ export class EgresoDetalleModalComponent {
   readonly egreso = input<EgresoConDetalles | null>(null);
 
   readonly cerrar = output<void>();
+  readonly imprimir = output<EgresoConDetalles>();
 
   readonly totalArticulos = computed(() => {
     const e = this.egreso();

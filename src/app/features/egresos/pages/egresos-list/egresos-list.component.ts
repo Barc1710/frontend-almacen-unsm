@@ -6,6 +6,7 @@ import {
   LucideBan,
   LucideCalendar,
   LucideEye,
+  LucideFileDown,
   LucideLoader2,
   LucidePackageCheck,
   LucidePlus,
@@ -42,6 +43,7 @@ import { EgresoService } from '../../services';
     LucideSearch,
     LucideRefreshCw,
     LucideEye,
+    LucideFileDown,
     LucideBan,
     LucideLoader2,
     LucideCalendar,
@@ -105,6 +107,7 @@ export class EgresosListComponent implements OnInit {
   readonly modalDetalleVisible = signal<boolean>(false);
   readonly egresoDetalle = signal<EgresoConDetalles | null>(null);
   readonly cargandoDetalleId = signal<number | null>(null);
+  readonly descargandoPdfId = signal<number | null>(null);
   readonly anulandoId = signal<number | null>(null);
 
   ngOnInit(): void {
@@ -296,6 +299,39 @@ export class EgresosListComponent implements OnInit {
   cerrarModalDetalle(): void {
     this.modalDetalleVisible.set(false);
     this.egresoDetalle.set(null);
+  }
+
+  abrirPdf(egreso: Egreso): void {
+    if (this.descargandoPdfId() !== null) return;
+    this.descargandoPdfId.set(egreso.id);
+
+    const nuevaPestana = window.open('about:blank', '_blank');
+
+    this.egresoService.descargarPdf(egreso.id).subscribe({
+      next: (blob) => {
+        this.descargandoPdfId.set(null);
+        const file = new Blob([blob], { type: 'application/pdf' });
+        const fileUrl = window.URL.createObjectURL(file);
+
+        if (nuevaPestana && !nuevaPestana.closed) {
+          nuevaPestana.location.href = fileUrl;
+        } else {
+          window.open(fileUrl, '_blank');
+        }
+
+        setTimeout(() => window.URL.revokeObjectURL(fileUrl), 60000);
+      },
+      error: () => {
+        this.descargandoPdfId.set(null);
+        if (nuevaPestana && !nuevaPestana.closed) {
+          nuevaPestana.close();
+        }
+        this.notificationService.error(
+          'Error al abrir PDF',
+          'No se pudo generar ni abrir la autorización de salida en formato PDF.',
+        );
+      },
+    });
   }
 
   anularDespacho(egreso: Egreso): void {
