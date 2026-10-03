@@ -9,12 +9,14 @@ import {
   LucideUser,
   LucideX,
 } from '@lucide/angular';
+import { ModalDialogDirective } from '../../../../shared/directives/modal-dialog.directive';
 import { IngresoConDetalles } from '../../models';
 
 @Component({
   selector: 'app-ingreso-detalle-modal',
   imports: [
     DatePipe,
+    ModalDialogDirective,
     LucideX,
     LucideBuilding2,
     LucideCalendar,

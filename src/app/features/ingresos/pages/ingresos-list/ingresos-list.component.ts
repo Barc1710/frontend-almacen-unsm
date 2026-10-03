@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import {
@@ -14,8 +14,8 @@ import {
   LucideTruck,
   LucideUser,
 } from '@lucide/angular';
-import { catchError, of } from 'rxjs';
-import { NotificationService, obtenerFechaHoy } from '../../../../core';
+import { Subscription } from 'rxjs';
+import { AuthService, NotificationService, obtenerFechaHoy } from '../../../../core';
 import { PaginationComponent } from '../../../../shared';
 import { IngresoDetalleModalComponent, IngresoFormModalComponent } from '../../components';
 import { Ingreso, IngresoConDetalles, Proveedor } from '../../models';
@@ -66,9 +66,17 @@ import { IngresoService } from '../../services';
 export class IngresosListComponent implements OnInit {
   private readonly ingresoService = inject(IngresoService);
   private readonly notificationService = inject(NotificationService);
+  private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
+  private consultaIngresos?: Subscription;
+
+  readonly esAdministrador = computed(() => this.authService.isAdmin());
   readonly cargando = signal<boolean>(false);
+  readonly errorListado = signal<string | null>(null);
+  readonly cargandoCatalogos = signal<boolean>(false);
+  readonly errorCatalogos = signal<string | null>(null);
+
   readonly ingresos = signal<Ingreso[]>([]);
   readonly totalElementos = signal<number>(0);
   readonly totalPaginas = signal<number>(0);
@@ -96,18 +104,28 @@ export class IngresosListComponent implements OnInit {
   }
 
   cargarCatalogos(): void {
+    this.cargandoCatalogos.set(true);
+    this.errorCatalogos.set(null);
     this.ingresoService
       .listarProveedoresActivos()
-      .pipe(
-        catchError(() => of([])),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((provs) => {
-        this.proveedores.set(provs);
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (provs) => {
+          this.proveedores.set(provs);
+          this.cargandoCatalogos.set(false);
+        },
+        error: () => {
+          this.cargandoCatalogos.set(false);
+          this.errorCatalogos.set(
+            'No se pudieron cargar los datos necesarios para registrar un ingreso.',
+          );
+        },
       });
   }
 
   cargarIngresos(): void {
+    this.consultaIngresos?.unsubscribe();
+    this.errorListado.set(null);
     this.cargando.set(true);
 
     let fechaInicio: string | undefined = undefined;
@@ -122,7 +140,7 @@ export class IngresosListComponent implements OnInit {
       fechaFin = this.fechaHasta() || undefined;
     }
 
-    this.ingresoService
+    this.consultaIngresos = this.ingresoService
       .listar({
         filtro: this.filtroTexto() || undefined,
         numeroOrden: this.filtroTexto() || undefined,
@@ -147,6 +165,9 @@ export class IngresosListComponent implements OnInit {
           this.cargando.set(false);
         },
         error: () => {
+          this.errorListado.set(
+            'No se pudieron cargar los comprobantes de ingreso. Intente nuevamente.',
+          );
           this.ingresos.set([]);
           this.totalElementos.set(0);
           this.totalPaginas.set(0);
@@ -221,6 +242,7 @@ export class IngresosListComponent implements OnInit {
   }
 
   abrirNuevoIngreso(): void {
+    if (this.cargandoCatalogos() || !!this.errorCatalogos()) return;
     this.modalRegistroVisible.set(true);
   }
 
@@ -300,7 +322,7 @@ export class IngresosListComponent implements OnInit {
   }
 
   anularIngreso(ingreso: Ingreso): void {
-    if (ingreso.estado === '0' || this.anulandoId() !== null) {
+    if (ingreso.estado === '0' || this.anulandoId() !== null || !this.esAdministrador()) {
       return;
     }
 

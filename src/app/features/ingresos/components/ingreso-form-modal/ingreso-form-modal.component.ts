@@ -9,6 +9,7 @@ import {
   OnInit,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -29,8 +30,9 @@ import {
   LucideTrash,
   LucideX,
 } from '@lucide/angular';
-import { catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, of, Subject, Subscription, switchMap } from 'rxjs';
 import { obtenerFechaHoy } from '../../../../core';
+import { ModalDialogDirective } from '../../../../shared/directives/modal-dialog.directive';
 import { Articulo } from '../../../articulos/models';
 import {
   Encargado,
@@ -119,6 +121,7 @@ interface CabeceraForm {
     ReactiveFormsModule,
     FormsModule,
     DecimalPipe,
+    ModalDialogDirective,
     LucideX,
     LucideSave,
     LucideLoader2,
@@ -176,6 +179,7 @@ export class IngresoFormModalComponent implements OnInit {
   readonly filas = signal<FilaDetalle[]>([]);
 
   private readonly busquedaSubjects = new Map<string, Subject<string>>();
+  private readonly busquedaSubscriptions = new Map<string, Subscription>();
 
   readonly cabeceraForm = new FormGroup<CabeceraForm>({
     idProveedor: new FormControl<number | null>(null, {
@@ -217,9 +221,10 @@ export class IngresoFormModalComponent implements OnInit {
     // Inicialización o reset al abrir la modal
     effect(() => {
       if (this.visible()) {
-        this.resetearFormulario();
-        this.cargarCatalogoArticulos();
-        this.cargarFirmantes();
+        untracked(() => {
+          this.resetearFormulario();
+          this.cargarFirmantes();
+        });
       }
     });
   }
@@ -239,7 +244,7 @@ export class IngresoFormModalComponent implements OnInit {
       .subscribe((lista) => {
         this.encargadosAlmacen.set(lista);
         if (!this.cabeceraForm.controls.idEncargadoAlmacen.value) {
-          const titular = lista.find((e) => e.esTitular) || lista[0];
+          const titular = lista.find((e) => e.esTitular) || (lista.length === 1 ? lista[0] : null);
           if (titular) {
             this.cabeceraForm.controls.idEncargadoAlmacen.setValue(titular.id);
           }
@@ -255,7 +260,7 @@ export class IngresoFormModalComponent implements OnInit {
       .subscribe({
         next: (lista) => {
           this.jefes.set(lista);
-          if (!this.cabeceraForm.controls.idJefe.value && lista.length > 0) {
+          if (!this.cabeceraForm.controls.idJefe.value && lista.length === 1) {
             this.cabeceraForm.controls.idJefe.setValue(lista[0].id);
           }
           this.cargandoFirmantes.set(false);
@@ -323,6 +328,9 @@ export class IngresoFormModalComponent implements OnInit {
     const listaActual = this.filas();
     if (index >= 0 && index < listaActual.length) {
       const fila = listaActual[index];
+      this.busquedaSubscriptions.get(fila.id)?.unsubscribe();
+      this.busquedaSubscriptions.delete(fila.id);
+      this.busquedaSubjects.get(fila.id)?.complete();
       this.busquedaSubjects.delete(fila.id);
 
       const nuevaLista = listaActual.filter((_, idx) => idx !== index);
@@ -392,27 +400,8 @@ export class IngresoFormModalComponent implements OnInit {
     fila.idArticulo = articulo.id;
     fila.codigoArticulo = articulo.codigo;
     fila.descripcionArticulo = articulo.descripcion;
-    fila.simboloUnidadMedida = articulo.simboloUnidadMedida || 'UND';
-
-    // Determinar si permite decimales de forma robusta por bandera o catálogo de unidad de medida
-    const unidadesDecimales = [
-      'KG',
-      'KGM',
-      'L',
-      'LTR',
-      'GL',
-      'GLL',
-      'GAL',
-      'M',
-      'MTR',
-      'M2',
-      'MTK',
-      'M3',
-    ];
-    const simbolo = (articulo.simboloUnidadMedida || '').toUpperCase().trim();
-    fila.permiteDecimales =
-      articulo.permiteDecimales === true ||
-      (articulo.permiteDecimales !== false && unidadesDecimales.includes(simbolo));
+    fila.simboloUnidadMedida = articulo.simboloUnidadMedida || '';
+    fila.permiteDecimales = articulo.permiteDecimales === true;
 
     fila.cantidad = 1;
     fila.precioUnitario = 0; // Precios siempre en 0
@@ -470,11 +459,11 @@ export class IngresoFormModalComponent implements OnInit {
     this.filas.set([...this.filas()]);
   }
 
-  cerrarSugerencias(fila: FilaDetalle): void {
-    setTimeout(() => {
-      fila.mostrarSugerencias = false;
-      this.filas.set([...this.filas()]);
-    }, 250);
+  cerrarSugerencias(fila: FilaDetalle, event: FocusEvent): void {
+    const contenedor = event.currentTarget as HTMLElement;
+    if (event.relatedTarget instanceof Node && contenedor.contains(event.relatedTarget)) return;
+    fila.mostrarSugerencias = false;
+    this.filas.set([...this.filas()]);
   }
 
   onSubmit(): void {
@@ -588,6 +577,9 @@ export class IngresoFormModalComponent implements OnInit {
     this.guardando.set(false);
     this.errorGeneral.set(null);
     this.alertaDuplicado.set(null);
+    this.busquedaSubscriptions.forEach((subscription) => subscription.unsubscribe());
+    this.busquedaSubscriptions.clear();
+    this.busquedaSubjects.forEach((subject) => subject.complete());
     this.busquedaSubjects.clear();
 
     this.cabeceraForm.reset({
@@ -606,7 +598,7 @@ export class IngresoFormModalComponent implements OnInit {
     const subject = new Subject<string>();
     this.busquedaSubjects.set(fila.id, subject);
 
-    subject
+    const subscription = subject
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         debounceTime(250),
@@ -637,6 +629,7 @@ export class IngresoFormModalComponent implements OnInit {
           this.filas.set([...this.filas()]);
         }
       });
+    this.busquedaSubscriptions.set(fila.id, subscription);
   }
 
   private handleError(err: unknown): void {

@@ -19,13 +19,23 @@
       <button
         type="button"
         (click)="abrirNuevoIngreso()"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-unsm-green hover:bg-unsm-green-dark active:scale-[0.98] text-white text-sm font-semibold shadow-sm transition-all duration-150 cursor-pointer"
+        [disabled]="cargandoCatalogos() || !!errorCatalogos()"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-unsm-green hover:bg-unsm-green-dark active:scale-[0.98] text-white text-sm font-semibold shadow-sm transition-all duration-150 cursor-pointer disabled:opacity-50"
       >
         <svg lucidePlus class="size-4"></svg>
         <span>Registrar Ingreso</span>
       </button>
     </div>
   </div>
+
+  @if (errorCatalogos()) {
+    <div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+      {{ errorCatalogos() }}
+      <button type="button" class="ml-2 underline font-semibold cursor-pointer" (click)="cargarCatalogos()">
+        Reintentar carga
+      </button>
+    </div>
+  }
 
   <!-- Barra de Filtros -->
   <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 space-y-3">
@@ -212,6 +222,19 @@
                 </div>
               </td>
             </tr>
+          } @else if (errorListado()) {
+            <tr>
+              <td colspan="7" class="p-6 text-center text-red-800">
+                <p role="alert">{{ errorListado() }}</p>
+                <button
+                  type="button"
+                  class="mt-2 underline font-semibold cursor-pointer"
+                  (click)="cargarIngresos()"
+                >
+                  Reintentar
+                </button>
+              </td>
+            </tr>
           } @else {
             @for (ing of ingresos(); track ing.id) {
               <tr
@@ -326,7 +349,7 @@
                       }
                     </button>
 
-                    @if (ing.estado === '1') {
+                    @if (ing.estado === '1' && esAdministrador()) {
                       <button
                         type="button"
                         (click)="anularIngreso(ing)"
@@ -341,6 +364,13 @@
                           <svg lucideBan class="size-4"></svg>
                         }
                       </button>
+                    } @else if (ing.estado === '0') {
+                      <span
+                        class="p-1.5 text-slate-300 cursor-not-allowed select-none inline-flex"
+                        title="Comprobante ya anulado"
+                      >
+                        <svg lucideBan class="size-4 opacity-30"></svg>
+                      </span>
                     } @else {
                       <span
                         class="p-1.5 text-slate-300 cursor-not-allowed select-none inline-flex"

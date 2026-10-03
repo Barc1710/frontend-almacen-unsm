@@ -374,13 +374,15 @@ export class IngresoService {
       'M3',
     ];
     const detalles = detallesRaw.map((d) => {
-      const simbolo = String(
-        d['simboloUnidadMedida'] || d['unidadMedida'] || d['simbolo'] || 'UND',
-      );
+      const simboloRaw = d['simboloUnidadMedida'] || d['unidadMedida'] || d['simbolo'];
+      const simbolo =
+        typeof simboloRaw === 'string' && simboloRaw.trim() ? simboloRaw.trim() : null;
       const permiteDec =
-        d['permiteDecimales'] === true ||
-        (d['permiteDecimales'] !== false &&
-          unidadesDecimales.includes(simbolo.toUpperCase().trim()));
+        typeof d['permiteDecimales'] === 'boolean'
+          ? d['permiteDecimales']
+          : simbolo && unidadesDecimales.includes(simbolo.toUpperCase().trim())
+            ? true
+            : null;
 
       return {
         id: typeof d['id'] === 'number' ? d['id'] : undefined,

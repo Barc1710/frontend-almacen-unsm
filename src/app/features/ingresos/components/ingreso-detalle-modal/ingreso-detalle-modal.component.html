@@ -1,6 +1,8 @@
 @if (visible() && ingreso()) {
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto"
+  <dialog
+    appModalDialog
+    (cancel)="onCerrar()"
+    class="m-0 border-0 max-w-none max-h-none w-screen h-dvh fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto"
     (click)="onBackdropClick($event)"
     role="dialog"
     aria-modal="true"
@@ -211,7 +213,7 @@
                         <span
                           class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-700"
                         >
-                          {{ item.simboloUnidadMedida || 'UND' }}
+                          {{ item.simboloUnidadMedida || '—' }}
                         </span>
                       </td>
                       <td
@@ -262,5 +264,5 @@
         </button>
       </div>
     </div>
-  </div>
+  </dialog>
 }

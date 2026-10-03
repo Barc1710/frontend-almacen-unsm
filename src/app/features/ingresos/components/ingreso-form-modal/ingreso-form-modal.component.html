@@ -1,6 +1,8 @@
 @if (visible()) {
-  <div
-    class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs p-3 sm:p-6"
+  <dialog
+    appModalDialog
+    (cancel)="onCerrar()"
+    class="m-0 border-0 max-w-none max-h-none w-screen h-dvh fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs p-3 sm:p-6"
     (click)="onBackdropClick($event)"
     role="dialog"
     aria-modal="true"
@@ -292,7 +294,10 @@
                             </button>
                           </div>
                         } @else {
-                          <div class="relative w-full min-w-0">
+                          <div
+                            class="relative w-full min-w-0"
+                            (focusout)="cerrarSugerencias(fila, $event)"
+                          >
                             <div class="relative flex items-center w-full min-w-0">
                               <svg
                                 lucideSearch
@@ -303,7 +308,6 @@
                                 [ngModel]="fila.busquedaTexto"
                                 (ngModelChange)="onBuscarArticuloInput(fila, $event)"
                                 (focus)="onFocusArticulo(fila)"
-                                (blur)="cerrarSugerencias(fila)"
                                 placeholder="Buscar o seleccionar artículo..."
                                 aria-label="Buscar artículo"
                                 class="w-full h-9 pl-8 pr-8 rounded-lg border text-xs text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
@@ -333,7 +337,7 @@
                                 @for (sug of fila.sugerencias; track sug.id) {
                                   <button
                                     type="button"
-                                    (mousedown)="seleccionarArticulo(fila, sug)"
+                                    (click)="seleccionarArticulo(fila, sug)"
                                     class="w-full text-left p-2.5 hover:bg-unsm-green-light/50 transition-colors flex items-center justify-between gap-3 cursor-pointer group"
                                   >
                                     <div class="min-w-0 flex items-center gap-2 flex-1">
@@ -494,5 +498,5 @@
       </div>
     </div>
   </div>
-</div>
+</dialog>
 }
