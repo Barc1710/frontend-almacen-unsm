@@ -1,0 +1,515 @@
+@if (visible()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto"
+    (click)="onBackdropClick($event)"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'modal-registro-ingreso-title'"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-5xl my-auto overflow-visible relative flex flex-col max-h-[92vh]"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Cabecera de la Modal -->
+      <div
+        class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 rounded-t-2xl shrink-0"
+      >
+        <h3 id="modal-registro-ingreso-title" class="text-lg font-bold text-slate-800">
+          Nuevo Ingreso
+        </h3>
+        <button
+          type="button"
+          (click)="onCerrar()"
+          [disabled]="guardando()"
+          class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer disabled:opacity-50"
+          aria-label="Cerrar modal"
+        >
+          <svg lucideX class="size-5"></svg>
+        </button>
+      </div>
+
+      <!-- Contenido de la Modal -->
+      <div class="p-6 overflow-visible flex-1 space-y-4">
+        <!-- Banner de Error General -->
+        @if (errorGeneral()) {
+          <div
+            class="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-900 flex items-start gap-3"
+            role="alert"
+          >
+            <svg lucideCircleAlert class="size-5 text-unsm-red shrink-0 mt-0.5"></svg>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-red-800">Error al guardar</p>
+              <p class="text-xs text-red-700 mt-0.5">{{ errorGeneral() }}</p>
+            </div>
+          </div>
+        }
+
+        <!-- Banner de Artículo Duplicado en Lote -->
+        @if (alertaDuplicado()) {
+          <div
+            class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-3"
+            role="alert"
+          >
+            <svg lucideAlertCircle class="size-5 text-amber-600 shrink-0 mt-0.5"></svg>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-amber-800">Artículo ya agregado</p>
+              <p class="text-xs text-amber-700 mt-0.5">{{ alertaDuplicado() }}</p>
+            </div>
+          </div>
+        }
+
+        <!-- Formulario de Cabecera -->
+        <form
+          [formGroup]="cabeceraForm"
+          id="ingresoForm"
+          (ngSubmit)="onSubmit()"
+          class="space-y-4"
+          novalidate
+        >
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Selector de Proveedor -->
+            <div>
+              <label
+                for="idProveedor"
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                Proveedor <span class="text-unsm-red">*</span>
+              </label>
+              <select
+                id="idProveedor"
+                formControlName="idProveedor"
+                class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                [class.border-unsm-red]="isFieldInvalid('idProveedor')"
+                [class.border-slate-300]="!isFieldInvalid('idProveedor')"
+              >
+                <option [ngValue]="null">Seleccionar proveedor</option>
+                @for (prov of proveedores(); track prov.id) {
+                  <option [ngValue]="prov.id">
+                    {{ prov.razonSocial }}{{ prov.ruc ? ' (RUC: ' + prov.ruc + ')' : '' }}
+                  </option>
+                }
+              </select>
+              @if (isFieldInvalid('idProveedor')) {
+                <p class="text-xs text-unsm-red mt-1">Debe seleccionar un proveedor</p>
+              }
+            </div>
+
+            <!-- N° de Ingreso -->
+            <div>
+              <label
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                N° de Ingreso
+              </label>
+              <div class="relative flex items-center">
+                <input
+                  type="text"
+                  [value]="proximoCorrelativo() || 'Cargando...'"
+                  readonly
+                  tabindex="-1"
+                  aria-label="Número de ingreso correlativo"
+                  class="w-full h-10 px-3 rounded-lg border border-slate-300 bg-slate-100 text-sm font-mono font-bold text-slate-800 outline-none select-none cursor-not-allowed"
+                />
+                @if (cargandoCorrelativo()) {
+                  <div class="absolute right-3 text-slate-400">
+                    <svg lucideLoader2 class="size-4 animate-spin"></svg>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Fecha de Ingreso -->
+            <div>
+              <label
+                for="fecha"
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                Fecha de Recepción <span class="text-unsm-red">*</span>
+              </label>
+              <input
+                id="fecha"
+                type="date"
+                formControlName="fecha"
+                (click)="abrirSelectorFecha($event)"
+                class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
+                [class.border-unsm-red]="isFieldInvalid('fecha')"
+                [class.border-slate-300]="!isFieldInvalid('fecha')"
+              />
+              @if (isFieldInvalid('fecha')) {
+                <p class="text-xs text-unsm-red mt-1">La fecha es obligatoria</p>
+              }
+            </div>
+
+            <!-- Encargado de Almacén (Firmante Almacén) -->
+            <div>
+              <label
+                for="idEncargadoAlmacen"
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                Encargado de Almacén <span class="text-unsm-red">*</span>
+              </label>
+              <select
+                id="idEncargadoAlmacen"
+                formControlName="idEncargadoAlmacen"
+                class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                [class.border-unsm-red]="isFieldInvalid('idEncargadoAlmacen')"
+                [class.border-slate-300]="!isFieldInvalid('idEncargadoAlmacen')"
+              >
+                <option [ngValue]="null">Seleccionar encargado</option>
+                @for (enc of encargadosAlmacen(); track enc.id) {
+                  <option [ngValue]="enc.id">
+                    {{ enc.nombre }}{{ enc.esTitular ? ' (Titular)' : '' }}
+                  </option>
+                }
+              </select>
+              @if (isFieldInvalid('idEncargadoAlmacen')) {
+                <p class="text-xs text-unsm-red mt-1">El encargado de almacén es requerido</p>
+              }
+            </div>
+
+            <!-- Jefe USG (Firmante Jefatura) -->
+            <div class="sm:col-span-2">
+              <label
+                for="idJefe"
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                Jefe USG-UNSM <span class="text-unsm-red">*</span>
+              </label>
+              <select
+                id="idJefe"
+                formControlName="idJefe"
+                class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                [class.border-unsm-red]="isFieldInvalid('idJefe')"
+                [class.border-slate-300]="!isFieldInvalid('idJefe')"
+              >
+                <option [ngValue]="null">Seleccionar jefe</option>
+                @for (jefe of jefes(); track jefe.id) {
+                  <option [ngValue]="jefe.id">
+                    {{ jefe.siglaProfesion ? jefe.siglaProfesion + ' ' : '' }}{{ jefe.nombres }} {{ jefe.apellidos }}{{ jefe.ambiente ? ' (' + jefe.ambiente + ')' : '' }}
+                  </option>
+                }
+              </select>
+              @if (isFieldInvalid('idJefe')) {
+                <p class="text-xs text-unsm-red mt-1">El jefe de USG es requerido</p>
+              }
+            </div>
+
+            <!-- Observación -->
+            <div class="sm:col-span-3">
+              <label
+                for="observacion"
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                Observación
+              </label>
+              <textarea
+                id="observacion"
+                rows="2"
+                maxlength="255"
+                placeholder="Observación o nota adicional del ingreso (opcional)..."
+                formControlName="observacion"
+                class="w-full p-3 rounded-lg border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green resize-none"
+              ></textarea>
+            </div>
+          </div>
+        </form>
+
+        <!-- Detalle Dinámico de Artículos -->
+        <div class="space-y-3 pt-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+              Artículos y Bienes
+            </h4>
+
+            <button
+              type="button"
+              (click)="agregarFila()"
+              [disabled]="guardando()"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-unsm-green-light hover:bg-unsm-green/20 text-unsm-green-dark text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+            >
+              <svg lucidePlus class="size-3.5"></svg>
+              <span>Agregar Artículo</span>
+            </button>
+          </div>
+
+          <!-- Tabla de Renglones -->
+          <div class="rounded-xl border border-slate-200 overflow-visible shadow-2xs">
+            <div class="overflow-visible">
+              <table class="w-full text-left text-sm text-slate-600 border-collapse">
+                <thead
+                  class="bg-slate-50 text-xs font-semibold text-slate-700 border-b border-slate-200"
+                >
+                  <tr>
+                    <th scope="col" class="py-3 px-3.5 w-12 text-center">#</th>
+                    <th scope="col" class="py-3 px-3.5 min-w-80 font-semibold text-slate-700">
+                      Artículo
+                    </th>
+                    <th
+                      scope="col"
+                      class="py-3 px-3.5 w-28 text-center font-semibold text-slate-700"
+                    >
+                      U.M.
+                    </th>
+                    <th
+                      scope="col"
+                      class="py-3 px-3.5 w-44 text-right font-semibold text-slate-700"
+                    >
+                      Cantidad Recibida
+                    </th>
+                    <th
+                      scope="col"
+                      class="py-3 px-3.5 w-16 text-center font-semibold text-slate-700"
+                    >
+                      Acción
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  @for (fila of filas(); track fila.id; let idx = $index) {
+                    <tr
+                      class="hover:bg-slate-50/50 transition-colors align-top"
+                      [class.relative]="fila.mostrarSugerencias"
+                      [class.z-40]="fila.mostrarSugerencias"
+                    >
+                      <!-- Número de Renglón -->
+                      <td class="py-3 px-3.5 text-center text-xs font-medium text-slate-400 pt-4">
+                        {{ idx + 1 }}
+                      </td>
+
+                      <!-- Artículo / Búsqueda predictiva integrada como select -->
+                      <td class="py-2.5 px-3.5 relative">
+                        @if (fila.articulo) {
+                          <div
+                            class="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200"
+                          >
+                            <div class="min-w-0 flex-1">
+                              <div class="flex items-center gap-2">
+                                <span
+                                  class="font-mono text-xs font-bold text-slate-900 bg-white px-1.5 py-0.5 rounded border border-slate-200 shrink-0"
+                                >
+                                  {{ fila.codigoArticulo }}
+                                </span>
+                                <span
+                                  class="text-xs font-semibold text-slate-800 truncate"
+                                  [title]="fila.descripcionArticulo"
+                                >
+                                  {{ fila.descripcionArticulo }}
+                                </span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              (click)="limpiarArticuloEnFila(fila)"
+                              class="p-1 rounded-md text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors shrink-0 cursor-pointer"
+                              title="Cambiar artículo"
+                              aria-label="Cambiar artículo"
+                            >
+                              <svg lucideX class="size-3.5"></svg>
+                            </button>
+                          </div>
+                        } @else {
+                          <div class="relative">
+                            <div class="relative flex items-center">
+                              <svg
+                                lucideSearch
+                                class="size-3.5 text-slate-400 absolute left-3 pointer-events-none"
+                              ></svg>
+                              <input
+                                type="text"
+                                [ngModel]="fila.busquedaTexto"
+                                (ngModelChange)="onBuscarArticuloInput(fila, $event)"
+                                (focus)="onFocusArticulo(fila)"
+                                (blur)="cerrarSugerencias(fila)"
+                                placeholder="Buscar o seleccionar artículo..."
+                                aria-label="Buscar artículo"
+                                class="w-full h-9 pl-8 pr-8 rounded-lg border text-xs text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
+                                [class.border-unsm-red]="fila.errorArticulo"
+                                [class.border-slate-300]="!fila.errorArticulo"
+                              />
+                              <div
+                                class="absolute right-2.5 text-slate-400 pointer-events-none flex items-center"
+                              >
+                                @if (fila.buscando) {
+                                  <svg lucideLoader2 class="size-3.5 animate-spin"></svg>
+                                } @else {
+                                  <svg lucideChevronDown class="size-3.5"></svg>
+                                }
+                              </div>
+                            </div>
+
+                            @if (fila.errorArticulo) {
+                              <p class="text-[11px] text-unsm-red mt-1">{{ fila.errorArticulo }}</p>
+                            }
+
+                            <!-- Menú flotante de resultados predictivos tipo combobox -->
+                            @if (fila.mostrarSugerencias && fila.sugerencias.length > 0) {
+                              <div
+                                class="absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto bg-white rounded-xl shadow-2xl border border-slate-200 divide-y divide-slate-100 ring-1 ring-black/5"
+                              >
+                                @for (sug of fila.sugerencias; track sug.id) {
+                                  <button
+                                    type="button"
+                                    (mousedown)="seleccionarArticulo(fila, sug)"
+                                    class="w-full text-left p-2.5 hover:bg-unsm-green-light/50 transition-colors flex items-center justify-between gap-3 cursor-pointer group"
+                                  >
+                                    <div class="min-w-0">
+                                      <div class="flex items-center gap-2">
+                                        <span
+                                          class="font-mono text-xs font-bold text-slate-900 group-hover:text-unsm-green-dark"
+                                        >
+                                          {{ sug.codigo }}
+                                        </span>
+                                        <span class="text-xs text-slate-700 truncate">
+                                          {{ sug.descripcion }}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <span
+                                      class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700 shrink-0"
+                                    >
+                                      {{ sug.simboloUnidadMedida || 'UND' }}
+                                    </span>
+                                  </button>
+                                }
+                              </div>
+                            } @else if (
+                              fila.mostrarSugerencias && fila.busquedaTexto.trim().length > 0
+                            ) {
+                              <div
+                                class="absolute left-0 right-0 z-50 mt-1 p-3 bg-white rounded-xl shadow-2xl border border-slate-200 text-xs text-slate-500 text-center"
+                              >
+                                No se encontraron artículos que coincidan con la búsqueda.
+                              </div>
+                            }
+                          </div>
+                        }
+                      </td>
+
+                      <!-- Unidad de Medida -->
+                      <td class="py-2.5 px-3.5 text-center pt-3.5">
+                        <span
+                          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700"
+                        >
+                          {{ fila.simboloUnidadMedida || 'UND' }}
+                        </span>
+                      </td>
+
+                      <!-- Cantidad -->
+                      <td class="py-2.5 px-3.5 text-right w-44">
+                        <input
+                          type="number"
+                          [ngModel]="fila.cantidad"
+                          (ngModelChange)="onCantidadInput(fila, $event)"
+                          (blur)="onCantidadBlur(fila)"
+                          [step]="fila.permiteDecimales ? 'any' : '1'"
+                          [min]="fila.permiteDecimales ? '0.01' : '1'"
+                          [disabled]="!fila.articulo"
+                          class="w-full h-9 px-2 text-right rounded-lg border text-xs font-semibold text-slate-900 tabular-nums transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green disabled:bg-slate-100 disabled:text-slate-400"
+                          [class.border-unsm-red]="fila.errorCantidad"
+                          [class.border-slate-300]="!fila.errorCantidad"
+                        />
+                        @if (fila.errorCantidad) {
+                          <p class="text-[10px] text-unsm-red mt-0.5 text-right font-medium">
+                            {{ fila.errorCantidad }}
+                          </p>
+                        } @else if (fila.articulo) {
+                          <span
+                            class="block text-[10px] mt-0.5 text-right font-medium"
+                            [class.text-emerald-700]="fila.permiteDecimales"
+                            [class.text-slate-400]="!fila.permiteDecimales"
+                          >
+                            {{ fila.permiteDecimales ? 'Admite decimales' : 'Solo enteros' }}
+                          </span>
+                        }
+                      </td>
+
+                      <!-- Botón Eliminar Fila -->
+                      <td class="py-2.5 px-3.5 text-center pt-3">
+                        <button
+                          type="button"
+                          (click)="eliminarFila(idx)"
+                          [disabled]="guardando()"
+                          class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+                          title="Eliminar fila"
+                          aria-label="Eliminar fila"
+                        >
+                          <svg lucideTrash class="size-4"></svg>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+
+                  <!-- Botón rápido para seguir añadiendo filas directamente al pie de los artículos -->
+                  <tr
+                    class="border-t border-slate-100 bg-slate-50/30 hover:bg-slate-50/70 transition-colors"
+                  >
+                    <td colspan="5" class="py-2.5 px-3.5">
+                      <button
+                        type="button"
+                        (click)="agregarFila()"
+                        [disabled]="guardando()"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-unsm-green-dark bg-unsm-green-light hover:bg-unsm-green/20 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+                        title="Añadir otra fila de artículo"
+                      >
+                        <svg lucidePlus class="size-3.5"></svg>
+                        <span>Añadir fila</span>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Resumen Totalizador -->
+            <div
+              class="bg-slate-50/90 px-4 py-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
+            >
+              <div class="flex items-center gap-2 text-slate-600">
+                <span>Renglones:</span>
+                <strong class="text-slate-900 font-bold">{{ totalArticulos() }}</strong>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <span class="text-slate-600 font-semibold uppercase tracking-wider">
+                  Total Unidades:
+                </span>
+                <span class="text-base font-bold text-unsm-green-dark tabular-nums">
+                  {{ totalCantidad() | number: '1.0-2' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie de la Modal -->
+      <div
+        class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50/70 rounded-b-2xl shrink-0"
+      >
+        <button
+          type="button"
+          (click)="onCerrar()"
+          [disabled]="guardando()"
+          class="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-50"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          form="ingresoForm"
+          [disabled]="guardando()"
+          class="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white bg-unsm-green hover:bg-unsm-green-dark active:scale-[0.98] shadow-sm transition-all duration-150 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          @if (guardando()) {
+            <svg lucideLoader2 class="size-4 animate-spin"></svg>
+            <span>Guardando...</span>
+          } @else {
+            <svg lucideSave class="size-4"></svg>
+            <span>Guardar</span>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

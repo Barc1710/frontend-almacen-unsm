@@ -1,0 +1,291 @@
+@if (visible()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto"
+    (click)="onBackdropClick($event)"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'modal-articulo-title'"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl my-auto overflow-hidden flex flex-col max-h-[92vh]"
+      (click)="$event.stopPropagation()"
+    >
+      <div
+        class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 shrink-0"
+      >
+        <h3 id="modal-articulo-title" class="text-lg font-bold text-slate-800">
+          {{ isEdit() ? 'Editar Artículo' : 'Nuevo Artículo' }}
+        </h3>
+        <button
+          type="button"
+          (click)="onCerrar()"
+          [disabled]="guardando()"
+          class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer disabled:opacity-50"
+          aria-label="Cerrar modal"
+        >
+          <svg lucideX class="size-5"></svg>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto flex-1">
+        @if (conflictoCodigo()) {
+          <div
+            class="mb-5 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-3"
+            role="alert"
+          >
+            <svg lucideCircleAlert class="size-5 text-amber-600 shrink-0 mt-0.5"></svg>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-amber-800">Código duplicado</p>
+              <p class="text-xs text-amber-700 mt-0.5">{{ conflictoCodigo() }}</p>
+            </div>
+          </div>
+        }
+
+        @if (errorGeneral()) {
+          <div
+            class="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-900 flex items-start gap-3"
+            role="alert"
+          >
+            <svg lucideCircleAlert class="size-5 text-unsm-red shrink-0 mt-0.5"></svg>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-red-800">Error al guardar</p>
+              <p class="text-xs text-red-700 mt-0.5">{{ errorGeneral() }}</p>
+            </div>
+          </div>
+        }
+
+        <form
+          [formGroup]="form"
+          (ngSubmit)="onSubmit()"
+          id="articuloForm"
+          class="space-y-4"
+          novalidate
+        >
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                for="idFamilia"
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                Familia <span class="text-unsm-red">*</span>
+              </label>
+              <select
+                id="idFamilia"
+                formControlName="idFamilia"
+                class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                [class.border-unsm-red]="isFieldInvalid('idFamilia')"
+                [class.border-slate-300]="!isFieldInvalid('idFamilia')"
+              >
+                <option [ngValue]="null">Seleccionar familia</option>
+                @for (fam of familias(); track fam.id) {
+                  <option [ngValue]="fam.id">{{ fam.nombre }}</option>
+                }
+              </select>
+              @if (isFieldInvalid('idFamilia')) {
+                <p class="text-xs text-unsm-red mt-1">Debe seleccionar una familia</p>
+              }
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label
+                  for="codigo"
+                  class="block text-xs font-semibold text-slate-700 uppercase tracking-wider"
+                >
+                  Código <span class="text-unsm-red">*</span>
+                </label>
+                @if (!isEdit() && cargandoCodigo()) {
+                  <span class="inline-flex items-center gap-1 text-[11px] text-slate-400">
+                    <svg lucideLoader2 class="size-3 animate-spin"></svg>
+                    <span>Generando...</span>
+                  </span>
+                } @else if (!isEdit() && form.controls.codigo.value) {
+                  <span
+                    class="text-[11px] font-semibold text-unsm-green-dark bg-unsm-green-light px-1.5 py-0.5 rounded"
+                  >
+                    Automático
+                  </span>
+                }
+              </div>
+              <div class="relative">
+                <input
+                  id="codigo"
+                  type="text"
+                  formControlName="codigo"
+                  maxlength="20"
+                  class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors uppercase outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
+                  [class.border-unsm-red]="isFieldInvalid('codigo') || conflictoCodigo()"
+                  [class.border-slate-300]="!isFieldInvalid('codigo') && !conflictoCodigo()"
+                />
+                @if (cargandoCodigo()) {
+                  <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    <svg lucideLoader2 class="size-4 animate-spin"></svg>
+                  </div>
+                }
+              </div>
+              @if (isFieldInvalid('codigo')) {
+                <p class="text-xs text-unsm-red mt-1">
+                  El código es obligatorio (máx. 20 caracteres)
+                </p>
+              }
+            </div>
+
+            <div class="sm:col-span-2">
+              <label
+                for="descripcion"
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                Descripción <span class="text-unsm-red">*</span>
+              </label>
+              <input
+                id="descripcion"
+                type="text"
+                formControlName="descripcion"
+                maxlength="255"
+                class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
+                [class.border-unsm-red]="isFieldInvalid('descripcion')"
+                [class.border-slate-300]="!isFieldInvalid('descripcion')"
+              />
+              @if (isFieldInvalid('descripcion')) {
+                <p class="text-xs text-unsm-red mt-1">La descripción es obligatoria</p>
+              }
+            </div>
+
+            <div>
+              <label
+                for="idMarca"
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                Marca <span class="text-unsm-red">*</span>
+              </label>
+              <select
+                id="idMarca"
+                formControlName="idMarca"
+                class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                [class.border-unsm-red]="isFieldInvalid('idMarca')"
+                [class.border-slate-300]="!isFieldInvalid('idMarca')"
+              >
+                <option [ngValue]="null">Seleccionar marca</option>
+                @for (m of marcas(); track m.id) {
+                  <option [ngValue]="m.id">{{ m.nombre }}</option>
+                }
+              </select>
+              @if (isFieldInvalid('idMarca')) {
+                <p class="text-xs text-unsm-red mt-1">Debe seleccionar una marca</p>
+              }
+            </div>
+
+            <div>
+              <label
+                for="idUbicacion"
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                Ubicación <span class="text-unsm-red">*</span>
+              </label>
+              <select
+                id="idUbicacion"
+                formControlName="idUbicacion"
+                class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                [class.border-unsm-red]="isFieldInvalid('idUbicacion')"
+                [class.border-slate-300]="!isFieldInvalid('idUbicacion')"
+              >
+                <option [ngValue]="null">Seleccionar ubicación</option>
+                @for (u of ubicaciones(); track u.id) {
+                  <option [ngValue]="u.id">{{ u.nombre }}</option>
+                }
+              </select>
+              @if (isFieldInvalid('idUbicacion')) {
+                <p class="text-xs text-unsm-red mt-1">Debe seleccionar una ubicación</p>
+              }
+            </div>
+
+            <div>
+              <label
+                for="idUnidadMedida"
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                Unidad de Medida
+              </label>
+              <select
+                id="idUnidadMedida"
+                formControlName="idUnidadMedida"
+                class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+              >
+                <option [ngValue]="null">Sin unidad especificada</option>
+                @for (um of unidadesMedida(); track um.id) {
+                  <option [ngValue]="um.id">{{ um.nombre }} ({{ um.simbolo }})</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label
+                for="cantidadMinima"
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                Stock Mínimo <span class="text-unsm-red">*</span>
+              </label>
+              <input
+                id="cantidadMinima"
+                type="number"
+                step="any"
+                min="0"
+                formControlName="cantidadMinima"
+                class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
+                [class.border-unsm-red]="isFieldInvalid('cantidadMinima')"
+                [class.border-slate-300]="!isFieldInvalid('cantidadMinima')"
+              />
+              @if (isFieldInvalid('cantidadMinima')) {
+                <p class="text-xs text-unsm-red mt-1">Debe ingresar un valor mayor o igual a 0</p>
+              }
+            </div>
+          </div>
+
+          <div>
+            <label
+              for="detalle"
+              class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+            >
+              Detalle
+            </label>
+            <textarea
+              id="detalle"
+              rows="2"
+              maxlength="255"
+              formControlName="detalle"
+              class="w-full p-3 rounded-lg border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green resize-none"
+            ></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div
+        class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50/70 shrink-0"
+      >
+        <button
+          type="button"
+          (click)="onCerrar()"
+          [disabled]="guardando()"
+          class="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-50"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          form="articuloForm"
+          [disabled]="guardando()"
+          class="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white bg-unsm-green hover:bg-unsm-green-dark active:scale-[0.98] shadow-sm transition-all duration-150 cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
+        >
+          @if (guardando()) {
+            <svg lucideLoader2 class="size-4 animate-spin"></svg>
+            <span>Guardando...</span>
+          } @else {
+            <svg lucideSave class="size-4"></svg>
+            <span>Guardar</span>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

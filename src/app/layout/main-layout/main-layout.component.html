@@ -1,0 +1,37 @@
+<div
+  class="h-screen w-screen overflow-hidden flex bg-slate-50 text-slate-800 antialiased font-sans"
+>
+  <!-- Sidebar de Escritorio (fijo a la izquierda, ancho 260px) -->
+  <aside class="hidden lg:flex flex-col w-65 shrink-0 h-full bg-unsm-green-dark z-20">
+    <app-sidebar class="h-full min-h-0 flex flex-col" />
+  </aside>
+
+  <!-- Menú lateral móvil / tablet como Drawer Flotante con Backdrop -->
+  @if (layoutService.isMobileSidebarOpen()) {
+    <!-- Fondo desenfocado (backdrop) -->
+    <div
+      (click)="layoutService.close()"
+      class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs lg:hidden transition-opacity"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Drawer Flotante -->
+    <aside
+      class="fixed inset-y-0 left-0 z-50 w-65 bg-unsm-green-dark shadow-2xl lg:hidden flex flex-col h-full"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Menú lateral de navegación"
+    >
+      <app-sidebar class="h-full min-h-0 flex flex-col" />
+    </aside>
+  }
+
+  <!-- Contenedor Principal: Topbar superior + Área de contenido con scroll independiente -->
+  <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+    <app-topbar />
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-slate-50" role="main">
+      <router-outlet />
+    </main>
+  </div>
+</div>

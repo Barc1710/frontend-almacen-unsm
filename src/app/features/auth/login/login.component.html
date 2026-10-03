@@ -1,0 +1,205 @@
+<div
+  class="min-h-screen w-full flex flex-col lg:flex-row relative selection:bg-unsm-green-light selection:text-unsm-green-dark"
+>
+  <!-- Fondo para versión móvil: imagen campus con overlay verde institucional -->
+  <div class="lg:hidden absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+    <img
+      ngSrc="/images/logos/login-campus.png"
+      fill
+      priority
+      alt=""
+      class="object-cover object-center"
+    />
+    <div class="absolute inset-0 bg-gradient-to-r from-[#1c2c21] to-[#004e1a] opacity-85"></div>
+  </div>
+
+  <!-- Panel Izquierdo: Formulario de Autenticación (punto medio equilibrado y centrado verticalmente) -->
+  <section
+    class="w-full lg:w-[33%] xl:w-[28.5%] 2xl:w-[25%] lg:min-w-[380px] xl:min-w-[415px] flex flex-col justify-center items-center px-6 sm:px-8 lg:px-8 xl:px-10 py-6 lg:py-10 min-h-screen lg:bg-white lg:border-r lg:border-slate-100 z-10"
+    aria-labelledby="login-heading"
+  >
+    <div
+      class="w-full max-w-[375px] sm:max-w-[385px] my-auto flex flex-col justify-center bg-white rounded-2xl lg:rounded-none shadow-2xl lg:shadow-none p-6 sm:p-8 lg:p-0"
+    >
+      <!-- Escudo Institucional (sin contenedor, limpio, directo) -->
+      <div class="flex justify-center mb-4">
+        <img
+          ngSrc="/images/logos/escudo_unsm.png"
+          width="120"
+          height="138"
+          priority
+          alt="Escudo Oficial de la Universidad Nacional de San Martín"
+          class="h-36 sm:h-40 w-auto object-contain select-none"
+        />
+      </div>
+
+      <!-- Título: Universidad Nacional de San Martín con tamaño mayor (1.8rem) como en el Campus Virtual -->
+      <h1
+        id="login-heading"
+        class="text-xl sm:text-2xl lg:text-[1.65rem] font-bold text-[#4b4b4d] text-center uppercase font-sans leading-tight px-1"
+      >
+        Universidad Nacional<br class="hidden sm:inline" />
+        de San Martín
+      </h1>
+
+      <!-- Subtítulo: Sistema de Gestión de Almacén Central con letra grisácea #9a9a9b -->
+      <p class="text-base sm:text-lg font-semibold text-[#9a9a9b] text-center tracking-tight mt-1">
+        Sistema de Gestión del Almacén Central
+      </p>
+
+      <!-- Saludo: Bienvenido en letra grisácea #9a9a9b -->
+      <h2
+        class="text-lg sm:text-xl font-normal text-[#9a9a9b] text-center tracking-normal mt-4 mb-3 font-sans"
+      >
+        Bienvenido
+      </h2>
+
+      <!-- Formulario Reactivo con inputs h-12 y distancia estable sin saltos -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="mt-1" novalidate>
+        <!-- Campo: Usuario con floating label y fondo verde claro #f2fff6 -->
+        <div>
+          <div class="relative">
+            <input
+              id="usuario-input"
+              type="text"
+              formControlName="usuario"
+              autocomplete="username"
+              placeholder=" "
+              class="peer block w-full h-12 rounded-[10px] border border-[#009531] bg-[#f2fff6] px-4 pt-3 pb-1 text-sm text-[#4b4b4d] focus:bg-[#f2fff6] focus:border-[#009531] focus:ring-2 focus:ring-[#009531]/20 outline-none transition-all duration-200"
+              [class.border-slate-800]="isFieldInvalid('usuario')"
+              [attr.aria-invalid]="isFieldInvalid('usuario')"
+            />
+            <label
+              for="usuario-input"
+              class="absolute start-3.5 top-1/2 -translate-y-1/2 text-sm font-normal text-[#009531] bg-[#f2fff6] px-1 transition-all duration-200 pointer-events-none origin-[0] peer-focus:-top-2.5 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-[#009531] peer-focus:bg-white peer-focus:rounded-sm peer-focus:px-1.5 peer-[:not(:placeholder-shown)]:-top-2.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:text-[#009531] peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:rounded-sm peer-[:not(:placeholder-shown)]:px-1.5"
+            >
+              Usuario
+            </label>
+          </div>
+          <!-- Espacio reservado con distancia fija: Usuario obligatorio en letra delgada -->
+          <div class="h-5 mt-1 flex items-center">
+            @if (isFieldInvalid('usuario')) {
+              <p class="text-xs text-slate-800 font-normal">Usuario obligatorio</p>
+            }
+          </div>
+        </div>
+
+        <!-- Campo: Contraseña con floating label y botón de alternar visibilidad -->
+        <div>
+          <div class="relative">
+            <input
+              id="clave-input"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="clave"
+              autocomplete="current-password"
+              placeholder=" "
+              class="peer block w-full h-12 rounded-[10px] border border-[#009531] bg-[#f2fff6] px-4 pt-3 pb-1 pr-11 text-sm text-[#4b4b4d] focus:bg-[#f2fff6] focus:border-[#009531] focus:ring-2 focus:ring-[#009531]/20 outline-none transition-all duration-200"
+              [class.border-slate-800]="isFieldInvalid('clave')"
+              [attr.aria-invalid]="isFieldInvalid('clave')"
+            />
+            <label
+              for="clave-input"
+              class="absolute start-3.5 top-1/2 -translate-y-1/2 text-sm font-normal text-[#009531] bg-[#f2fff6] px-1 transition-all duration-200 pointer-events-none origin-[0] peer-focus:-top-2.5 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:font-semibold peer-focus:text-[#009531] peer-focus:bg-white peer-focus:rounded-sm peer-focus:px-1.5 peer-[:not(:placeholder-shown)]:-top-2.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:font-semibold peer-[:not(:placeholder-shown)]:text-[#009531] peer-[:not(:placeholder-shown)]:bg-white peer-[:not(:placeholder-shown)]:rounded-sm peer-[:not(:placeholder-shown)]:px-1.5"
+            >
+              Contraseña
+            </label>
+            <button
+              type="button"
+              (click)="togglePasswordVisibility()"
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-700 focus:outline-none cursor-pointer"
+              [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Ver contraseña'"
+            >
+              @if (showPassword()) {
+                <svg lucideEyeOff class="size-4.5"></svg>
+              } @else {
+                <svg lucideEye class="size-4.5"></svg>
+              }
+            </button>
+          </div>
+          <!-- Espacio reservado con distancia fija: Contraseña obligatoria en letra delgada -->
+          <div class="h-5 mt-1 flex items-center">
+            @if (isFieldInvalid('clave')) {
+              <p class="text-xs text-slate-800 font-normal">Contraseña obligatoria</p>
+            }
+          </div>
+        </div>
+
+        <!-- Botón Principal: Ingresar (h-12 un poco menos alto) -->
+        <div class="pt-1">
+          <button
+            type="submit"
+            [disabled]="isLoading()"
+            class="w-full h-12 rounded-[10px] bg-[#009531] hover:bg-[#007A30] active:scale-[0.98] text-white font-semibold text-sm sm:text-base shadow-sm transition-all duration-150 disabled:opacity-60 disabled:pointer-events-none cursor-pointer flex items-center justify-center"
+          >
+            @if (isLoading()) {
+              <span>Ingresando...</span>
+            } @else {
+              <span>Ingresar</span>
+            }
+          </button>
+
+          <!-- Notificación de error: solo texto en letras rojas suaves directamente abajo de Ingresar sin contenedor -->
+          @if (errorMessage()) {
+            <p role="alert" class="text-red-700 font-medium text-center text-xs sm:text-sm mt-2.5">
+              {{ errorMessage() }}
+            </p>
+          }
+        </div>
+      </form>
+
+      @if (developmentLoginEnabled) {
+        <div class="my-4 border-t border-slate-200" aria-hidden="true"></div>
+        <button
+          type="button"
+          (click)="onDevelopmentLogin()"
+          [disabled]="isLoading()"
+          class="flex h-11 w-full items-center justify-center rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-unsm-green-dark disabled:opacity-60 disabled:cursor-wait"
+        >
+          Acceso de desarrollo
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- Panel Derecho: Fotografía Campus con Overlay Verde Institucional UNSM (solo en pantallas de escritorio) -->
+  <section
+    class="hidden lg:flex flex-1 relative min-h-screen flex-col justify-between p-10 xl:p-14 overflow-hidden select-none bg-slate-900"
+    aria-label="Campus Universidad Nacional de San Martín"
+  >
+    <!-- Imagen de fondo login-campus.png optimizada -->
+    <img
+      ngSrc="/images/logos/login-campus.png"
+      fill
+      priority
+      alt="Campus Universitario UNSM"
+      class="object-cover object-center"
+    />
+
+    <!-- Capa verde institucional sobrepuesta (degradado exacto al portal oficial UNSM) -->
+    <div
+      class="absolute inset-0 bg-gradient-to-r from-[#1c2c21] to-[#004e1a] opacity-85 pointer-events-none"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Parte Superior: Unidad de Servicios Generales más grande -->
+    <div class="relative z-10">
+      <h2 class="text-3xl xl:text-4xl font-bold text-white tracking-wide font-sans drop-shadow-sm">
+        Unidad de Servicios Generales
+      </h2>
+    </div>
+
+    <!-- Parte Inferior: Universidad Nacional de San Martín abajo y v1.0.0 oit unsm a la derecha -->
+    <div class="relative z-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-4">
+      <div>
+        <p
+          class="text-2xl xl:text-3xl font-extrabold text-[#00c540] tracking-wide uppercase drop-shadow-sm font-sans"
+        >
+          UNIVERSIDAD NACIONAL DE SAN MARTÍN
+        </p>
+      </div>
+      <div class="text-right shrink-0">
+        <span class="text-xs font-mono text-white/75 tracking-wider"> v1.0.0 oit unsm </span>
+      </div>
+    </div>
+  </section>
+</div>

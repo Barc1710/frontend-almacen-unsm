@@ -1,1 +1,13 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@theme {
+  --color-unsm-green: #00953b;
+  --color-unsm-green-dark: #007a30;
+  --color-unsm-green-border: #006025;
+  --color-unsm-green-light: #e8f7ee;
+  --color-unsm-cyan: #00a0df;
+  --color-unsm-yellow: #ffe800;
+  --color-unsm-red: #dc4c4c;
+
+  --font-sans: 'Roboto', system-ui, -apple-system, sans-serif;
+}
