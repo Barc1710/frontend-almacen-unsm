@@ -10,6 +10,8 @@ import {
 } from '../../../core/models';
 import { Articulo } from '../../articulos/models';
 import {
+  Encargado,
+  EncargadoAlmacen,
   Ingreso,
   IngresoConDetalles,
   IngresoCreateRequest,
@@ -128,6 +130,35 @@ export class IngresoService {
   }
 
   /**
+   * Consulta el catálogo de encargados de almacén activos para selección de firmante.
+   */
+  listarEncargadosAlmacenActivos(): Observable<EncargadoAlmacen[]> {
+    return this.http.get<unknown>(`${this.apiUrl}/encargados-almacen/activos`).pipe(
+      map((res) => this.extractList<EncargadoAlmacen>(res)),
+      catchError(() => of([])),
+    );
+  }
+
+  /**
+   * Consulta el catálogo de jefes (encargados) activos para selección de firmante.
+   */
+  listarJefesActivos(): Observable<Encargado[]> {
+    return this.http.get<unknown>(`${this.apiUrl}/encargados/activos`).pipe(
+      map((res) => this.extractList<Encargado>(res)),
+      catchError(() => of([])),
+    );
+  }
+
+  /**
+   * Descarga el reporte del comprobante de ingreso en formato PDF.
+   */
+  descargarPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/ingresos/${id}/reporte-pdf`, {
+      responseType: 'blob',
+    });
+  }
+
+  /**
    * Registra transaccionalmente un nuevo ingreso con sus detalles de artículos.
    * Envía siempre precio en 0 según requerimiento.
    */
@@ -136,6 +167,8 @@ export class IngresoService {
       idProveedor: request.idProveedor,
       numeroOrdenCompra: (request.numeroOrden || '').trim() || null,
       descripcion: (request.observacion || '').trim() || '',
+      idEncargadoAlmacen: request.idEncargadoAlmacen || null,
+      idJefe: request.idJefe || null,
       detalles: request.detalles.map((d) => ({
         idArticulo: d.idArticulo,
         cantidad: Number(d.cantidad) || 0,

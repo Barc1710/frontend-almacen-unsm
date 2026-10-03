@@ -140,6 +140,60 @@
               }
             </div>
 
+            <!-- Encargado de Almacén (Firmante Almacén) -->
+            <div>
+              <label
+                for="idEncargadoAlmacen"
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                Encargado de Almacén <span class="text-unsm-red">*</span>
+              </label>
+              <select
+                id="idEncargadoAlmacen"
+                formControlName="idEncargadoAlmacen"
+                class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                [class.border-unsm-red]="isFieldInvalid('idEncargadoAlmacen')"
+                [class.border-slate-300]="!isFieldInvalid('idEncargadoAlmacen')"
+              >
+                <option [ngValue]="null">Seleccionar encargado</option>
+                @for (enc of encargadosAlmacen(); track enc.id) {
+                  <option [ngValue]="enc.id">
+                    {{ enc.nombre }}{{ enc.esTitular ? ' (Titular)' : '' }}
+                  </option>
+                }
+              </select>
+              @if (isFieldInvalid('idEncargadoAlmacen')) {
+                <p class="text-xs text-unsm-red mt-1">El encargado de almacén es requerido</p>
+              }
+            </div>
+
+            <!-- Jefe USG (Firmante Jefatura) -->
+            <div class="sm:col-span-2">
+              <label
+                for="idJefe"
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                Jefe USG-UNSM <span class="text-unsm-red">*</span>
+              </label>
+              <select
+                id="idJefe"
+                formControlName="idJefe"
+                class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                [class.border-unsm-red]="isFieldInvalid('idJefe')"
+                [class.border-slate-300]="!isFieldInvalid('idJefe')"
+              >
+                <option [ngValue]="null">Seleccionar jefe</option>
+                @for (jefe of jefes(); track jefe.id) {
+                  <option [ngValue]="jefe.id">
+                    {{ jefe.siglaProfesion ? jefe.siglaProfesion + ' ' : '' }}{{ jefe.nombres }} {{ jefe.apellidos }}{{ jefe.ambiente ? ' (' + jefe.ambiente + ')' : '' }}
+                  </option>
+                }
+              </select>
+              @if (isFieldInvalid('idJefe')) {
+                <p class="text-xs text-unsm-red mt-1">El jefe de USG es requerido</p>
+              }
+            </div>
+
             <!-- Observación -->
             <div class="sm:col-span-3">
               <label

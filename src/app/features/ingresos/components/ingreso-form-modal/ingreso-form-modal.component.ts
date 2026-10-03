@@ -32,7 +32,13 @@ import {
 import { catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap } from 'rxjs';
 import { obtenerFechaHoy } from '../../../../core';
 import { Articulo } from '../../../articulos/models';
-import { IngresoConDetalles, IngresoCreateRequest, Proveedor } from '../../models';
+import {
+  Encargado,
+  EncargadoAlmacen,
+  IngresoConDetalles,
+  IngresoCreateRequest,
+  Proveedor,
+} from '../../models';
 import { IngresoService } from '../../services';
 
 function normalizarTexto(txt: string | null | undefined): string {
@@ -103,6 +109,8 @@ interface CabeceraForm {
   idProveedor: FormControl<number | null>;
   fecha: FormControl<string>;
   observacion: FormControl<string>;
+  idEncargadoAlmacen: FormControl<number | null>;
+  idJefe: FormControl<number | null>;
 }
 
 @Component({
@@ -164,6 +172,9 @@ export class IngresoFormModalComponent implements OnInit {
   readonly cargandoCorrelativo = signal<boolean>(false);
 
   readonly catalogoArticulos = signal<Articulo[]>([]);
+  readonly encargadosAlmacen = signal<EncargadoAlmacen[]>([]);
+  readonly jefes = signal<Encargado[]>([]);
+  readonly cargandoFirmantes = signal<boolean>(false);
   readonly filas = signal<FilaDetalle[]>([]);
 
   private readonly busquedaSubjects = new Map<string, Subject<string>>();
@@ -179,6 +190,12 @@ export class IngresoFormModalComponent implements OnInit {
     observacion: new FormControl<string>('', {
       nonNullable: true,
       validators: [Validators.maxLength(255)],
+    }),
+    idEncargadoAlmacen: new FormControl<number | null>(null, {
+      validators: [Validators.required],
+    }),
+    idJefe: new FormControl<number | null>(null, {
+      validators: [Validators.required],
     }),
   });
 
@@ -204,12 +221,49 @@ export class IngresoFormModalComponent implements OnInit {
       if (this.visible()) {
         this.resetearFormulario();
         this.cargarCatalogoArticulos();
+        this.cargarFirmantes();
       }
     });
   }
 
   ngOnInit(): void {
     this.cargarCatalogoArticulos();
+  }
+
+  cargarFirmantes(): void {
+    this.cargandoFirmantes.set(true);
+    this.ingresoService
+      .listarEncargadosAlmacenActivos()
+      .pipe(
+        catchError(() => of([])),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((lista) => {
+        this.encargadosAlmacen.set(lista);
+        if (!this.cabeceraForm.controls.idEncargadoAlmacen.value) {
+          const titular = lista.find((e) => e.esTitular) || lista[0];
+          if (titular) {
+            this.cabeceraForm.controls.idEncargadoAlmacen.setValue(titular.id);
+          }
+        }
+      });
+
+    this.ingresoService
+      .listarJefesActivos()
+      .pipe(
+        catchError(() => of([])),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (lista) => {
+          this.jefes.set(lista);
+          if (!this.cabeceraForm.controls.idJefe.value && lista.length > 0) {
+            this.cabeceraForm.controls.idJefe.setValue(lista[0].id);
+          }
+          this.cargandoFirmantes.set(false);
+        },
+        error: () => this.cargandoFirmantes.set(false),
+      });
   }
 
   cargarCatalogoArticulos(): void {
@@ -510,6 +564,8 @@ export class IngresoFormModalComponent implements OnInit {
       numeroOrden: '', // El backend genera automáticamente el correlativo (ej. I26-0001)
       fecha: raw.fecha,
       observacion: raw.observacion.trim() || null,
+      idEncargadoAlmacen: raw.idEncargadoAlmacen ? Number(raw.idEncargadoAlmacen) : null,
+      idJefe: raw.idJefe ? Number(raw.idJefe) : null,
       detalles: filasConArticulo.map((f) => ({
         idArticulo: f.idArticulo!,
         cantidad: Number(f.cantidad),
@@ -554,6 +610,8 @@ export class IngresoFormModalComponent implements OnInit {
       idProveedor: null,
       fecha: obtenerFechaHoy(),
       observacion: '',
+      idEncargadoAlmacen: null,
+      idJefe: null,
     });
 
     this.filas.set([]);

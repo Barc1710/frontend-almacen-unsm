@@ -1,5 +1,3 @@
-import { Articulo } from '../../articulos/models';
-
 /**
  * Representación de un proveedor registrado en el catálogo institucional.
  */
@@ -14,6 +12,25 @@ export interface Proveedor {
   readonly email?: string | null;
   readonly activo?: boolean;
   readonly estado?: string;
+}
+
+export interface EncargadoAlmacen {
+  readonly id: number;
+  readonly nombre: string;
+  readonly estado: string;
+  readonly esTitular: boolean;
+  readonly cargo?: string | null;
+}
+
+export interface Encargado {
+  readonly id: number;
+  readonly siglaProfesion?: string | null;
+  readonly nombres: string;
+  readonly apellidos: string;
+  readonly nombreCompleto?: string | null;
+  readonly dni?: string | null;
+  readonly ambiente?: string | null;
+  readonly estado: string;
 }
 
 /**
@@ -33,6 +50,10 @@ export interface Ingreso {
   readonly idUsuario?: number | null;
   readonly usuarioRecepcion?: string | null;
   readonly nombreUsuario?: string | null;
+  readonly idEncargadoAlmacen?: number | null;
+  readonly nombreEncargadoAlmacen?: string | null;
+  readonly idJefe?: number | null;
+  readonly nombreJefe?: string | null;
   readonly totalItems?: number;
   readonly totalArticulos?: number;
   readonly totalImporte?: number;
@@ -81,6 +102,8 @@ export interface IngresoCreateRequest {
   readonly numeroOrden: string;
   readonly fecha: string;
   readonly observacion?: string | null;
+  readonly idEncargadoAlmacen?: number | null;
+  readonly idJefe?: number | null;
   readonly detalles: IngresoDetalleRequest[];
 }
 
@@ -98,37 +121,4 @@ export interface IngresoFiltros {
   page?: number;
   size?: number;
   sort?: string;
-}
-
-/**
- * Type guard para validar si un objeto corresponde a un Proveedor.
- */
-export function isProveedor(value: unknown): value is Proveedor {
-  if (typeof value !== 'object' || value === null) return false;
-  const cand = value as Record<string, unknown>;
-  return (
-    typeof cand['id'] === 'number' &&
-    (typeof cand['razonSocial'] === 'string' || typeof cand['nombre'] === 'string')
-  );
-}
-
-/**
- * Type guard para validar si un objeto corresponde a un Ingreso.
- */
-export function isIngreso(value: unknown): value is Ingreso {
-  if (typeof value !== 'object' || value === null) return false;
-  const cand = value as Record<string, unknown>;
-  return (
-    typeof cand['id'] === 'number' &&
-    (typeof cand['numeroOrden'] === 'string' || typeof cand['ordenCompra'] === 'string')
-  );
-}
-
-/**
- * Type guard para validar si un objeto corresponde a un IngresoConDetalles.
- */
-export function isIngresoConDetalles(value: unknown): value is IngresoConDetalles {
-  return (
-    isIngreso(value) && Array.isArray((value as unknown as Record<string, unknown>)['detalles'])
-  );
 }
