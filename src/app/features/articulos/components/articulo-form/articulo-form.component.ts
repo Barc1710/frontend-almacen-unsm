@@ -5,8 +5,6 @@ import { LucideCircleAlert, LucideLoader2, LucideSave, LucideX } from '@lucide/a
 import { catchError, finalize, of, switchMap } from 'rxjs';
 import {
   Articulo,
-  ArticuloCreateRequest,
-  ArticuloUpdateRequest,
   Familia,
   Marca,
   Ubicacion,

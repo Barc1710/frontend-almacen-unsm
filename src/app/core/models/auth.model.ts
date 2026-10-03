@@ -53,32 +53,6 @@ export interface AuthUser {
 }
 
 /**
- * Type guard para verificar si un objeto cumple con la estructura LoginRequest.
- */
-export function isLoginRequest(value: unknown): value is LoginRequest {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  const candidate = value as Record<string, unknown>;
-  return typeof candidate['usuario'] === 'string' && typeof candidate['clave'] === 'string';
-}
-
-/**
- * Type guard para verificar si un objeto cumple con la estructura JwtResponse.
- */
-export function isJwtResponse(value: unknown): value is JwtResponse {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  const candidate = value as Record<string, unknown>;
-  const hasToken =
-    typeof candidate['token'] === 'string' || typeof candidate['accessToken'] === 'string';
-  const hasUsuario =
-    typeof candidate['usuario'] === 'string' || typeof candidate['username'] === 'string';
-  return hasToken && hasUsuario;
-}
-
-/**
  * Normaliza de forma segura un objeto proveniente del backend a la interfaz ModuloResponse.
  * Tolera ids numéricos o string, campos opcionales de icono/orden y prefijos de ruta.
  */
@@ -129,18 +103,4 @@ export function normalizeModuloList(value: unknown): ModuloResponse[] {
     return [];
   }
   return value.map(normalizeModulo).filter((m): m is ModuloResponse => m !== null);
-}
-
-/**
- * Type guard para verificar si un objeto cumple con la estructura ModuloResponse.
- */
-export function isModuloResponse(value: unknown): value is ModuloResponse {
-  return normalizeModulo(value) !== null;
-}
-
-/**
- * Type guard para verificar si un objeto corresponde a un arreglo de ModuloResponse.
- */
-export function isModuloResponseList(value: unknown): value is ModuloResponse[] {
-  return Array.isArray(value) && value.every(isModuloResponse);
 }
