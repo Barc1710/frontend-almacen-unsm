@@ -89,7 +89,7 @@
               <span>Proveedor</span>
             </div>
             <p
-              class="text-sm font-semibold text-slate-900 .break-words whitespace-normal leading-snug"
+              class="text-sm font-semibold text-slate-900 break-words whitespace-normal leading-snug"
               [title]="ingreso()?.nombreProveedor || '-'"
             >
               {{ ingreso()?.nombreProveedor || 'Proveedor no especificado' }}
@@ -122,6 +122,31 @@
             </div>
             <p class="text-sm font-medium text-slate-800 truncate">
               {{ ingreso()?.nombreUsuario || ingreso()?.usuarioRecepcion || 'Usuario de Almacén' }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Firmantes Oficiales del Comprobante -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
+            <span
+              class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-0.5"
+            >
+              Encargado de Almacén
+            </span>
+            <p class="text-sm font-semibold text-slate-800">
+              {{ ingreso()?.nombreEncargadoAlmacen || 'No asignado' }}
+            </p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
+            <span
+              class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-0.5"
+            >
+              Jefe USG-UNSM
+            </span>
+            <p class="text-sm font-semibold text-slate-800">
+              {{ ingreso()?.nombreJefe || 'No asignado' }}
             </p>
           </div>
         </div>

@@ -313,12 +313,17 @@
 
                     <button
                       type="button"
-                      (click)="descargarPdf(ing)"
-                      class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer"
-                      title="Generar comprobante PDF"
-                      aria-label="Generar comprobante PDF"
+                      (click)="abrirPdf(ing)"
+                      [disabled]="descargandoPdfId() === ing.id"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
+                      title="Ver comprobante PDF en nueva pestaña"
+                      aria-label="Ver comprobante PDF en nueva pestaña"
                     >
-                      <svg lucideFileDown class="size-4"></svg>
+                      @if (descargandoPdfId() === ing.id) {
+                        <svg lucideLoader2 class="size-4 animate-spin text-rose-600"></svg>
+                      } @else {
+                        <svg lucideFileDown class="size-4"></svg>
+                      }
                     </button>
 
                     @if (ing.estado === '1') {

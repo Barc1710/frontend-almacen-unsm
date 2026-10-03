@@ -88,6 +88,7 @@ export class IngresosListComponent implements OnInit {
   readonly ingresoDetalle = signal<IngresoConDetalles | null>(null);
   readonly cargandoDetalleId = signal<number | null>(null);
   readonly anulandoId = signal<number | null>(null);
+  readonly descargandoPdfId = signal<number | null>(null);
 
   ngOnInit(): void {
     this.cargarCatalogos();
@@ -258,8 +259,44 @@ export class IngresosListComponent implements OnInit {
     this.ingresoDetalle.set(null);
   }
 
+  abrirPdf(ingreso: Ingreso): void {
+    if (this.descargandoPdfId() !== null) return;
+    this.descargandoPdfId.set(ingreso.id);
+
+    // Abrir una pestaña en blanco inmediatamente para evitar bloqueos del navegador
+    const nuevaPestana = window.open('about:blank', '_blank');
+
+    this.ingresoService.descargarPdf(ingreso.id).subscribe({
+      next: (blob) => {
+        this.descargandoPdfId.set(null);
+        const file = new Blob([blob], { type: 'application/pdf' });
+        const fileUrl = window.URL.createObjectURL(file);
+
+        if (nuevaPestana && !nuevaPestana.closed) {
+          nuevaPestana.location.href = fileUrl;
+        } else {
+          window.open(fileUrl, '_blank');
+        }
+
+        // Revocar la URL después de un minuto para liberar memoria
+        setTimeout(() => window.URL.revokeObjectURL(fileUrl), 60000);
+      },
+      error: () => {
+        this.descargandoPdfId.set(null);
+        if (nuevaPestana && !nuevaPestana.closed) {
+          nuevaPestana.close();
+        }
+        this.notificationService.error(
+          'Error al abrir PDF',
+          'No se pudo generar ni abrir el comprobante en formato PDF.',
+        );
+      },
+    });
+  }
+
+  // Alias para mantener compatibilidad si se invoca como descargarPdf
   descargarPdf(ingreso: Ingreso): void {
-    this.notificationService.toast(`Comprobante ${ingreso.numeroOrden} preparado`);
+    this.abrirPdf(ingreso);
   }
 
   anularIngreso(ingreso: Ingreso): void {
