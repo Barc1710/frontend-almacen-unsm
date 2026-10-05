@@ -109,6 +109,7 @@ export interface FilaDetalle {
 
 interface CabeceraForm {
   idProveedor: FormControl<number | null>;
+  numeroOrdenCompra: FormControl<string>;
   fecha: FormControl<string>;
   observacion: FormControl<string>;
   idEncargadoAlmacen: FormControl<number | null>;
@@ -171,6 +172,7 @@ export class IngresoFormModalComponent implements OnInit {
   readonly guardando = signal<boolean>(false);
   readonly errorGeneral = signal<string | null>(null);
   readonly alertaDuplicado = signal<string | null>(null);
+  readonly siguienteNumero = signal<string>('');
 
   readonly catalogoArticulos = signal<Articulo[]>([]);
   readonly encargadosAlmacen = signal<EncargadoAlmacen[]>([]);
@@ -184,6 +186,10 @@ export class IngresoFormModalComponent implements OnInit {
   readonly cabeceraForm = new FormGroup<CabeceraForm>({
     idProveedor: new FormControl<number | null>(null, {
       validators: [Validators.required],
+    }),
+    numeroOrdenCompra: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(50)],
     }),
     fecha: new FormControl<string>(obtenerFechaHoy(), {
       nonNullable: true,
@@ -224,6 +230,7 @@ export class IngresoFormModalComponent implements OnInit {
         untracked(() => {
           this.resetearFormulario();
           this.cargarFirmantes();
+          this.cargarSiguienteNumero();
         });
       }
     });
@@ -231,6 +238,16 @@ export class IngresoFormModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarCatalogoArticulos();
+  }
+
+  cargarSiguienteNumero(): void {
+    this.ingresoService
+      .obtenerSiguienteNumero()
+      .pipe(
+        catchError(() => of('')),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((num) => this.siguienteNumero.set(num));
   }
 
   cargarFirmantes(): void {
@@ -534,7 +551,8 @@ export class IngresoFormModalComponent implements OnInit {
 
     const request: IngresoCreateRequest = {
       idProveedor: Number(raw.idProveedor),
-      numeroOrden: '', // El backend genera automáticamente el correlativo (ej. I26-0001)
+      numeroOrden: raw.numeroOrdenCompra.trim() || '',
+      numeroOrdenCompra: raw.numeroOrdenCompra.trim() || null,
       fecha: raw.fecha,
       observacion: raw.observacion.trim() || null,
       idEncargadoAlmacen: raw.idEncargadoAlmacen ? Number(raw.idEncargadoAlmacen) : null,
@@ -584,6 +602,7 @@ export class IngresoFormModalComponent implements OnInit {
 
     this.cabeceraForm.reset({
       idProveedor: null,
+      numeroOrdenCompra: '',
       fecha: obtenerFechaHoy(),
       observacion: '',
       idEncargadoAlmacen: null,

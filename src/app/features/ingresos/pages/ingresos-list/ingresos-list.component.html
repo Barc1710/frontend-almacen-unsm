@@ -249,7 +249,12 @@
                   [class.text-slate-400]="ing.estado === '0'"
                   [class.line-through]="ing.estado === '0'"
                 >
-                  {{ ing.numeroOrden || '-' }}
+                  <div>{{ ing.numeroOrden || '-' }}</div>
+                  @if (ing.numeroOrdenCompra) {
+                    <p class="text-[11px] font-sans font-normal text-slate-400 mt-0.5">
+                      O.C.: {{ ing.numeroOrdenCompra }}
+                    </p>
+                  }
                 </td>
 
                 <!-- Proveedor -->

@@ -29,6 +29,7 @@ export interface Encargado {
   readonly apellidos: string;
   readonly nombreCompleto?: string | null;
   readonly dni?: string | null;
+  readonly cargo?: string | null;
   readonly ambiente?: string | null;
   readonly estado: string;
 }
@@ -99,7 +100,8 @@ export interface IngresoDetalleRequest {
  */
 export interface IngresoCreateRequest {
   readonly idProveedor: number;
-  readonly numeroOrden: string;
+  readonly numeroOrden?: string;
+  readonly numeroOrdenCompra?: string | null;
   readonly fecha: string;
   readonly observacion?: string | null;
   readonly idEncargadoAlmacen?: number | null;

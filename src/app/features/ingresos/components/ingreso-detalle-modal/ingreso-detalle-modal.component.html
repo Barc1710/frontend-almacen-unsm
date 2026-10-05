@@ -137,7 +137,7 @@
               Encargado de Almacén
             </span>
             <p class="text-sm font-semibold text-slate-800">
-              {{ ingreso()?.nombreEncargadoAlmacen || 'No asignado' }}
+              {{ ingreso()?.nombreEncargadoAlmacen || ingreso()?.usuarioRecepcion || ingreso()?.nombreUsuario || 'No asignado' }}
             </p>
           </div>
 
