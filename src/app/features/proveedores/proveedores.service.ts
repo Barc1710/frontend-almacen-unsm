@@ -4,11 +4,16 @@ import { map, Observable, of, throwError } from 'rxjs';
 import {
   getApiResponseData,
   isApiResponse,
+  isPageResponse,
   PageResponse,
 } from '../../core/models/api-response.model';
 import { AuthService } from '../../core/services/auth.service';
 import { environment } from '../../../environments/environment';
 import { isProveedorPage, NuevoProveedor, Proveedor } from './proveedor.model';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
 
 const DEMO_PROVEEDORES: Proveedor[] = [
   {
@@ -821,12 +826,33 @@ export class ProveedoresService {
   private readonly demoProveedores = signal<Proveedor[]>(DEMO_PROVEEDORES);
   private nextDemoId = DEMO_PROVEEDORES.length + 1;
 
-  readonly puedeModificar = computed<boolean>(() => this.authService.isDemoMode());
+  readonly puedeModificar = computed<boolean>(() =>
+    this.authService.isDemoMode() ||
+    this.authService.isAdmin() ||
+    this.authService.hasModule('PROVEEDORES') ||
+    this.authService.canAccessModule('PROVEEDORES')
+  );
 
-  obtenerPagina(page: number, size: number): Observable<PageResponse<Proveedor>> {
-    if (this.puedeModificar()) {
-      const proveedores = this.demoProveedores();
-      const totalPages = Math.ceil(proveedores.length / size);
+  readonly puedeEliminar = computed<boolean>(() =>
+    this.authService.isDemoMode() ||
+    this.authService.isAdmin()
+  );
+
+  obtenerPagina(page: number, size: number, filtro?: string): Observable<PageResponse<Proveedor>> {
+    if (this.authService.isDemoMode()) {
+      let proveedores = this.demoProveedores();
+      if (filtro && filtro.trim()) {
+        const term = filtro.trim().toLowerCase();
+        proveedores = proveedores.filter((item) => {
+          const ruc = String(item.ruc ?? '').toLowerCase();
+          const razonSocial = String(item.razonSocial ?? '').toLowerCase();
+          const correo = String(item.correo ?? '').toLowerCase();
+          const contacto = String(item.contacto ?? '').toLowerCase();
+          return ruc.includes(term) || razonSocial.includes(term) || correo.includes(term) || contacto.includes(term);
+        });
+      }
+
+      const totalPages = Math.ceil(proveedores.length / size) || 1;
       const content = proveedores.slice(page * size, (page + 1) * size);
 
       return of({
@@ -843,15 +869,18 @@ export class ProveedoresService {
       });
     }
 
-    const params = new HttpParams().set('page', page).set('size', size);
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    if (filtro && filtro.trim()) {
+      params = params.set('filtro', filtro.trim());
+    }
 
     return this.http
       .get<unknown>(this.endpoint, { params })
-      .pipe(map((response) => this.normalizarPagina(response)));
+      .pipe(map((response) => this.normalizarPagina(response, page, size)));
   }
 
   registrar(proveedor: NuevoProveedor): Observable<void> {
-    if (this.puedeModificar()) {
+    if (this.authService.isDemoMode()) {
       const duplicado = this.demoProveedores().some(
         (item) => String(item.ruc ?? '') === proveedor.ruc,
       );
@@ -869,13 +898,26 @@ export class ProveedoresService {
           direccion: proveedor.direccion,
           telefono: proveedor.telefono,
           correo: proveedor.correo,
+          contacto: proveedor.contacto,
+          banco: proveedor.banco,
+          cuentaCorriente: proveedor.cuentaCorriente,
+          estado: '1',
         },
         ...proveedores,
       ]);
       return of(undefined);
     }
 
-    const payload = { ruc: proveedor.ruc, ...this.detalles(proveedor) };
+    const payload = {
+      ruc: proveedor.ruc?.trim() || null,
+      razonSocial: proveedor.razonSocial.trim(),
+      direccion: proveedor.direccion?.trim() || null,
+      telefono: proveedor.telefono?.trim() || null,
+      correo: proveedor.correo?.trim() || null,
+      contacto: proveedor.contacto?.trim() || null,
+      banco: proveedor.banco?.trim() || null,
+      cuentaCorriente: proveedor.cuentaCorriente?.trim() || null,
+    };
 
     return this.http.post<unknown>(this.endpoint, payload).pipe(map(() => undefined));
   }
@@ -887,58 +929,124 @@ export class ProveedoresService {
       );
     }
 
-    this.demoProveedores.update((proveedores) =>
-      proveedores.map((item) =>
-        this.clave(item) === this.clave(original)
-          ? {
-              id: item.id,
-              ruc: proveedor.ruc,
-              razonSocial: proveedor.razonSocial,
-              direccion: proveedor.direccion,
-              telefono: proveedor.telefono,
-              correo: proveedor.correo,
-            }
-          : item,
-      ),
-    );
-    return of(undefined);
+    if (this.authService.isDemoMode()) {
+      this.demoProveedores.update((proveedores) =>
+        proveedores.map((item) =>
+          this.clave(item) === this.clave(original)
+            ? {
+                id: item.id,
+                ruc: proveedor.ruc,
+                razonSocial: proveedor.razonSocial,
+                direccion: proveedor.direccion,
+                telefono: proveedor.telefono,
+                correo: proveedor.correo,
+                contacto: proveedor.contacto,
+                banco: proveedor.banco,
+                cuentaCorriente: proveedor.cuentaCorriente,
+                estado: item.estado ?? '1',
+              }
+            : item,
+        ),
+      );
+      return of(undefined);
+    }
+
+    const id = original.id ?? original.ruc;
+    const payload = {
+      ruc: proveedor.ruc?.trim() || null,
+      razonSocial: proveedor.razonSocial.trim(),
+      direccion: proveedor.direccion?.trim() || null,
+      telefono: proveedor.telefono?.trim() || null,
+      correo: proveedor.correo?.trim() || null,
+      contacto: proveedor.contacto?.trim() || null,
+      banco: proveedor.banco?.trim() || null,
+      cuentaCorriente: proveedor.cuentaCorriente?.trim() || null,
+    };
+
+    return this.http.put<unknown>(`${this.endpoint}/${id}`, payload).pipe(map(() => undefined));
   }
 
   eliminar(proveedor: Proveedor): Observable<void> {
-    if (!this.puedeModificar()) {
+    if (!this.puedeEliminar() && !this.puedeModificar()) {
       return throwError(
         () => new Error('La eliminación requiere que el backend habilite la operación.'),
       );
     }
 
-    this.demoProveedores.update((proveedores) =>
-      proveedores.filter((item) => this.clave(item) !== this.clave(proveedor)),
-    );
-    return of(undefined);
+    if (this.authService.isDemoMode()) {
+      this.demoProveedores.update((proveedores) =>
+        proveedores.filter((item) => this.clave(item) !== this.clave(proveedor)),
+      );
+      return of(undefined);
+    }
+
+    const id = proveedor.id ?? proveedor.ruc;
+    return this.http.delete<unknown>(`${this.endpoint}/${id}`).pipe(map(() => undefined));
   }
 
   private clave(proveedor: Proveedor): string {
     return String(proveedor.id ?? proveedor.ruc);
   }
 
-  private detalles(proveedor: NuevoProveedor): Omit<NuevoProveedor, 'ruc'> {
-    return {
-      razonSocial: proveedor.razonSocial,
-      direccion: proveedor.direccion,
-      telefono: proveedor.telefono,
-      correo: proveedor.correo,
-    };
-  }
-
-  private normalizarPagina(response: unknown): PageResponse<Proveedor> {
+  private normalizarPagina(
+    response: unknown,
+    requestedPage = 0,
+    requestedSize = 10,
+  ): PageResponse<Proveedor> {
     const data = isApiResponse(response) ? getApiResponseData(response) : response;
 
-    if (!isProveedorPage(data)) {
-      throw new Error(
-        'La respuesta del servidor no contiene una página válida de proveedores.',
-      );
+    if (!isRecord(data)) {
+      throw new Error('La respuesta del servidor no contiene una página válida de proveedores.');
     }
 
-    return data;
+    if (isPageResponse<unknown>(data)) {
+      const content: Proveedor[] = data.content.map((item) => this.mapToProveedor(item));
+      const page =
+        typeof data.page === 'number'
+          ? data.page
+          : typeof data.number === 'number'
+            ? data.number
+            : requestedPage;
+      const size = typeof data.size === 'number' ? data.size : requestedSize;
+      const totalElements =
+        typeof data.totalElements === 'number' ? data.totalElements : content.length;
+      const totalPages =
+        typeof data.totalPages === 'number'
+          ? data.totalPages
+          : Math.ceil(totalElements / (size || 10));
+
+      return {
+        content,
+        page,
+        number: page,
+        size,
+        totalElements,
+        totalPages,
+        first: data.first ?? page === 0,
+        last: data.last ?? page + 1 >= totalPages,
+        numberOfElements: data.numberOfElements ?? content.length,
+        empty: data.empty ?? content.length === 0,
+      };
+    }
+
+    throw new Error('La respuesta del servidor no contiene una página válida de proveedores.');
+  }
+
+  private mapToProveedor(item: unknown): Proveedor {
+    if (!isRecord(item)) {
+      return { id: '', ruc: '', razonSocial: '' };
+    }
+    return {
+      id: (item['id'] as string | number) ?? undefined,
+      ruc: item['ruc'] != null ? String(item['ruc']) : null,
+      razonSocial: (item['razonSocial'] as string) ?? null,
+      direccion: (item['direccion'] as string) ?? null,
+      telefono: (item['telefono'] as string) ?? null,
+      correo: (item['correo'] as string) ?? null,
+      contacto: (item['contacto'] as string) ?? null,
+      banco: (item['banco'] as string) ?? null,
+      cuentaCorriente: (item['cuentaCorriente'] as string) ?? null,
+      estado: item['estado'] != null ? String(item['estado']) : '1',
+    };
   }
 }

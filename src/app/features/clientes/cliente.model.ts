@@ -9,6 +9,7 @@ export interface Cliente {
   readonly direccion?: string | null;
   readonly telefono?: string | null;
   readonly correo?: string | null;
+  readonly estado?: string | null;
 }
 
 export interface NuevoCliente {
@@ -82,7 +83,8 @@ function isCliente(value: unknown): value is Cliente {
     isOptionalText(cliente['apellidos']) &&
     isOptionalText(cliente['direccion']) &&
     isOptionalText(cliente['telefono']) &&
-    isOptionalText(cliente['correo'])
+    isOptionalText(cliente['correo']) &&
+    isOptionalText(cliente['estado'])
   );
 }
 

@@ -7,14 +7,21 @@ export interface Proveedor {
   readonly direccion?: string | null;
   readonly telefono?: string | null;
   readonly correo?: string | null;
+  readonly contacto?: string | null;
+  readonly banco?: string | null;
+  readonly cuentaCorriente?: string | null;
+  readonly estado?: string | null;
 }
 
 export interface NuevoProveedor {
   readonly ruc: string;
   readonly razonSocial: string;
-  readonly direccion: string;
-  readonly telefono: string;
-  readonly correo: string;
+  readonly direccion?: string;
+  readonly telefono?: string;
+  readonly correo?: string;
+  readonly contacto?: string;
+  readonly banco?: string;
+  readonly cuentaCorriente?: string;
 }
 
 export function esRucValido(numero: string): boolean {
@@ -78,7 +85,11 @@ function isProveedor(value: unknown): value is Proveedor {
     isOptionalText(proveedor['razonSocial']) &&
     isOptionalText(proveedor['direccion']) &&
     isOptionalText(proveedor['telefono']) &&
-    isOptionalText(proveedor['correo'])
+    isOptionalText(proveedor['correo']) &&
+    isOptionalText(proveedor['contacto']) &&
+    isOptionalText(proveedor['banco']) &&
+    isOptionalText(proveedor['cuentaCorriente']) &&
+    isOptionalText(proveedor['estado'])
   );
 }
 

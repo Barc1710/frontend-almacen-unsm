@@ -43,6 +43,7 @@ export class ProveedoresComponent implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
 
   protected readonly puedeModificar = this.proveedoresService.puedeModificar;
+  protected readonly puedeEliminar = this.proveedoresService.puedeEliminar;
   protected readonly pageSize = 10;
   protected readonly proveedores = signal<Proveedor[]>([]);
   protected readonly page = signal(0);
@@ -63,10 +64,13 @@ export class ProveedoresComponent implements OnInit {
   );
   protected readonly proveedorForm = this.formBuilder.nonNullable.group({
     ruc: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
-    razonSocial: ['', [Validators.required, Validators.maxLength(120)]],
-    direccion: ['', Validators.maxLength(200)],
-    telefono: ['', Validators.maxLength(20)],
-    correo: ['', [Validators.email, Validators.maxLength(160)]],
+    razonSocial: ['', [Validators.required, Validators.maxLength(150)]],
+    direccion: ['', Validators.maxLength(255)],
+    telefono: ['', Validators.maxLength(50)],
+    correo: ['', [Validators.email, Validators.maxLength(100)]],
+    contacto: ['', Validators.maxLength(100)],
+    banco: ['', Validators.maxLength(50)],
+    cuentaCorriente: ['', Validators.maxLength(50)],
   });
 
   protected readonly proveedoresFiltrados = computed(() => {
@@ -154,12 +158,16 @@ export class ProveedoresComponent implements OnInit {
     this.createErrorMessage.set(null);
     this.proveedorForm.reset({
       ruc: String(proveedor.ruc ?? ''),
-      razonSocial: this.razonSocialDe(proveedor) === 'Sin razón social registrada'
-        ? ''
-        : this.razonSocialDe(proveedor),
+      razonSocial:
+        this.razonSocialDe(proveedor) === 'Sin razón social registrada'
+          ? ''
+          : this.razonSocialDe(proveedor),
       direccion: proveedor.direccion ?? '',
       telefono: proveedor.telefono ?? '',
       correo: proveedor.correo ?? '',
+      contacto: proveedor.contacto ?? '',
+      banco: proveedor.banco ?? '',
+      cuentaCorriente: proveedor.cuentaCorriente ?? '',
     });
     this.isCreateDialogOpen.set(true);
     this.focusAfterRender(() => this.rucField()?.nativeElement);
@@ -228,7 +236,16 @@ export class ProveedoresComponent implements OnInit {
 
     this.isSaving.set(true);
     this.createErrorMessage.set(null);
-    const proveedor: NuevoProveedor = values;
+    const proveedor: NuevoProveedor = {
+      ruc: values.ruc.trim(),
+      razonSocial: values.razonSocial.trim(),
+      direccion: values.direccion?.trim() || undefined,
+      telefono: values.telefono?.trim() || undefined,
+      correo: values.correo?.trim() || undefined,
+      contacto: values.contacto?.trim() || undefined,
+      banco: values.banco?.trim() || undefined,
+      cuentaCorriente: values.cuentaCorriente?.trim() || undefined,
+    };
     const selectedProveedor = this.selectedProveedor();
     const save$ = selectedProveedor
       ? this.proveedoresService.actualizar(selectedProveedor, proveedor)
@@ -302,8 +319,30 @@ export class ProveedoresComponent implements OnInit {
     });
   }
 
+  private searchDebounceTimer?: ReturnType<typeof setTimeout>;
+
   protected onSearchChange(event: Event): void {
-    this.search.set((event.target as HTMLInputElement).value);
+    const value = (event.target as HTMLInputElement).value;
+    this.search.set(value);
+
+    if (!value.trim()) {
+      clearTimeout(this.searchDebounceTimer);
+      this.page.set(0);
+      this.loadPage(0);
+      return;
+    }
+
+    clearTimeout(this.searchDebounceTimer);
+    this.searchDebounceTimer = setTimeout(() => {
+      this.page.set(0);
+      this.loadPage(0);
+    }, 400);
+  }
+
+  protected ejecutarBusqueda(): void {
+    clearTimeout(this.searchDebounceTimer);
+    this.page.set(0);
+    this.loadPage(0);
   }
 
   protected razonSocialDe(proveedor: Proveedor): string {
@@ -340,7 +379,7 @@ export class ProveedoresComponent implements OnInit {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    this.proveedoresService.obtenerPagina(page, this.pageSize).subscribe({
+    this.proveedoresService.obtenerPagina(page, this.pageSize, this.search().trim()).subscribe({
       next: (result) => this.setPage(result),
       error: (error: unknown) => {
         this.loading.set(false);

@@ -43,6 +43,7 @@ export class ClientesComponent implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
 
   protected readonly puedeModificar = this.clientesService.puedeModificar;
+  protected readonly puedeEliminar = this.clientesService.puedeEliminar;
   protected readonly pageSize = 10;
   protected readonly clientes = signal<Cliente[]>([]);
   protected readonly page = signal(0);
@@ -63,10 +64,10 @@ export class ClientesComponent implements OnInit {
   );
   protected readonly clienteForm = this.formBuilder.nonNullable.group({
     dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
-    nombre: ['', [Validators.required, Validators.maxLength(120)]],
-    direccion: ['', Validators.maxLength(200)],
-    telefono: ['', Validators.maxLength(20)],
-    correo: ['', [Validators.email, Validators.maxLength(160)]],
+    nombre: ['', [Validators.required, Validators.maxLength(150)]],
+    direccion: ['', Validators.maxLength(255)],
+    telefono: ['', Validators.maxLength(50)],
+    correo: ['', [Validators.email, Validators.maxLength(100)]],
   });
 
   protected readonly clientesFiltrados = computed(() => {
@@ -303,8 +304,32 @@ export class ClientesComponent implements OnInit {
     });
   }
 
+  private searchDebounceTimer?: ReturnType<typeof setTimeout>;
+
   protected onSearchChange(event: Event): void {
-    this.search.set((event.target as HTMLInputElement).value);
+    const value = (event.target as HTMLInputElement).value;
+    this.search.set(value);
+
+    // Si el usuario borra la búsqueda, recargamos inmediatamente la página 0 desde el backend
+    if (!value.trim()) {
+      clearTimeout(this.searchDebounceTimer);
+      this.page.set(0);
+      this.loadPage(0);
+      return;
+    }
+
+    // Debounce para consultar al backend si el término no está en la página actual
+    clearTimeout(this.searchDebounceTimer);
+    this.searchDebounceTimer = setTimeout(() => {
+      this.page.set(0);
+      this.loadPage(0);
+    }, 400);
+  }
+
+  protected ejecutarBusqueda(): void {
+    clearTimeout(this.searchDebounceTimer);
+    this.page.set(0);
+    this.loadPage(0);
   }
 
   protected nombreCompleto(cliente: Cliente): string {
@@ -351,7 +376,7 @@ export class ClientesComponent implements OnInit {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    this.clientesService.obtenerPagina(page, this.pageSize).subscribe({
+    this.clientesService.obtenerPagina(page, this.pageSize, this.search().trim()).subscribe({
       next: (result) => this.setPage(result),
       error: (error: unknown) => {
         this.loading.set(false);

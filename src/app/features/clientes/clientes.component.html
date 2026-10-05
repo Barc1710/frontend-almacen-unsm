@@ -31,7 +31,7 @@
       class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
       role="status"
     >
-      Editar y eliminar se habilitarán para cuentas reales cuando el backend tenga esas operaciones.
+      Modo lectura: editar y eliminar se habilitarán para cuentas reales cuando el backend tenga esas operaciones o cuentes con permisos.
     </p>
   }
 
@@ -58,6 +58,7 @@
           type="search"
           [value]="search()"
           (input)="onSearchChange($event)"
+          (keyup.enter)="ejecutarBusqueda()"
           placeholder="Filtrar esta página..."
           class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-500 focus:border-[#00A0DF] focus:bg-white focus:ring-2 focus:ring-[#00A0DF]/20"
         />
@@ -97,6 +98,7 @@
               <th scope="col" class="px-4 py-4">Dirección</th>
               <th scope="col" class="px-4 py-4">Teléfono</th>
               <th scope="col" class="px-4 py-4">Correo</th>
+              <th scope="col" class="px-4 py-4 text-center">Estado</th>
               <th scope="col" class="px-4 py-4">
                 <div class="flex justify-end">
                   Acciones
@@ -107,13 +109,13 @@
           <tbody class="divide-y divide-slate-100">
             @if (loading()) {
               <tr>
-                <td colspan="7" class="px-6 py-16 text-center text-sm text-slate-500" role="status">
+                <td colspan="8" class="px-6 py-16 text-center text-sm text-slate-500" role="status">
                   Cargando clientes...
                 </td>
               </tr>
             } @else if (clientesFiltrados().length === 0) {
               <tr>
-                <td colspan="7" class="px-6 py-16 text-center">
+                <td colspan="8" class="px-6 py-16 text-center">
                   <p class="font-medium text-slate-700">
                     No se encontraron clientes en esta página.
                   </p>
@@ -161,6 +163,21 @@
                   >
                     {{ cliente.correo || '—' }}
                   </td>
+                  <td class="px-4 py-4 text-center whitespace-nowrap">
+                    @if (cliente.estado === '0') {
+                      <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200"
+                      >
+                        Inactivo
+                      </span>
+                    } @else {
+                      <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-[#007A30] border border-emerald-200"
+                      >
+                        Activo
+                      </span>
+                    }
+                  </td>
                   <td class="px-4 py-4">
                     <div class="flex justify-end gap-1">
                       <button
@@ -170,7 +187,7 @@
                         [title]="
                           puedeModificar()
                             ? 'Editar cliente'
-                            : 'La edición estará disponible cuando el backend lo admita'
+                            : 'La edición estará disponible cuando el backend tenga esas operaciones'
                         "
                         [attr.aria-label]="'Editar a ' + nombreCompleto(cliente)"
                         class="flex size-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-sky-50 hover:text-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] disabled:cursor-not-allowed disabled:opacity-40"
@@ -180,11 +197,13 @@
                       <button
                         type="button"
                         (click)="requestDelete(cliente, $event)"
-                        [disabled]="!puedeModificar()"
+                        [disabled]="!puedeEliminar() || cliente.estado === '0'"
                         [title]="
-                          puedeModificar()
-                            ? 'Eliminar cliente'
-                            : 'La eliminación estará disponible cuando el backend lo admita'
+                          cliente.estado === '0'
+                            ? 'Cliente ya desactivado'
+                            : puedeEliminar()
+                              ? 'Eliminar cliente'
+                              : 'La eliminación estará disponible cuando el backend tenga esas operaciones'
                         "
                         [attr.aria-label]="'Eliminar a ' + nombreCompleto(cliente)"
                         class="flex size-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:cursor-not-allowed disabled:opacity-40"

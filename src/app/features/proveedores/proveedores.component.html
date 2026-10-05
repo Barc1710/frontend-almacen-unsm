@@ -31,7 +31,7 @@
       class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
       role="status"
     >
-      Editar y eliminar se habilitarán para cuentas reales cuando el backend tenga esas operaciones.
+      Modo lectura: editar y eliminar se habilitarán para cuentas reales cuando el backend tenga esas operaciones o cuentes con permisos.
     </p>
   }
 
@@ -58,6 +58,7 @@
           type="search"
           [value]="search()"
           (input)="onSearchChange($event)"
+          (keyup.enter)="ejecutarBusqueda()"
           placeholder="Filtrar esta página..."
           class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-500 focus:border-[#00A0DF] focus:bg-white focus:ring-2 focus:ring-[#00A0DF]/20"
         />
@@ -92,10 +93,12 @@
           <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
             <tr>
               <th scope="col" class="w-16 px-5 py-4 sm:px-6">N.º</th>
-              <th scope="col" class="px-4 py-4">Nombre</th>
-              <th scope="col" class="px-4 py-4">Dirección</th>
+              <th scope="col" class="px-4 py-4">Razón Social</th>
               <th scope="col" class="w-32 px-4 py-4">RUC</th>
+              <th scope="col" class="px-4 py-4">Dirección</th>
               <th scope="col" class="w-32 px-4 py-4">Teléfono</th>
+              <th scope="col" class="px-4 py-4">Contacto</th>
+              <th scope="col" class="px-4 py-4 text-center">Estado</th>
               <th scope="col" class="px-4 py-4">
                 <div class="flex justify-end">
                   Acciones
@@ -106,13 +109,13 @@
           <tbody class="divide-y divide-slate-100">
             @if (loading()) {
               <tr>
-                <td colspan="6" class="px-6 py-16 text-center text-sm text-slate-500" role="status">
+                <td colspan="8" class="px-6 py-16 text-center text-sm text-slate-500" role="status">
                   Cargando proveedores...
                 </td>
               </tr>
             } @else if (proveedoresFiltrados().length === 0) {
               <tr>
-                <td colspan="6" class="px-6 py-16 text-center">
+                <td colspan="8" class="px-6 py-16 text-center">
                   <p class="font-medium text-slate-700">
                     No se encontraron proveedores en esta página.
                   </p>
@@ -142,17 +145,35 @@
                       }}</span>
                     </div>
                   </td>
+                  <td class="px-4 py-4 font-medium tabular-nums text-slate-700">
+                    {{ rucDe(proveedor) }}
+                  </td>
                   <td
                     class="max-w-64 truncate px-4 py-4 text-slate-500"
                     [title]="proveedor.direccion || ''"
                   >
                     {{ proveedor.direccion || '—' }}
                   </td>
-                  <td class="px-4 py-4 font-medium tabular-nums text-slate-700">
-                    {{ rucDe(proveedor) }}
-                  </td>
                   <td class="px-4 py-4 tabular-nums text-slate-600">
                     {{ proveedor.telefono || '—' }}
+                  </td>
+                  <td class="px-4 py-4 text-slate-600">
+                    {{ proveedor.contacto || '—' }}
+                  </td>
+                  <td class="px-4 py-4 text-center whitespace-nowrap">
+                    @if (proveedor.estado === '0') {
+                      <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200"
+                      >
+                        Inactivo
+                      </span>
+                    } @else {
+                      <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-[#007A30] border border-emerald-200"
+                      >
+                        Activo
+                      </span>
+                    }
                   </td>
                   <td class="px-4 py-4">
                     <div class="flex justify-end gap-1">
@@ -173,11 +194,13 @@
                       <button
                         type="button"
                         (click)="requestDelete(proveedor, $event)"
-                        [disabled]="!puedeModificar()"
+                        [disabled]="!puedeEliminar() || proveedor.estado === '0'"
                         [title]="
-                          puedeModificar()
-                            ? 'Eliminar proveedor'
-                            : 'La eliminación estará disponible cuando el backend lo admita'
+                          proveedor.estado === '0'
+                            ? 'Proveedor ya desactivado'
+                            : puedeEliminar()
+                              ? 'Eliminar proveedor'
+                              : 'La eliminación estará disponible cuando el backend lo admita'
                         "
                         [attr.aria-label]="'Eliminar a ' + razonSocialDe(proveedor)"
                         class="flex size-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:cursor-not-allowed disabled:opacity-40"
@@ -382,7 +405,7 @@
               id="new-supplier-email"
               type="email"
               autocomplete="email"
-              maxlength="160"
+              maxlength="100"
               formControlName="correo"
               class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#00A0DF] focus:ring-2 focus:ring-[#00A0DF]/20"
             />
@@ -391,6 +414,49 @@
                 Ingresa un correo electrónico válido.
               </p>
             }
+          </div>
+
+          <div>
+            <label for="new-supplier-contact" class="mb-1.5 block text-sm font-medium text-slate-700">
+              Persona de contacto
+            </label>
+            <input
+              id="new-supplier-contact"
+              type="text"
+              maxlength="100"
+              formControlName="contacto"
+              placeholder="Nombre del asesor o contacto comercial"
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#00A0DF] focus:ring-2 focus:ring-[#00A0DF]/20"
+            />
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label for="new-supplier-bank" class="mb-1.5 block text-sm font-medium text-slate-700">
+                Banco
+              </label>
+              <input
+                id="new-supplier-bank"
+                type="text"
+                maxlength="50"
+                formControlName="banco"
+                placeholder="Ej. BCP, BBVA, Interbank"
+                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#00A0DF] focus:ring-2 focus:ring-[#00A0DF]/20"
+              />
+            </div>
+            <div>
+              <label for="new-supplier-account" class="mb-1.5 block text-sm font-medium text-slate-700">
+                Cuenta corriente
+              </label>
+              <input
+                id="new-supplier-account"
+                type="text"
+                maxlength="50"
+                formControlName="cuentaCorriente"
+                placeholder="N.º de cuenta corriente o CCI"
+                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-[#00A0DF] focus:ring-2 focus:ring-[#00A0DF]/20"
+              />
+            </div>
           </div>
 
           <div

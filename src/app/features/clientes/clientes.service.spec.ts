@@ -33,7 +33,11 @@ describe('ClientesService', () => {
     limpiarSesion();
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([{ path: 'dashboard', children: [] }]),
+      ],
     });
 
     service = TestBed.inject(ClientesService);

@@ -32,7 +32,11 @@ describe('ClientesComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ClientesComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([{ path: 'dashboard', children: [] }]),
+      ],
     }).compileComponents();
 
     if (demo) {
