@@ -162,11 +162,25 @@ export class ArticulosListComponent implements OnInit {
   }
 
   abrirNuevo(): void {
+    if (
+      this.familias().length === 0 ||
+      this.marcas().length === 0 ||
+      this.ubicaciones().length === 0
+    ) {
+      this.cargarCatalogos();
+    }
     this.articuloSeleccionado.set(null);
     this.modalVisible.set(true);
   }
 
   abrirEditar(articulo: Articulo): void {
+    if (
+      this.familias().length === 0 ||
+      this.marcas().length === 0 ||
+      this.ubicaciones().length === 0
+    ) {
+      this.cargarCatalogos();
+    }
     this.articuloSeleccionado.set(articulo);
     this.modalVisible.set(true);
   }

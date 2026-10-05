@@ -65,7 +65,7 @@ export class ArticuloFormComponent {
     idMarca: new FormControl(null, { validators: [Validators.required] }),
     idUbicacion: new FormControl(null, { validators: [Validators.required] }),
     idUnidadMedida: new FormControl(null),
-    precio: new FormControl(0, { validators: [Validators.min(0)] }),
+    precio: new FormControl(0),
     cantidadMinima: new FormControl(10, {
       validators: [Validators.required, Validators.min(0)],
     }),
@@ -118,7 +118,7 @@ export class ArticuloFormComponent {
             idMarca: art.idMarca,
             idUbicacion: art.idUbicacion,
             idUnidadMedida: art.idUnidadMedida,
-            precio: art.precio,
+            precio: 0,
             cantidadMinima: art.cantidadMinima,
             detalle: art.detalle ?? '',
           });
@@ -135,7 +135,7 @@ export class ArticuloFormComponent {
             cantidadMinima: 10,
             detalle: '',
           });
-          this.form.controls.codigo.enable();
+          this.form.controls.codigo.disable();
         }
       }
     });
@@ -187,7 +187,7 @@ export class ArticuloFormComponent {
       this.isEdit() && currentArt
         ? this.articuloService.actualizar(currentArt.id, {
             ...baseData,
-            precio: Number(raw.precio),
+            precio: 0.0,
           })
         : this.articuloService.crear({
             ...baseData,

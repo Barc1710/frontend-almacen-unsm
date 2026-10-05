@@ -99,12 +99,6 @@
                     <svg lucideLoader2 class="size-3 animate-spin"></svg>
                     <span>Generando...</span>
                   </span>
-                } @else if (!isEdit() && form.controls.codigo.value) {
-                  <span
-                    class="text-[11px] font-semibold text-unsm-green-dark bg-unsm-green-light px-1.5 py-0.5 rounded"
-                  >
-                    Automático
-                  </span>
                 }
               </div>
               <div class="relative">
@@ -113,7 +107,9 @@
                   type="text"
                   formControlName="codigo"
                   maxlength="20"
-                  class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors uppercase outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
+                  readonly
+                  placeholder="Seleccione familia"
+                  class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors uppercase outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-slate-100 text-slate-600 cursor-not-allowed select-none"
                   [class.border-unsm-red]="isFieldInvalid('codigo') || conflictoCodigo()"
                   [class.border-slate-300]="!isFieldInvalid('codigo') && !conflictoCodigo()"
                 />
@@ -125,7 +121,7 @@
               </div>
               @if (isFieldInvalid('codigo')) {
                 <p class="text-xs text-unsm-red mt-1">
-                  El código es obligatorio (máx. 20 caracteres)
+                  El código se genera al seleccionar una familia
                 </p>
               }
             </div>
