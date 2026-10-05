@@ -21,6 +21,20 @@ export interface Articulo {
   readonly fecha: string;
 }
 
+export interface ArticuloResumen {
+  readonly id: number;
+  readonly codigo: string;
+  readonly descripcion: string;
+  readonly simboloUnidadMedida: string;
+  readonly permiteDecimales: boolean;
+  readonly saldo: number;
+  readonly precio: number;
+  readonly nombreFamilia?: string;
+  readonly nombreMarca?: string;
+  readonly nombreUbicacion?: string;
+  readonly activo: boolean;
+}
+
 export interface ArticuloCreateRequest {
   readonly codigo: string;
   readonly descripcion: string;

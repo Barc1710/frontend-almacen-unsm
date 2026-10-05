@@ -7,7 +7,7 @@ const loadAccessStatus = () =>
 const loadDashboard = () =>
   import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent);
 
-const loadInventario = () =>
+const loadArticulos = () =>
   import('./features/articulos/pages/articulos-list/articulos-list.component').then(
     (m) => m.ArticulosListComponent,
   );
@@ -15,6 +15,11 @@ const loadInventario = () =>
 const loadIngresos = () =>
   import('./features/ingresos/pages/ingresos-list/ingresos-list.component').then(
     (m) => m.IngresosListComponent,
+  );
+
+const loadEgresos = () =>
+  import('./features/egresos/pages/egresos-list/egresos-list.component').then(
+    (m) => m.EgresosListComponent,
   );
 
 export const routes: Routes = [
@@ -34,9 +39,16 @@ export const routes: Routes = [
       { path: '', pathMatch: 'full', canActivate: [landingGuard], loadComponent: loadAccessStatus },
       { path: 'sin-acceso', loadComponent: loadAccessStatus },
       { path: 'dashboard', canActivate: [moduleGuard()], loadComponent: loadDashboard },
-      { path: 'inventario', canActivate: [moduleGuard('INVENTARIO')], loadComponent: loadInventario },
-      { path: 'articulos', pathMatch: 'full', redirectTo: 'inventario' },
+      {
+        path: 'inventario/articulos',
+        canActivate: [moduleGuard('INVENTARIO_ARTICULOS')],
+        loadComponent: loadArticulos,
+      },
+      { path: 'inventario', pathMatch: 'full', redirectTo: 'inventario/articulos' },
+      { path: 'articulos', pathMatch: 'full', redirectTo: 'inventario/articulos' },
       { path: 'ingresos', canActivate: [moduleGuard('INGRESOS')], loadComponent: loadIngresos },
+      { path: 'egresos', canActivate: [moduleGuard('EGRESOS')], loadComponent: loadEgresos },
+      { path: 'despachos', pathMatch: 'full', redirectTo: 'egresos' },
       { path: 'cambiar-clave', pathMatch: 'full', redirectTo: '' },
       // Rutas dinámicas universales para módulos y submódulos cargados desde la base de datos
       { path: ':modulo', canActivate: [moduleGuard()], loadComponent: loadDashboard },

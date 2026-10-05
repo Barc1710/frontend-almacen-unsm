@@ -1,5 +1,5 @@
-import { DatePipe } from '@angular/common';
-import { Component, DestroyRef, computed, inject, OnInit, signal } from '@angular/core';
+import { DatePipe, TitleCasePipe } from '@angular/common';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import {
@@ -8,28 +8,37 @@ import {
   LucideEye,
   LucideFileDown,
   LucideLoader2,
+  LucidePackageCheck,
   LucidePlus,
   LucideRefreshCw,
   LucideSearch,
-  LucideTruck,
   LucideUser,
 } from '@lucide/angular';
-import { Subscription } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import { AuthService, NotificationService, obtenerFechaHoy } from '../../../../core';
 import { PaginationComponent } from '../../../../shared';
-import { IngresoDetalleModalComponent, IngresoFormModalComponent } from '../../components';
-import { Ingreso, IngresoConDetalles, Proveedor } from '../../models';
-import { IngresoService } from '../../services';
+import { EgresoDetalleModalComponent, EgresoFormModalComponent } from '../../components';
+import {
+  Area,
+  Cliente,
+  Egreso,
+  EgresoConDetalles,
+  Encargado,
+  EncargadoAlmacen,
+  TipoEgreso,
+} from '../../models';
+import { EgresoService } from '../../services';
 
 @Component({
-  selector: 'app-ingresos-list',
+  selector: 'app-egresos-list',
   imports: [
     FormsModule,
     DatePipe,
+    TitleCasePipe,
     PaginationComponent,
-    IngresoFormModalComponent,
-    IngresoDetalleModalComponent,
-    LucideTruck,
+    EgresoFormModalComponent,
+    EgresoDetalleModalComponent,
+    LucidePackageCheck,
     LucidePlus,
     LucideSearch,
     LucideRefreshCw,
@@ -40,7 +49,7 @@ import { IngresoService } from '../../services';
     LucideCalendar,
     LucideUser,
   ],
-  templateUrl: './ingresos-list.component.html',
+  templateUrl: './egresos-list.component.html',
   styles: `
     input[type='date'] {
       cursor: pointer;
@@ -63,68 +72,79 @@ import { IngresoService } from '../../services';
     }
   `,
 })
-export class IngresosListComponent implements OnInit {
-  private readonly ingresoService = inject(IngresoService);
+export class EgresosListComponent implements OnInit {
+  readonly esAdministrador = inject(AuthService).isAdmin;
+  private consultaEgresos?: Subscription;
+  readonly errorListado = signal<string | null>(null);
+  readonly errorCatalogos = signal<string | null>(null);
+  readonly cargandoCatalogos = signal(false);
+  private readonly egresoService = inject(EgresoService);
   private readonly notificationService = inject(NotificationService);
-  private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
 
-  private consultaIngresos?: Subscription;
-
-  readonly esAdministrador = computed(() => this.authService.isAdmin());
   readonly cargando = signal<boolean>(false);
-  readonly errorListado = signal<string | null>(null);
-  readonly cargandoCatalogos = signal<boolean>(false);
-  readonly errorCatalogos = signal<string | null>(null);
-
-  readonly ingresos = signal<Ingreso[]>([]);
+  readonly egresos = signal<Egreso[]>([]);
   readonly totalElementos = signal<number>(0);
   readonly totalPaginas = signal<number>(0);
   readonly paginaActual = signal<number>(0);
   readonly tamanioPagina = signal<number>(10);
 
+  // Filtros
+  readonly filtroTexto = signal<string>('');
+  readonly tipoEgresoFiltro = signal<string>('TODOS');
   readonly periodoFiltro = signal<'hoy' | 'todos' | 'intervalo'>('hoy');
   readonly fechaDesde = signal<string>(obtenerFechaHoy());
   readonly fechaHasta = signal<string>(obtenerFechaHoy());
-  readonly proveedorFiltro = signal<number | null>(null);
-  readonly filtroTexto = signal<string>('');
 
-  readonly proveedores = signal<Proveedor[]>([]);
+  // Catálogos para los modales
+  readonly clientes = signal<Cliente[]>([]);
+  readonly areas = signal<Area[]>([]);
+  readonly encargados = signal<Encargado[]>([]);
+  readonly encargadosAlmacen = signal<EncargadoAlmacen[]>([]);
 
+  // Modales
   readonly modalRegistroVisible = signal<boolean>(false);
   readonly modalDetalleVisible = signal<boolean>(false);
-  readonly ingresoDetalle = signal<IngresoConDetalles | null>(null);
+  readonly egresoDetalle = signal<EgresoConDetalles | null>(null);
   readonly cargandoDetalleId = signal<number | null>(null);
-  readonly anulandoId = signal<number | null>(null);
   readonly descargandoPdfId = signal<number | null>(null);
+  readonly anulandoId = signal<number | null>(null);
 
   ngOnInit(): void {
     this.cargarCatalogos();
-    this.cargarIngresos();
+    this.cargarEgresos();
   }
 
   cargarCatalogos(): void {
+    if (this.cargandoCatalogos()) return;
     this.cargandoCatalogos.set(true);
     this.errorCatalogos.set(null);
-    this.ingresoService
-      .listarProveedoresActivos()
+    forkJoin({
+      clientes: this.egresoService.listarClientesActivos(),
+      areas: this.egresoService.listarAreasActivas(),
+      encargados: this.egresoService.listarEncargadosActivos(),
+      encargadosAlmacen: this.egresoService.listarEncargadosAlmacenActivos(),
+    })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (provs) => {
-          this.proveedores.set(provs);
+        next: (catalogos) => {
+          this.clientes.set(catalogos.clientes);
+          this.areas.set(catalogos.areas);
+          this.encargados.set(catalogos.encargados);
+          this.encargadosAlmacen.set(catalogos.encargadosAlmacen);
           this.cargandoCatalogos.set(false);
         },
         error: () => {
           this.cargandoCatalogos.set(false);
           this.errorCatalogos.set(
-            'No se pudieron cargar los datos necesarios para registrar un ingreso.',
+            'No se pudieron cargar los datos necesarios para registrar un egreso.',
           );
         },
       });
   }
 
-  cargarIngresos(): void {
-    this.consultaIngresos?.unsubscribe();
+  cargarEgresos(): void {
+    this.consultaEgresos?.unsubscribe();
     this.errorListado.set(null);
     this.cargando.set(true);
 
@@ -140,35 +160,35 @@ export class IngresosListComponent implements OnInit {
       fechaFin = this.fechaHasta() || undefined;
     }
 
-    this.consultaIngresos = this.ingresoService
+    const tipoFiltro =
+      this.tipoEgresoFiltro() !== 'TODOS' ? (this.tipoEgresoFiltro() as TipoEgreso) : undefined;
+
+    this.consultaEgresos = this.egresoService
       .listar({
         filtro: this.filtroTexto() || undefined,
-        numeroOrden: this.filtroTexto() || undefined,
-        idProveedor: this.proveedorFiltro(),
+        tipoEgreso: tipoFiltro,
         fechaInicio,
         fechaFin,
         page: this.paginaActual(),
         size: this.tamanioPagina(),
-        sort: 'id,desc',
+        sort: 'fecha,desc',
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (page) => {
           if (page.content.length === 0 && this.paginaActual() > 0 && page.totalElements > 0) {
             this.paginaActual.update((p) => p - 1);
-            this.cargarIngresos();
+            this.cargarEgresos();
             return;
           }
-          this.ingresos.set(page.content);
+          this.egresos.set(page.content);
           this.totalElementos.set(page.totalElements);
           this.totalPaginas.set(page.totalPages);
           this.cargando.set(false);
         },
         error: () => {
-          this.errorListado.set(
-            'No se pudieron cargar los comprobantes de ingreso. Intente nuevamente.',
-          );
-          this.ingresos.set([]);
+          this.errorListado.set('No se pudieron cargar los egresos. Intente nuevamente.');
+          this.egresos.set([]);
           this.totalElementos.set(0);
           this.totalPaginas.set(0);
           this.cargando.set(false);
@@ -178,13 +198,13 @@ export class IngresosListComponent implements OnInit {
 
   onBuscarTexto(): void {
     this.paginaActual.set(0);
-    this.cargarIngresos();
+    this.cargarEgresos();
   }
 
-  onCambioProveedor(id: number | null): void {
-    this.proveedorFiltro.set(id);
+  onCambioTipoEgreso(tipo: string): void {
+    this.tipoEgresoFiltro.set(tipo);
     this.paginaActual.set(0);
-    this.cargarIngresos();
+    this.cargarEgresos();
   }
 
   onCambioPeriodo(periodo: 'hoy' | 'todos' | 'intervalo'): void {
@@ -200,12 +220,12 @@ export class IngresosListComponent implements OnInit {
       if (!this.fechaHasta()) this.fechaHasta.set(obtenerFechaHoy());
     }
     this.paginaActual.set(0);
-    this.cargarIngresos();
+    this.cargarEgresos();
   }
 
   onCambioFechas(): void {
     this.paginaActual.set(0);
-    this.cargarIngresos();
+    this.cargarEgresos();
   }
 
   abrirSelectorFecha(event: MouseEvent): void {
@@ -214,35 +234,35 @@ export class IngresosListComponent implements OnInit {
     try {
       input.showPicker();
     } catch {
-      // Ignorar si el navegador no soporta showPicker o ya está abierto
+      // Ignorar si el navegador no soporta showPicker
     }
   }
 
   onLimpiarFiltros(): void {
     this.filtroTexto.set('');
+    this.tipoEgresoFiltro.set('TODOS');
     this.periodoFiltro.set('hoy');
     this.fechaDesde.set(obtenerFechaHoy());
     this.fechaHasta.set(obtenerFechaHoy());
-    this.proveedorFiltro.set(null);
     this.paginaActual.set(0);
-    this.cargarIngresos();
+    this.cargarEgresos();
   }
 
   cambiarPagina(nuevaPagina: number): void {
     if (nuevaPagina >= 0 && nuevaPagina < this.totalPaginas()) {
       this.paginaActual.set(nuevaPagina);
-      this.cargarIngresos();
+      this.cargarEgresos();
     }
   }
 
   cambiarTamanio(nuevoTamanio: number): void {
     this.tamanioPagina.set(nuevoTamanio);
     this.paginaActual.set(0);
-    this.cargarIngresos();
+    this.cargarEgresos();
   }
 
-  abrirNuevoIngreso(): void {
-    if (this.cargandoCatalogos() || !!this.errorCatalogos()) return;
+  abrirNuevoDespacho(): void {
+    if (this.cargandoCatalogos() || this.errorCatalogos()) return;
     this.modalRegistroVisible.set(true);
   }
 
@@ -250,27 +270,27 @@ export class IngresosListComponent implements OnInit {
     this.modalRegistroVisible.set(false);
   }
 
-  onIngresoGuardado(_guardado: IngresoConDetalles): void {
+  onDespachoGuardado(_guardado: EgresoConDetalles): void {
     this.cerrarModalRegistro();
-    this.notificationService.toast('Ingreso registrado con éxito');
-    this.cargarIngresos();
+    this.notificationService.toast('Despacho registrado con éxito');
+    this.cargarEgresos();
   }
 
-  verDetalle(ingreso: Ingreso): void {
+  verDetalle(egreso: Egreso): void {
     if (this.cargandoDetalleId() !== null) return;
-    this.cargandoDetalleId.set(ingreso.id);
+    this.cargandoDetalleId.set(egreso.id);
 
-    this.ingresoService.obtenerPorId(ingreso.id).subscribe({
+    this.egresoService.obtenerPorId(egreso.id).subscribe({
       next: (detalleCompleto) => {
         this.cargandoDetalleId.set(null);
-        this.ingresoDetalle.set(detalleCompleto);
+        this.egresoDetalle.set(detalleCompleto);
         this.modalDetalleVisible.set(true);
       },
       error: () => {
         this.cargandoDetalleId.set(null);
         this.notificationService.error(
           'Error de consulta',
-          'No se pudo cargar el detalle del comprobante de ingreso.',
+          'No se pudo cargar el detalle del despacho solicitado.',
         );
       },
     });
@@ -278,17 +298,16 @@ export class IngresosListComponent implements OnInit {
 
   cerrarModalDetalle(): void {
     this.modalDetalleVisible.set(false);
-    this.ingresoDetalle.set(null);
+    this.egresoDetalle.set(null);
   }
 
-  abrirPdf(ingreso: Ingreso): void {
+  abrirPdf(egreso: Egreso): void {
     if (this.descargandoPdfId() !== null) return;
-    this.descargandoPdfId.set(ingreso.id);
+    this.descargandoPdfId.set(egreso.id);
 
-    // Abrir una pestaña en blanco inmediatamente para evitar bloqueos del navegador
     const nuevaPestana = window.open('about:blank', '_blank');
 
-    this.ingresoService.descargarPdf(ingreso.id).subscribe({
+    this.egresoService.descargarPdf(egreso.id).subscribe({
       next: (blob) => {
         this.descargandoPdfId.set(null);
         const file = new Blob([blob], { type: 'application/pdf' });
@@ -300,7 +319,6 @@ export class IngresosListComponent implements OnInit {
           window.open(fileUrl, '_blank');
         }
 
-        // Revocar la URL después de un minuto para liberar memoria
         setTimeout(() => window.URL.revokeObjectURL(fileUrl), 60000);
       },
       error: () => {
@@ -310,28 +328,23 @@ export class IngresosListComponent implements OnInit {
         }
         this.notificationService.error(
           'Error al abrir PDF',
-          'No se pudo generar ni abrir el comprobante en formato PDF.',
+          'No se pudo generar ni abrir la autorización de salida en formato PDF.',
         );
       },
     });
   }
 
-  // Alias para mantener compatibilidad si se invoca como descargarPdf
-  descargarPdf(ingreso: Ingreso): void {
-    this.abrirPdf(ingreso);
-  }
-
-  anularIngreso(ingreso: Ingreso): void {
-    if (ingreso.estado === '0' || this.anulandoId() !== null || !this.esAdministrador()) {
+  anularDespacho(egreso: Egreso): void {
+    if (!this.esAdministrador() || egreso.estado === '0' || this.anulandoId() !== null) {
       return;
     }
 
     void this.notificationService
       .confirm({
         title: '¿Anular comprobante?',
-        text: `¿Desea anular el ingreso ${ingreso.numeroOrden}? Se revertirán las existencias en almacén.`,
+        text: `¿Desea anular el comprobante ${egreso.numeroCompleto}? Se revertirán las cantidades despachadas al stock general del almacén.`,
         icon: 'warning',
-        confirmButtonText: 'Sí, anular',
+        confirmButtonText: 'Sí, anular comprobante',
         cancelButtonText: 'Cancelar',
         confirmButtonClass:
           'bg-rose-600 hover:bg-rose-700 text-white font-semibold px-4 py-2 rounded-xl text-sm shadow-xs transition-colors cursor-pointer',
@@ -340,19 +353,22 @@ export class IngresosListComponent implements OnInit {
       })
       .then((result) => {
         if (result.isConfirmed) {
-          this.anulandoId.set(ingreso.id);
-          this.ingresoService.anular(ingreso.id).subscribe({
+          this.anulandoId.set(egreso.id);
+          this.egresoService.anular(egreso.id).subscribe({
             next: () => {
               this.anulandoId.set(null);
               this.notificationService.toast(
-                'Comprobante anulado y existencias revertidas con éxito',
+                'Comprobante anulado y existencias restituidas al inventario con éxito',
               );
-              this.cargarIngresos();
+              this.cargarEgresos();
             },
             error: (err: unknown) => {
               this.anulandoId.set(null);
-              const mensaje = this.extraerMensaje(err, 'No fue posible anular el comprobante.');
-              this.notificationService.error('No se pudo anular el ingreso', mensaje);
+              const mensaje = this.extraerMensaje(
+                err,
+                'No fue posible anular el comprobante de despacho.',
+              );
+              this.notificationService.error('No se pudo anular', mensaje);
             },
           });
         }

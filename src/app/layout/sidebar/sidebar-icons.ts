@@ -13,7 +13,10 @@ import {
   LucidePackageCheck,
   LucideSettings,
   LucideShieldCheck,
+  LucideTag,
+  LucideTags,
   LucideTruck,
+  LucideUserCheck,
   LucideUserCog,
   LucideUserRound,
   LucideUserRoundCog,
@@ -32,34 +35,42 @@ export const SIDEBAR_ICONS: Record<string, LucideIcon> = {
   PANEL: LucideLayoutDashboard,
   INICIO: LucideLayoutDashboard,
 
-  // Catálogo de artículos y bienes
-  ARTICULOS: LucideBoxes,
+  // Grupo Inventario y submódulos (Artículos, Familias, Marcas)
+  INVENTARIO: LucideBoxes,
+  ARTICULOS: LucidePackage,
+  INVENTARIO_ARTICULOS: LucidePackage,
+  FAMILIAS: LucideLayers,
+  INVENTARIO_FAMILIAS: LucideLayers,
+  MARCAS: LucideTags,
+  INVENTARIO_MARCAS: LucideTags,
   BIENES: LucideBoxes,
   PRODUCTOS: LucideBoxes,
   BOXES: LucideBoxes,
   BOX: LucideBox,
+  PACKAGE: LucidePackage,
+  LAYERS: LucideLayers,
+  TAGS: LucideTags,
+  TAG: LucideTag,
 
   // Control de inventario y kardex
   KARDEX: LucideClipboardList,
-  INVENTARIO: LucideClipboardList,
   EXISTENCIAS: LucideClipboardList,
   CLIPBOARD: LucideClipboardList,
   'CLIPBOARD-LIST': LucideClipboardList,
   CLIPBOARD_LIST: LucideClipboardList,
 
   // Entradas y recepción de suministros
-  INGRESOS: LucideTruck,
-  ENTRADAS: LucideTruck,
+  INGRESOS: LucideArrowDownLeft,
+  ENTRADAS: LucideArrowDownLeft,
   RECEPCION: LucideTruck,
   TRUCK: LucideTruck,
   'ARROW-DOWN-LEFT': LucideArrowDownLeft,
   ARROW_DOWN_LEFT: LucideArrowDownLeft,
 
   // Salidas y despachos de almacén
-  EGRESOS: LucidePackageCheck,
-  SALIDAS: LucidePackage,
+  EGRESOS: LucideArrowUpRight,
+  SALIDAS: LucideArrowUpRight,
   DESPACHOS: LucidePackageCheck,
-  PACKAGE: LucidePackage,
   'PACKAGE-CHECK': LucidePackageCheck,
   PACKAGE_CHECK: LucidePackageCheck,
   'ARROW-UP-RIGHT': LucideArrowUpRight,
@@ -75,8 +86,10 @@ export const SIDEBAR_ICONS: Record<string, LucideIcon> = {
   'FILE-TEXT': LucideFileText,
   FILE_TEXT: LucideFileText,
 
-  // Usuarios y control de acceso
+  // Usuarios y control de acceso (Grupo Seguridad)
   SEGURIDAD: LucideShieldCheck,
+  SEGURIDAD_USUARIOS: LucideUsers,
+  SEGURIDAD_PERFILES: LucideShieldCheck,
   'SHIELD-CHECK': LucideShieldCheck,
   SHIELD_CHECK: LucideShieldCheck,
   MANTENIMIENTO: LucideSettings,
@@ -95,22 +108,24 @@ export const SIDEBAR_ICONS: Record<string, LucideIcon> = {
   PERFIL: LucideUsers,
   PERMISOS: LucideShieldCheck,
 
-  PROVEEDORES: LucideBuilding2,
+  // Proveedores y Clientes
+  PROVEEDORES: LucideTruck,
   'BUILDING-2': LucideBuilding2,
   BUILDING_2: LucideBuilding2,
-  CLIENTES: LucideUsers,
+  CLIENTES: LucideBuilding2,
   AREAS: LucideBuilding2,
-  FAMILIAS: LucideLayers,
-  MARCAS: LucideBox,
-  UBICACIONES: LucideWarehouse,
-  ENCARGADOS: LucideUsers,
+
+  // Encargados
+  ENCARGADOS: LucideUserCheck,
+  ENCARGADO: LucideUserCheck,
+  'USER-CHECK': LucideUserCheck,
+  USER_CHECK: LucideUserCheck,
   ENCARGADOS_ALMACEN: LucideUserCog,
   UNIDADES_MEDIDA: LucideLayers,
 
   // Categorías y clasificaciones
   CATEGORIAS: LucideLayers,
   GRUPOS: LucideLayers,
-  LAYERS: LucideLayers,
 
   // Almacenes y dependencias
   ALMACEN: LucideWarehouse,

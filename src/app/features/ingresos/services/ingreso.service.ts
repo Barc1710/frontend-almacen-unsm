@@ -163,9 +163,10 @@ export class IngresoService {
    * Envía siempre precio en 0 según requerimiento.
    */
   crear(request: IngresoCreateRequest): Observable<IngresoConDetalles> {
+    const ordenCompra = (request.numeroOrdenCompra ?? request.numeroOrden ?? '').trim();
     const payload = {
       idProveedor: request.idProveedor,
-      numeroOrdenCompra: (request.numeroOrden || '').trim() || null,
+      numeroOrdenCompra: ordenCompra || null,
       descripcion: (request.observacion || '').trim() || '',
       idEncargadoAlmacen: request.idEncargadoAlmacen || null,
       idJefe: request.idJefe || null,
@@ -326,6 +327,27 @@ export class IngresoService {
     const estado = typeof raw['estado'] === 'string' ? raw['estado'] : '1';
     const fechaCreacion = typeof raw['fechaCreacion'] === 'string' ? raw['fechaCreacion'] : fecha;
 
+    const idEncargadoAlmacen =
+      typeof raw['idEncargadoAlmacen'] === 'number' ? raw['idEncargadoAlmacen'] : null;
+    const nombreEncargadoAlmacen =
+      typeof raw['nombreEncargadoAlmacen'] === 'string' && raw['nombreEncargadoAlmacen'].trim()
+        ? raw['nombreEncargadoAlmacen'].trim()
+        : typeof raw['encargadoAlmacen'] === 'string' && raw['encargadoAlmacen'].trim()
+          ? raw['encargadoAlmacen'].trim()
+          : typeof raw['nombreUsuario'] === 'string' && raw['nombreUsuario'].trim()
+            ? raw['nombreUsuario'].trim()
+            : null;
+
+    const idJefe = typeof raw['idJefe'] === 'number' ? raw['idJefe'] : null;
+    const nombreJefe =
+      typeof raw['nombreJefe'] === 'string' && raw['nombreJefe'].trim()
+        ? raw['nombreJefe'].trim()
+        : typeof raw['jefe'] === 'string' && raw['jefe'].trim()
+          ? raw['jefe'].trim()
+          : typeof raw['nombreEncargado'] === 'string' && raw['nombreEncargado'].trim()
+            ? raw['nombreEncargado'].trim()
+            : null;
+
     return {
       id,
       numeroOrden: numeroCompleto,
@@ -340,6 +362,10 @@ export class IngresoService {
       idUsuario,
       usuarioRecepcion: nombreUsuario || usuarioRecepcion || 'Almacén Central',
       nombreUsuario: nombreUsuario || usuarioRecepcion || 'Almacén Central',
+      idEncargadoAlmacen,
+      nombreEncargadoAlmacen,
+      idJefe,
+      nombreJefe,
       totalItems: itemsCount,
       totalArticulos: itemsCount,
       totalImporte: 0,
@@ -374,13 +400,15 @@ export class IngresoService {
       'M3',
     ];
     const detalles = detallesRaw.map((d) => {
-      const simbolo = String(
-        d['simboloUnidadMedida'] || d['unidadMedida'] || d['simbolo'] || 'UND',
-      );
+      const simboloRaw = d['simboloUnidadMedida'] || d['unidadMedida'] || d['simbolo'];
+      const simbolo =
+        typeof simboloRaw === 'string' && simboloRaw.trim() ? simboloRaw.trim() : null;
       const permiteDec =
-        d['permiteDecimales'] === true ||
-        (d['permiteDecimales'] !== false &&
-          unidadesDecimales.includes(simbolo.toUpperCase().trim()));
+        typeof d['permiteDecimales'] === 'boolean'
+          ? d['permiteDecimales']
+          : simbolo && unidadesDecimales.includes(simbolo.toUpperCase().trim())
+            ? true
+            : null;
 
       return {
         id: typeof d['id'] === 'number' ? d['id'] : undefined,

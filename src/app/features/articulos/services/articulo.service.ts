@@ -12,6 +12,7 @@ import {
   Articulo,
   ArticuloCreateRequest,
   ArticuloFiltros,
+  ArticuloResumen,
   ArticuloUpdateRequest,
   Familia,
   Marca,
@@ -85,6 +86,24 @@ export class ArticuloService {
         const data = getApiResponseData(res);
         if (!data) throw new Error('Artículo no encontrado');
         return data;
+      }),
+    );
+  }
+
+  buscarPredictivo(termino?: string, soloConStock = true): Observable<ArticuloResumen[]> {
+    let params = new HttpParams().set('soloConStock', String(soloConStock));
+    if (termino && termino.trim()) {
+      params = params.set('q', termino.trim());
+    }
+    return this.http.get<unknown>(`${this.apiUrl}/articulos/buscar`, { params }).pipe(
+      map((res) => {
+        if (!res) return [];
+        if (Array.isArray(res)) return res as ArticuloResumen[];
+        if (typeof res === 'object') {
+          const data = getApiResponseData(res as ApiResponse<ArticuloResumen[]>);
+          if (Array.isArray(data)) return data;
+        }
+        return [];
       }),
     );
   }

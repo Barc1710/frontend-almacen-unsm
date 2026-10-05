@@ -1,51 +1,61 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, TitleCasePipe } from '@angular/common';
 import { Component, computed, input, output } from '@angular/core';
 import {
+  LucideAlertCircle,
   LucideBuilding2,
   LucideCalendar,
   LucideCircleAlert,
+  LucideMapPin,
   LucidePackage,
+  LucidePrinter,
   LucideTag,
   LucideUser,
   LucideX,
 } from '@lucide/angular';
 import { ModalDialogDirective } from '../../../../shared/directives/modal-dialog.directive';
-import { IngresoConDetalles } from '../../models';
+import { EgresoConDetalles } from '../../models';
 
 @Component({
-  selector: 'app-ingreso-detalle-modal',
+  selector: 'app-egreso-detalle-modal',
   imports: [
-    DatePipe,
     ModalDialogDirective,
+    DatePipe,
+    TitleCasePipe,
     LucideX,
-    LucideBuilding2,
-    LucideCalendar,
-    LucideUser,
-    LucideTag,
     LucidePackage,
     LucideCircleAlert,
+    LucideAlertCircle,
+    LucideTag,
+    LucideCalendar,
+    LucideUser,
+    LucideBuilding2,
+    LucideMapPin,
+    LucidePrinter,
   ],
-  templateUrl: './ingreso-detalle-modal.component.html',
-  host: {
-    '(document:keydown.escape)': 'onEscape()',
-  },
+  templateUrl: './egreso-detalle-modal.component.html',
 })
-export class IngresoDetalleModalComponent {
+export class EgresoDetalleModalComponent {
   readonly visible = input<boolean>(false);
-  readonly ingreso = input<IngresoConDetalles | null>(null);
+  readonly egreso = input<EgresoConDetalles | null>(null);
 
   readonly cerrar = output<void>();
+  readonly imprimir = output<EgresoConDetalles>();
 
   readonly totalArticulos = computed(() => {
-    const ing = this.ingreso();
-    return ing?.detalles?.length ?? ing?.totalItems ?? ing?.totalArticulos ?? 0;
+    const e = this.egreso();
+    return e?.detalles?.length ?? e?.totalItems ?? e?.totalArticulos ?? 0;
   });
 
   readonly totalUnidadesBienes = computed(() => {
-    const ing = this.ingreso();
-    if (!ing || !ing.detalles) return '0';
-    const sum = ing.detalles.reduce((acc, d) => acc + (Number(d.cantidad) || 0), 0);
+    const e = this.egreso();
+    if (!e || !e.detalles) return '0';
+    const sum = e.detalles.reduce((acc, d) => acc + (Number(d.cantidad) || 0), 0);
     return sum.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  });
+
+  readonly esBaja = computed(() => {
+    const tipo = this.egreso()?.tipoEgreso;
+    return tipo === 'BAJA_DETERIORO' || tipo === 'BAJA_VENCIMIENTO';
   });
 
   onEscape(): void {

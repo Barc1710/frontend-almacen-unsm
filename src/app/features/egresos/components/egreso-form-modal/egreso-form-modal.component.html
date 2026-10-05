@@ -1,0 +1,667 @@
+@if (visible()) {
+  <dialog
+    appModalDialog
+    (cancel)="onCerrar()"
+    class="m-0 border-0 max-w-none max-h-none w-screen h-dvh fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs p-3 sm:p-6"
+    (click)="onBackdropClick($event)"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'modal-registro-despacho-title'"
+  >
+    <div
+      class="min-h-full flex items-center justify-center py-4 sm:py-6"
+      (click)="onBackdropClick($event)"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-5xl my-auto overflow-visible relative"
+        (click)="$event.stopPropagation()"
+      >
+        <!-- Cabecera de la Modal -->
+        <div
+          class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 rounded-t-2xl"
+        >
+          <div class="flex items-center gap-3">
+            <h3 id="modal-registro-despacho-title" class="text-lg font-bold text-slate-800">
+              @if (esOperacionBaja()) {
+                Registrar Baja de Bienes
+              } @else {
+                Registrar Despacho
+              }
+            </h3>
+            @if (siguienteNumero()) {
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-mono"
+              >
+                N° {{ siguienteNumero() }}
+              </span>
+            }
+          </div>
+
+          <button
+            type="button"
+            (click)="onCerrar()"
+            [disabled]="guardando()"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer disabled:opacity-50"
+            aria-label="Cerrar modal"
+          >
+            <svg lucideX class="size-5"></svg>
+          </button>
+        </div>
+
+        <!-- Contenido de la Modal -->
+        <div class="p-6 overflow-visible space-y-4">
+          <!-- Selector de Tipo de Operación: Despacho vs Dar de baja -->
+          @if (esAdministrador()) {
+            <div class="flex items-center gap-2">
+              <div
+                class="p-1 rounded-xl bg-slate-100 border border-slate-200/80 inline-flex items-center gap-1"
+              >
+                <button
+                  type="button"
+                  [disabled]="guardando()"
+                  (click)="setTipoOperacion('DESPACHO_ORDINARIO')"
+                  class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                  [class.bg-white]="!esOperacionBaja()"
+                  [class.text-unsm-green-dark]="!esOperacionBaja()"
+                  [class.shadow-2xs]="!esOperacionBaja()"
+                  [class.text-slate-600]="esOperacionBaja()"
+                  [class.hover:text-slate-900]="esOperacionBaja()"
+                >
+                  Despacho
+                </button>
+
+                <button
+                  type="button"
+                  [disabled]="guardando()"
+                  (click)="setTipoOperacion('BAJA_DETERIORO')"
+                  class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                  [class.bg-white]="esOperacionBaja()"
+                  [class.text-red-700]="esOperacionBaja()"
+                  [class.shadow-2xs]="esOperacionBaja()"
+                  [class.text-slate-600]="!esOperacionBaja()"
+                  [class.hover:text-red-700]="!esOperacionBaja()"
+                >
+                  Dar de baja
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Banner de Error General -->
+          @if (errorGeneral()) {
+            <div
+              class="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-900 flex items-start gap-3"
+              role="alert"
+            >
+              <svg lucideCircleAlert class="size-5 text-red-700 shrink-0 mt-0.5"></svg>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-red-800">Error al procesar</p>
+                <p class="text-xs text-red-700 mt-0.5">{{ errorGeneral() }}</p>
+              </div>
+            </div>
+          }
+
+          <!-- Banner de Artículo Duplicado en Lote -->
+          @if (alertaDuplicado()) {
+            <div
+              class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-3"
+              role="alert"
+            >
+              <svg lucideAlertCircle class="size-5 text-amber-600 shrink-0 mt-0.5"></svg>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-amber-800">Artículo ya agregado</p>
+                <p class="text-xs text-amber-700 mt-0.5">{{ alertaDuplicado() }}</p>
+              </div>
+            </div>
+          }
+
+          <!-- Formulario de Cabecera -->
+          <form
+            [formGroup]="cabeceraForm"
+            id="egresoForm"
+            (ngSubmit)="onSubmit()"
+            class="space-y-4"
+            novalidate
+          >
+            @if (!esOperacionBaja()) {
+              <!-- Fila 1: Cliente y Área de Destino -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Cliente -->
+                <div>
+                  <label
+                    for="idClienteSelect"
+                    class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
+                    Cliente <span class="text-red-700">*</span>
+                  </label>
+                  <select
+                    id="idClienteSelect"
+                    formControlName="idCliente"
+                    class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                    [class.border-unsm-red]="isFieldInvalid('idCliente')"
+                    [class.border-slate-300]="!isFieldInvalid('idCliente')"
+                  >
+                    <option [ngValue]="null">Seleccionar cliente</option>
+                    @for (c of clientes(); track c.id) {
+                      <option [ngValue]="c.id">
+                        {{ c.nombre }} {{ c.dni ? '(' + c.dni + ')' : '' }}
+                      </option>
+                    }
+                  </select>
+                  @if (isFieldInvalid('idCliente')) {
+                    <p class="text-xs text-red-700 mt-1">Debe seleccionar un cliente</p>
+                  }
+                </div>
+
+                <!-- Área de Destino -->
+                <div>
+                  <label
+                    for="idAreaSelect"
+                    class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
+                    Área de Destino <span class="text-red-700">*</span>
+                  </label>
+                  <select
+                    id="idAreaSelect"
+                    formControlName="idArea"
+                    class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                    [class.border-unsm-red]="isFieldInvalid('idArea')"
+                    [class.border-slate-300]="!isFieldInvalid('idArea')"
+                  >
+                    <option [ngValue]="null">Seleccionar área</option>
+                    @for (a of areas(); track a.id) {
+                      <option [ngValue]="a.id">{{ a.nombre }}</option>
+                    }
+                  </select>
+                  @if (isFieldInvalid('idArea')) {
+                    <p class="text-xs text-red-700 mt-1">Debe seleccionar el área de destino</p>
+                  }
+                </div>
+              </div>
+
+              <!-- Fila 2: Ambiente -->
+              <div>
+                <label
+                  for="ambienteInput"
+                  class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
+                  Ambiente
+                </label>
+                <input
+                  id="ambienteInput"
+                  type="text"
+                  formControlName="ambiente"
+                  class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white"
+                />
+              </div>
+
+              <!-- Fila 3: Encargado y Encargado de Almacén -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Encargado -->
+                <div>
+                  <label
+                    for="idEncargadoSelect"
+                    class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
+                    Encargado <span class="text-red-700">*</span>
+                  </label>
+                  <select
+                    id="idEncargadoSelect"
+                    formControlName="idEncargado"
+                    class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                    [class.border-unsm-red]="isFieldInvalid('idEncargado')"
+                    [class.border-slate-300]="!isFieldInvalid('idEncargado')"
+                  >
+                    <option [ngValue]="null">Seleccionar encargado</option>
+                    @for (enc of encargados(); track enc.id) {
+                      <option [ngValue]="enc.id">
+                        {{ enc.siglaProfesion ? enc.siglaProfesion + ' ' : ''
+                        }}{{ enc.nombreCompleto || enc.nombres + ' ' + enc.apellidos }}{{ (enc.cargo || enc.ambiente) ? ' (' + (enc.cargo || enc.ambiente) + ')' : '' }}
+                      </option>
+                    }
+                  </select>
+                  @if (isFieldInvalid('idEncargado')) {
+                    <p class="text-xs text-red-700 mt-1">Debe seleccionar el encargado</p>
+                  }
+                </div>
+
+                <!-- Encargado de Almacén -->
+                <div>
+                  <label
+                    for="idEncargadoAlmacenSelect"
+                    class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
+                    Encargado de Almacén <span class="text-red-700">*</span>
+                  </label>
+                  <select
+                    id="idEncargadoAlmacenSelect"
+                    formControlName="idEncargadoAlmacen"
+                    class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                    [class.border-unsm-red]="isFieldInvalid('idEncargadoAlmacen')"
+                    [class.border-slate-300]="!isFieldInvalid('idEncargadoAlmacen')"
+                  >
+                    <option [ngValue]="null">Seleccionar encargado de almacén</option>
+                    @for (alm of encargadosAlmacenActivos(); track alm.id) {
+                      <option [ngValue]="alm.id">
+                        {{ alm.nombre }}{{ alm.esTitular ? ' (Titular)' : '' }}
+                      </option>
+                    }
+                  </select>
+                  @if (isFieldInvalid('idEncargadoAlmacen')) {
+                    <p class="text-xs text-red-700 mt-1">Debe seleccionar el encargado de almacén</p>
+                  }
+                </div>
+              </div>
+            } @else {
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Motivo (2 columnas) -->
+                <div class="sm:col-span-2">
+                  <label
+                    for="motivoBajaInput"
+                    class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
+                    Motivo <span class="text-red-700">*</span>
+                  </label>
+                  <input
+                    id="motivoBajaInput"
+                    type="text"
+                    formControlName="motivoBaja"
+                    placeholder="Escriba el motivo de la baja..."
+                    class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white"
+                    [class.border-unsm-red]="isFieldInvalid('motivoBaja')"
+                    [class.border-slate-300]="!isFieldInvalid('motivoBaja')"
+                  />
+                  @if (isFieldInvalid('motivoBaja')) {
+                    <p class="text-xs text-red-700 mt-1">
+                      El motivo es obligatorio
+                    </p>
+                  }
+                </div>
+
+                <!-- Encargado de Almacén (1 columna) -->
+                <div>
+                  <label
+                    for="idEncargadoAlmacenBajaSelect"
+                    class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  >
+                    Encargado de Almacén <span class="text-red-700">*</span>
+                  </label>
+                  <select
+                    id="idEncargadoAlmacenBajaSelect"
+                    formControlName="idEncargadoAlmacen"
+                    class="w-full h-10 px-3 rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+                    [class.border-unsm-red]="isFieldInvalid('idEncargadoAlmacen')"
+                    [class.border-slate-300]="!isFieldInvalid('idEncargadoAlmacen')"
+                  >
+                    <option [ngValue]="null">Seleccionar encargado de almacén</option>
+                    @for (alm of encargadosAlmacenActivos(); track alm.id) {
+                      <option [ngValue]="alm.id">
+                        {{ alm.nombre }}{{ alm.esTitular ? ' (Titular)' : '' }}
+                      </option>
+                    }
+                  </select>
+                  @if (isFieldInvalid('idEncargadoAlmacen')) {
+                    <p class="text-xs text-red-700 mt-1">Debe seleccionar el encargado de almacén</p>
+                  }
+                </div>
+              </div>
+            }
+          </form>
+
+          <!-- Detalle Dinámico de Artículos -->
+          <div class="space-y-3 pt-2">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                Artículos y Bienes
+              </h4>
+
+              <button
+                type="button"
+                (click)="agregarFila()"
+                [disabled]="guardando()"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-unsm-green-light hover:bg-unsm-green/20 text-unsm-green-dark text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+              >
+                <svg lucidePlus class="size-3.5"></svg>
+                <span>Agregar Artículo</span>
+              </button>
+            </div>
+
+            <!-- Tabla de Renglones -->
+            <div class="rounded-xl border border-slate-200 overflow-visible shadow-2xs">
+              <div class="overflow-visible">
+                <table class="w-full text-left text-sm text-slate-600 border-collapse table-fixed">
+                  <thead
+                    class="bg-slate-50 text-xs font-semibold text-slate-700 border-b border-slate-200"
+                  >
+                    <tr>
+                      <th scope="col" class="py-3 px-3.5 w-12 text-center shrink-0">#</th>
+                      <th scope="col" class="py-3 px-3.5 font-semibold text-slate-700">Artículo</th>
+                      <th
+                        scope="col"
+                        class="py-3 px-3.5 w-24 text-center font-semibold text-slate-700 shrink-0"
+                      >
+                        U.M.
+                      </th>
+                      <th
+                        scope="col"
+                        class="py-3 px-3.5 w-28 text-right font-semibold text-slate-700 shrink-0"
+                      >
+                        Saldo Disp.
+                      </th>
+                      <th
+                        scope="col"
+                        class="py-3 px-3.5 w-40 text-right font-semibold text-slate-700 shrink-0"
+                      >
+                        @if (esOperacionBaja()) {
+                          Cantidad a Dar de Baja
+                        } @else {
+                          Cantidad a Despachar
+                        }
+                      </th>
+                      <th
+                        scope="col"
+                        class="py-3 px-3.5 w-16 text-center font-semibold text-slate-700 shrink-0"
+                      >
+                        Acción
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    @for (fila of filas(); track fila.id; let idx = $index) {
+                      <tr
+                        class="hover:bg-slate-50/50 transition-colors align-top"
+                        [class.relative]="fila.mostrarSugerencias"
+                        [class.z-40]="fila.mostrarSugerencias"
+                      >
+                        <!-- Número de Renglón -->
+                        <td
+                          class="py-3 px-3.5 text-center text-xs font-medium text-slate-400 pt-4 w-12"
+                        >
+                          {{ idx + 1 }}
+                        </td>
+
+                        <!-- Artículo / Búsqueda predictiva integrada como select (max-w-0 para truncamiento estricto) -->
+                        <td class="py-2.5 px-3.5 relative max-w-0">
+                          @if (fila.articulo) {
+                            <div
+                              class="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200 w-full min-w-0"
+                            >
+                              <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 min-w-0">
+                                  <span
+                                    class="font-mono text-xs font-bold text-slate-900 bg-white px-1.5 py-0.5 rounded border border-slate-200 shrink-0"
+                                  >
+                                    {{ fila.codigoArticulo }}
+                                  </span>
+                                  <span
+                                    class="text-xs font-semibold text-slate-800 truncate block min-w-0 flex-1"
+                                    [title]="fila.descripcionArticulo"
+                                  >
+                                    {{ fila.descripcionArticulo }}
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                (click)="limpiarArticuloEnFila(fila)"
+                                class="p-1 rounded-md text-slate-400 hover:text-red-700 hover:bg-red-50 transition-colors shrink-0 cursor-pointer"
+                                title="Cambiar artículo"
+                                aria-label="Cambiar artículo"
+                              >
+                                <svg lucideX class="size-3.5"></svg>
+                              </button>
+                            </div>
+                          } @else {
+                            <div
+                              class="relative w-full min-w-0"
+                              (focusout)="cerrarSugerencias(fila, $event)"
+                            >
+                              <div class="relative flex items-center w-full min-w-0">
+                                <svg
+                                  lucideSearch
+                                  class="size-3.5 text-slate-400 absolute left-3 pointer-events-none"
+                                ></svg>
+                                <input
+                                  type="text"
+                                  [ngModel]="fila.busquedaTexto"
+                                  (ngModelChange)="onBuscarArticuloInput(fila, $event)"
+                                  (focus)="onFocusArticulo(fila)"
+                                  placeholder="Buscar o seleccionar artículo con stock..."
+                                  aria-label="Buscar artículo"
+                                  class="w-full h-9 pl-8 pr-8 rounded-lg border text-xs text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
+                                  [class.border-unsm-red]="fila.errorArticulo"
+                                  [class.border-slate-300]="!fila.errorArticulo"
+                                />
+                                <div
+                                  class="absolute right-2.5 text-slate-400 pointer-events-none flex items-center"
+                                >
+                                  @if (fila.buscando) {
+                                    <svg lucideLoader2 class="size-3.5 animate-spin"></svg>
+                                  } @else {
+                                    <svg lucideChevronDown class="size-3.5"></svg>
+                                  }
+                                </div>
+                              </div>
+
+                              @if (fila.errorBusqueda) {
+                                <p role="alert" class="text-xs text-red-700 mt-1">
+                                  {{ fila.errorBusqueda }}
+                                </p>
+                              }
+                              @if (fila.errorArticulo) {
+                                <p class="text-[11px] text-red-700 mt-1">
+                                  {{ fila.errorArticulo }}
+                                </p>
+                              }
+
+                              <!-- Menú flotante de resultados predictivos tipo combobox -->
+                              @if (fila.mostrarSugerencias && fila.sugerencias.length > 0) {
+                                <div
+                                  class="absolute left-0 z-50 mt-1 w-[480px] max-w-[90vw] max-h-60 overflow-y-auto bg-white rounded-xl shadow-2xl border border-slate-200 divide-y divide-slate-100 ring-1 ring-black/5"
+                                >
+                                  @for (sug of fila.sugerencias; track sug.id) {
+                                    <button
+                                      type="button"
+                                      (click)="seleccionarArticulo(fila, sug)"
+                                      class="w-full text-left p-2.5 hover:bg-unsm-green-light/50 transition-colors flex items-center justify-between gap-3 cursor-pointer group"
+                                    >
+                                      <div class="min-w-0 flex items-center gap-2 flex-1">
+                                        <span
+                                          class="font-mono text-xs font-bold text-slate-900 group-hover:text-unsm-green-dark bg-slate-50 px-2 py-0.5 rounded border border-slate-200 shrink-0 w-24 text-center"
+                                        >
+                                          {{ sug.codigo }}
+                                        </span>
+                                        <span
+                                          class="text-xs text-slate-700 truncate"
+                                          [title]="sug.descripcion"
+                                        >
+                                          {{ sug.descripcion }}
+                                        </span>
+                                      </div>
+                                      <span
+                                        class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 shrink-0 min-w-20 text-right tabular-nums"
+                                      >
+                                        {{ sug.saldo | number: '1.0-2' }}
+                                        {{ sug.simboloUnidadMedida || 'UND' }}
+                                      </span>
+                                    </button>
+                                  }
+                                </div>
+                              } @else if (
+                                fila.mostrarSugerencias &&
+                                fila.busquedaTexto.trim().length > 0 &&
+                                !fila.buscando &&
+                                !fila.errorBusqueda
+                              ) {
+                                <div
+                                  class="absolute left-0 z-50 mt-1 w-[480px] max-w-[90vw] p-3 bg-white rounded-xl shadow-2xl border border-slate-200 text-xs text-slate-500 text-center"
+                                >
+                                  No se encontraron artículos con stock disponible para "{{
+                                    fila.busquedaTexto
+                                  }}".
+                                </div>
+                              }
+                            </div>
+                          }
+                        </td>
+
+                        <!-- U.M. -->
+                        <td class="py-2.5 px-3.5 text-center pt-3.5 w-24">
+                          <span
+                            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700"
+                          >
+                            {{ fila.simboloUnidadMedida || 'UND' }}
+                          </span>
+                        </td>
+
+                        <!-- Saldo Disponible -->
+                        <td class="py-2.5 px-3.5 text-right whitespace-nowrap pt-3.5 w-28">
+                          <span
+                            class="font-mono font-bold text-xs"
+                            [class.text-emerald-700]="fila.saldo > 0"
+                            [class.text-slate-400]="fila.saldo === 0"
+                          >
+                            {{ fila.saldo | number: '1.0-2' }}
+                          </span>
+                        </td>
+
+                        <!-- Cantidad a Despachar -->
+                        <td class="py-2.5 px-3.5 text-right w-40">
+                          <input
+                            type="number"
+                            aria-label="Cantidad del artículo"
+                            [ngModel]="fila.cantidad"
+                            (ngModelChange)="onCantidadInput(fila, $event)"
+                            (blur)="onCantidadBlur(fila)"
+                            [step]="fila.permiteDecimales ? 'any' : '1'"
+                            [min]="fila.permiteDecimales ? '0.01' : '1'"
+                            [max]="fila.saldo"
+                            [disabled]="!fila.articulo"
+                            class="w-full h-9 px-2 text-right rounded-lg border text-xs font-semibold text-slate-900 tabular-nums transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green disabled:bg-slate-100 disabled:text-slate-400 bg-white"
+                            [class.border-unsm-red]="fila.errorCantidad"
+                            [class.border-slate-300]="!fila.errorCantidad"
+                          />
+                          @if (fila.errorCantidad) {
+                            <p class="text-[10px] text-red-700 mt-0.5 text-right font-medium">
+                              {{ fila.errorCantidad }}
+                            </p>
+                          } @else if (fila.articulo) {
+                            <span
+                              class="block text-[10px] mt-0.5 text-right font-medium"
+                              [class.text-emerald-700]="fila.permiteDecimales"
+                              [class.text-slate-400]="!fila.permiteDecimales"
+                            >
+                              {{ fila.permiteDecimales ? 'Admite decimales' : 'Solo enteros' }}
+                            </span>
+                          }
+                        </td>
+
+                        <!-- Botón Eliminar Fila -->
+                        <td class="py-2.5 px-3.5 text-center pt-3">
+                          <button
+                            type="button"
+                            (click)="eliminarFila(idx)"
+                            [disabled]="guardando()"
+                            class="p-1.5 rounded-lg text-slate-400 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+                            title="Eliminar fila"
+                            aria-label="Eliminar fila"
+                          >
+                            <svg lucideTrash class="size-4"></svg>
+                          </button>
+                        </td>
+                      </tr>
+                    }
+
+                    <!-- Botón rápido para seguir añadiendo filas directamente al pie de los artículos -->
+                    <tr
+                      class="border-t border-slate-100 bg-slate-50/30 hover:bg-slate-50/70 transition-colors"
+                    >
+                      <td colspan="6" class="py-2.5 px-3.5">
+                        <button
+                          type="button"
+                          (click)="agregarFila()"
+                          [disabled]="guardando()"
+                          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-unsm-green-dark bg-unsm-green-light hover:bg-unsm-green/20 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+                          title="Añadir otra fila de artículo"
+                        >
+                          <svg lucidePlus class="size-3.5"></svg>
+                          <span>Añadir fila</span>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Resumen Totalizador -->
+              <div
+                class="bg-slate-50/90 px-4 py-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
+              >
+                <div class="flex items-center gap-2 text-slate-600">
+                  <span>Renglones:</span>
+                  <strong class="text-slate-900 font-bold">{{ totalArticulos() }}</strong>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <span class="text-slate-600 font-semibold uppercase tracking-wider">
+                    Total Unidades:
+                  </span>
+                  <span class="text-base font-bold text-unsm-green-dark tabular-nums">
+                    {{ totalCantidad() | number: '1.0-2' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            @if (hayErroresDeStock()) {
+              <div
+                class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5"
+              >
+                <svg lucideAlertCircle class="size-4 text-amber-600 shrink-0"></svg>
+                <span
+                  >Existen artículos que superan el saldo disponible en almacén. Corrija las
+                  cantidades para guardar.</span
+                >
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Pie de la Modal -->
+        <div
+          class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 bg-slate-50/70 rounded-b-2xl"
+        >
+          <button
+            type="button"
+            (click)="onCerrar()"
+            [disabled]="guardando()"
+            class="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            form="egresoForm"
+            [disabled]="guardando() || hayErroresDeStock() || totalArticulos() === 0"
+            class="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white bg-unsm-green-dark hover:bg-unsm-green-border active:scale-[0.98] shadow-sm transition-all duration-150 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            @if (guardando()) {
+              <svg lucideLoader2 class="size-4 animate-spin"></svg>
+              <span>Guardando...</span>
+            } @else {
+              <svg lucideSave class="size-4"></svg>
+              <span>
+                @if (esOperacionBaja()) {
+                  Confirmar Baja
+                } @else {
+                  Guardar Despacho
+                }
+              </span>
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+}
