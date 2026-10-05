@@ -1,5 +1,5 @@
 <div
-  class="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#007A30] text-white select-none"
+  class="flex h-full min-h-0 w-full flex-col overflow-hidden bg-unsm-green-dark text-white select-none"
 >
   <!-- Cabecera Institucional del Sidebar -->
   <div class="px-3.5 pt-5 pb-2 flex items-start justify-between shrink-0">
@@ -26,7 +26,7 @@
           </h2>
         </div>
         <!-- UNSM más pequeño en amarillo institucional -->
-        <span class="text-xs font-bold text-[#FFE800] tracking-widest uppercase mt-0.5">
+        <span class="text-xs font-bold text-unsm-yellow tracking-widest uppercase mt-0.5">
           UNSM
         </span>
       </div>
@@ -36,7 +36,7 @@
     <button
       type="button"
       (click)="closeMobileMenu()"
-      class="lg:hidden p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-[#00A0DF] shrink-0 ml-1 mt-1"
+      class="lg:hidden p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-unsm-cyan shrink-0 ml-1 mt-1"
       aria-label="Cerrar menú lateral"
     >
       <svg lucideX class="size-5"></svg>
@@ -47,9 +47,9 @@
   <div class="h-px bg-white/20 mx-3 my-2 shadow-2xs" aria-hidden="true"></div>
 
   <!-- Lista de Navegación Dinámica según módulos autorizados del Backend -->
-  <div class="sidebar-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto bg-[#007A30]">
+  <div class="sidebar-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto bg-unsm-green-dark">
     <nav
-      class="min-h-full space-y-1 bg-[#007A30] px-3 py-1"
+      class="min-h-full space-y-1 bg-unsm-green-dark px-3 py-1"
       aria-label="Menú principal de navegación"
     >
       @for (item of items(); track item.id; let last = $last) {
@@ -67,10 +67,10 @@
             routerLinkActive="bg-white/15 text-white font-bold shadow-xs ring-1 ring-white/20"
             #itemActive="routerLinkActive"
             [routerLinkActiveOptions]="{ exact: item.url === '/dashboard' }"
-            class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#007A30]"
+            class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-unsm-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-unsm-green-dark"
           >
             <div
-              [class]="isItemActive(item, itemActive.isActive) ? 'bg-[#00A0DF] text-white shadow-sm' : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'"
+              [class]="isItemActive(item, itemActive.isActive) ? 'bg-unsm-cyan text-white shadow-sm' : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'"
               class="size-8 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-150"
             >
               <svg [lucideIcon]="item.icono" class="size-4.5"></svg>
@@ -80,26 +80,26 @@
 
           <!-- Separador sutil entre módulos -->
           @if (!last) {
-            <div class="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
+            <div class="h-px .bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
           }
         } @else {
-          <!-- Módulo Desplegable (Grupo Seguridad) -->
+          <!-- Módulo Desplegable (Grupos: Inventario, Seguridad, etc.) -->
           <div class="space-y-1">
             <button
               type="button"
-              (click)="toggleSeguridad()"
-              [class.bg-white\/15]="isSeguridadOpen() || isSeguridadActive()"
-              [class.text-white]="isSeguridadOpen() || isSeguridadActive()"
-              [class.font-bold]="isSeguridadOpen() || isSeguridadActive()"
-              [class.ring-1]="isSeguridadOpen() || isSeguridadActive()"
-              [class.ring-white\/20]="isSeguridadOpen() || isSeguridadActive()"
-              [class.shadow-xs]="isSeguridadOpen() || isSeguridadActive()"
-              class="w-full group flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#007A30]"
-              [attr.aria-expanded]="isSeguridadOpen()"
+              (click)="toggleGroup(item)"
+              [class.bg-white\/15]="isGroupOpen(item) || isGroupActive(item)"
+              [class.text-white]="isGroupOpen(item) || isGroupActive(item)"
+              [class.font-bold]="isGroupOpen(item) || isGroupActive(item)"
+              [class.ring-1]="isGroupOpen(item) || isGroupActive(item)"
+              [class.ring-white\/20]="isGroupOpen(item) || isGroupActive(item)"
+              [class.shadow-xs]="isGroupOpen(item) || isGroupActive(item)"
+              class="w-full group flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-unsm-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-unsm-green-dark"
+              [attr.aria-expanded]="isGroupOpen(item)"
             >
               <div class="flex items-center gap-3 min-w-0">
                 <div
-                  [class]="(isSeguridadOpen() || isSeguridadActive()) ? 'bg-[#00A0DF] text-white shadow-sm' : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'"
+                  [class]="(isGroupOpen(item) || isGroupActive(item)) ? 'bg-unsm-cyan text-white shadow-sm' : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'"
                   class="size-8 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-150"
                 >
                   <svg [lucideIcon]="item.icono" class="size-4.5"></svg>
@@ -109,12 +109,12 @@
               <svg
                 lucideChevronDown
                 class="size-4 text-white/70 transition-transform duration-200 shrink-0 ml-2"
-                [class.rotate-180]="isSeguridadOpen()"
+                [class.rotate-180]="isGroupOpen(item)"
               ></svg>
             </button>
 
-            <!-- Submódulos de Seguridad (ej. Usuarios, Perfiles) -->
-            @if (isSeguridadOpen()) {
+            <!-- Submódulos del Grupo (ej. Artículos, Familias, Marcas / Usuarios, Perfiles) -->
+            @if (isGroupOpen(item)) {
               <div class="mt-1 space-y-1 ml-5 animate-in fade-in slide-in-from-top-1 duration-150">
                 @for (sub of item.submodulos; track sub.id) {
                   <a
@@ -129,10 +129,10 @@
                     routerLinkActive="bg-white/15 text-white font-bold shadow-xs ring-1 ring-white/20"
                     #subActive="routerLinkActive"
                     [routerLinkActiveOptions]="{ exact: false }"
-                    class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-[#00A0DF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#007A30]"
+                    class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-unsm-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-unsm-green-dark"
                   >
                     <div
-                      [class]="isSubActive(sub, subActive.isActive) ? 'bg-[#FFE800] text-[#004e1a] shadow-sm font-bold' : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'"
+                      [class]="isSubActive(sub, subActive.isActive) ? 'bg-unsm-yellow text-unsm-green-border shadow-sm font-bold' : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'"
                       class="size-8 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-150"
                     >
                       <svg [lucideIcon]="sub.icono" class="size-4.5"></svg>
@@ -146,7 +146,7 @@
 
           <!-- Separador sutil tras el grupo si no es el último elemento -->
           @if (!last) {
-            <div class="h-px bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
+            <div class="h-px .bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
           }
         }
       } @empty {

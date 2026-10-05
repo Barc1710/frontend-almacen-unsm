@@ -176,6 +176,9 @@ export class AuthService {
     if (this.isAdmin()) return true;
     const cleanUrl = url.split('?')[0].replace(/\/+$/, '');
     if (cleanUrl === '' || cleanUrl === '/dashboard') return true;
+    if (cleanUrl === '/inventario' || cleanUrl === '/articulos') {
+      return this.canAccessModule('INVENTARIO_ARTICULOS');
+    }
     return this.modules().some((m) => {
       const modUrl = m.url.split('?')[0].replace(/\/+$/, '');
       return cleanUrl === modUrl || cleanUrl.startsWith(modUrl + '/');
@@ -187,6 +190,59 @@ export class AuthService {
     if (this.isAdmin()) return true;
     const normalized = code.trim().toUpperCase();
     if (normalized === 'DASHBOARD') return true;
+    if (normalized === 'INVENTARIO') {
+      return (
+        this.hasModule('INVENTARIO') ||
+        this.hasModule('INVENTARIO_ARTICULOS') ||
+        this.hasModule('INVENTARIO_FAMILIAS') ||
+        this.hasModule('INVENTARIO_MARCAS') ||
+        this.hasModule('ARTICULOS')
+      );
+    }
+    if (normalized === 'INVENTARIO_ARTICULOS' || normalized === 'ARTICULOS') {
+      return (
+        this.hasModule('INVENTARIO_ARTICULOS') ||
+        this.hasModule('ARTICULOS') ||
+        this.hasModule('INVENTARIO')
+      );
+    }
+    if (normalized === 'INVENTARIO_FAMILIAS' || normalized === 'FAMILIAS') {
+      return (
+        this.hasModule('INVENTARIO_FAMILIAS') ||
+        this.hasModule('FAMILIAS') ||
+        this.hasModule('INVENTARIO')
+      );
+    }
+    if (normalized === 'INVENTARIO_MARCAS' || normalized === 'MARCAS') {
+      return (
+        this.hasModule('INVENTARIO_MARCAS') ||
+        this.hasModule('MARCAS') ||
+        this.hasModule('INVENTARIO')
+      );
+    }
+    if (normalized === 'SEGURIDAD') {
+      return (
+        this.hasModule('SEGURIDAD') ||
+        this.hasModule('SEGURIDAD_USUARIOS') ||
+        this.hasModule('SEGURIDAD_PERFILES') ||
+        this.hasModule('USUARIOS') ||
+        this.hasModule('PERFILES')
+      );
+    }
+    if (normalized === 'SEGURIDAD_USUARIOS' || normalized === 'USUARIOS') {
+      return (
+        this.hasModule('SEGURIDAD_USUARIOS') ||
+        this.hasModule('USUARIOS') ||
+        this.hasModule('SEGURIDAD')
+      );
+    }
+    if (normalized === 'SEGURIDAD_PERFILES' || normalized === 'PERFILES') {
+      return (
+        this.hasModule('SEGURIDAD_PERFILES') ||
+        this.hasModule('PERFILES') ||
+        this.hasModule('SEGURIDAD')
+      );
+    }
     return this.hasModule(normalized);
   }
 

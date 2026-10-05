@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { of } from 'rxjs';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from '../../../../core';
 import { EgresoService } from '../../services';
 import { EgresoFormModalComponent } from './egreso-form-modal.component';
@@ -86,8 +87,7 @@ describe('Registro de egresos', () => {
     component.seleccionarArticulo(component.filas()[0], articulo);
     component.onSubmit();
     expect(registrar).not.toHaveBeenCalled();
-    expect(component.cabeceraForm.controls.idCliente.hasError('required')).toBe(true);
-    expect(component.cabeceraForm.controls.idArea.hasError('required')).toBe(true);
+    expect(component.cabeceraForm.controls.motivoBaja.hasError('required')).toBe(true);
   });
 
   it('conserva los datos y artículos cuando terminan de llegar los catálogos', () => {
