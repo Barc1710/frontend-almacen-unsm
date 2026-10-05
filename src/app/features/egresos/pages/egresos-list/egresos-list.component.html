@@ -42,7 +42,7 @@
     <!-- Fila 1: Búsqueda, Tipo de Egreso y Acciones -->
     <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3">
       <!-- Búsqueda por N° de comprobante (prefijo-correlativo) -->
-      <div class="relative flex-1 min-w-[200px]">
+      <div class="relative flex-1 .min-w-[200px]">
         <svg
           lucideSearch
           class="size-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -52,8 +52,8 @@
           [ngModel]="filtroTexto()"
           (ngModelChange)="filtroTexto.set($event)"
           (keyup.enter)="onBuscarTexto()"
-          placeholder="Buscar por N° de comprobante (ej. E26-0001)..."
-          aria-label="Buscar por N° de comprobante"
+          placeholder="Buscar por N° de egreso"
+          aria-label="Buscar por N° de egreso"
           class="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
         />
       </div>
@@ -311,7 +311,7 @@
                   <div class="flex items-center gap-1.5 text-slate-700">
                     <svg lucideUser class="size-3.5 text-slate-400 shrink-0"></svg>
                     <span class="font-medium text-slate-800">{{
-                      egr.nombreUsuario || egr.nombreEncargadoAlmacen || '-' | titlecase
+                      (egr.nombreUsuario || egr.nombreEncargadoAlmacen || '-') | titlecase
                     }}</span>
                   </div>
                 </td>

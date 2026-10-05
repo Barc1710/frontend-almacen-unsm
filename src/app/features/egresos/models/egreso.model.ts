@@ -36,6 +36,7 @@ export interface Encargado {
   readonly apellidos: string;
   readonly nombreCompleto?: string | null;
   readonly dni?: string | null;
+  readonly cargo?: string | null;
   readonly ambiente?: string | null;
   readonly estado?: string;
 }

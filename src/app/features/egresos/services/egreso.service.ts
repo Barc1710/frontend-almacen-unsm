@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
-import { catchError, map, Observable, shareReplay, throwError } from 'rxjs';
+import { catchError, map, Observable, of, shareReplay, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   ApiResponse,
@@ -230,25 +230,64 @@ export class EgresoService {
   }
 
   /**
+   * Obtiene el siguiente correlativo oficial de egreso (ej. E26-0001).
+   */
+  obtenerSiguienteNumero(): Observable<string> {
+    return this.http.get<unknown>(`${this.apiUrl}/egresos/siguiente-correlativo`).pipe(
+      map((res) => {
+        if (typeof res === 'string') return res;
+        if (typeof res === 'object' && res !== null) {
+          const data = getApiResponseData(res as ApiResponse<string>);
+          if (typeof data === 'string') return data;
+        }
+        return '';
+      }),
+      catchError(() => of('')),
+    );
+  }
+
+  /**
    * Normaliza un objeto de egreso para renderizado consistente.
    */
   private normalizarEgreso(raw: Record<string, unknown>): Egreso {
     const id = Number(raw['id']);
-    const idCliente = Number(raw['idCliente']);
+    const idCliente =
+      typeof raw['idCliente'] === 'number' ? raw['idCliente'] : null;
     const nombreCliente =
-      typeof raw['nombreCliente'] === 'string'
-        ? raw['nombreCliente']
-        : 'Destinatario no especificado';
+      typeof raw['nombreCliente'] === 'string' && raw['nombreCliente'].trim()
+        ? raw['nombreCliente'].trim()
+        : null;
 
-    const idArea = Number(raw['idArea']);
+    const idArea =
+      typeof raw['idArea'] === 'number' ? raw['idArea'] : null;
     const nombreArea =
-      typeof raw['nombreArea'] === 'string' ? raw['nombreArea'] : 'Área no asignada';
+      typeof raw['nombreArea'] === 'string' && raw['nombreArea'].trim()
+        ? raw['nombreArea'].trim()
+        : null;
 
-    const idEncargadoAlmacen = Number(raw['idEncargadoAlmacen']);
+    const idEncargadoAlmacen =
+      typeof raw['idEncargadoAlmacen'] === 'number' ? raw['idEncargadoAlmacen'] : 0;
     const nombreEncargadoAlmacen =
-      typeof raw['nombreEncargadoAlmacen'] === 'string'
-        ? raw['nombreEncargadoAlmacen']
-        : 'Encargado de almacén';
+      typeof raw['nombreEncargadoAlmacen'] === 'string' && raw['nombreEncargadoAlmacen'].trim()
+        ? raw['nombreEncargadoAlmacen'].trim()
+        : typeof raw['encargadoAlmacen'] === 'string' && raw['encargadoAlmacen'].trim()
+          ? raw['encargadoAlmacen'].trim()
+          : typeof raw['nombreUsuario'] === 'string' && raw['nombreUsuario'].trim()
+            ? raw['nombreUsuario'].trim()
+            : null;
+
+    const idEncargado =
+      typeof raw['idEncargado'] === 'number' ? raw['idEncargado'] : null;
+    const nombreEncargado =
+      typeof raw['nombreEncargado'] === 'string' && raw['nombreEncargado'].trim()
+        ? raw['nombreEncargado'].trim()
+        : typeof raw['nombreEncargadoLibre'] === 'string' && raw['nombreEncargadoLibre'].trim()
+          ? raw['nombreEncargadoLibre'].trim()
+          : null;
+    const nombreEncargadoLibre =
+      typeof raw['nombreEncargadoLibre'] === 'string' && raw['nombreEncargadoLibre'].trim()
+        ? raw['nombreEncargadoLibre'].trim()
+        : null;
 
     const prefijo = typeof raw['prefijo'] === 'string' ? raw['prefijo'] : 'E26';
     const correlativo = typeof raw['correlativo'] === 'number' ? raw['correlativo'] : 0;
@@ -257,6 +296,10 @@ export class EgresoService {
 
     const tipoEgreso =
       typeof raw['tipoEgreso'] === 'string' ? raw['tipoEgreso'] : 'DESPACHO_ORDINARIO';
+    const motivoBaja =
+      typeof raw['motivoBaja'] === 'string' && raw['motivoBaja'].trim()
+        ? raw['motivoBaja'].trim()
+        : null;
     const fecha = typeof raw['fecha'] === 'string' ? raw['fecha'] : '';
     const estado = typeof raw['estado'] === 'string' ? raw['estado'] : '1';
     const total = typeof raw['total'] === 'number' ? raw['total'] : Number(raw['total']) || 0;
@@ -268,10 +311,9 @@ export class EgresoService {
       id,
       idCliente,
       nombreCliente,
-      idEncargado: typeof raw['idEncargado'] === 'number' ? raw['idEncargado'] : null,
-      nombreEncargado: typeof raw['nombreEncargado'] === 'string' ? raw['nombreEncargado'] : null,
-      nombreEncargadoLibre:
-        typeof raw['nombreEncargadoLibre'] === 'string' ? raw['nombreEncargadoLibre'] : null,
+      idEncargado,
+      nombreEncargado,
+      nombreEncargadoLibre,
       idArea,
       nombreArea,
       idEncargadoAlmacen,
@@ -291,6 +333,7 @@ export class EgresoService {
       correlativo,
       numeroCompleto,
       tipoEgreso,
+      motivoBaja,
       fecha,
       estado,
       total,

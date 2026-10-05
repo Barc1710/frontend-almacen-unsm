@@ -111,6 +111,7 @@ export class EgresoFormModalComponent {
   readonly guardando = signal<boolean>(false);
   readonly errorGeneral = signal<string | null>(null);
   readonly alertaDuplicado = signal<string | null>(null);
+  readonly siguienteNumero = signal<string>('');
 
   readonly filas = signal<FilaEgresoDetalle[]>([]);
   private readonly busquedaSubjects = new Map<string, Subject<string>>();
@@ -147,7 +148,9 @@ export class EgresoFormModalComponent {
    * Lista todos los encargados de almacén activos (titulares y no titulares).
    */
   readonly encargadosAlmacenActivos = computed<EncargadoAlmacen[]>(() => {
-    return this.encargadosAlmacen().filter((e) => e.estado !== '0');
+    return this.encargadosAlmacen()
+      .filter((e) => e.estado !== '0')
+      .sort((a, b) => (b.esTitular ? 1 : 0) - (a.esTitular ? 1 : 0));
   });
 
   /**
@@ -194,9 +197,44 @@ export class EgresoFormModalComponent {
   constructor() {
     effect(() => {
       if (this.visible()) {
-        untracked(() => this.resetearFormulario());
+        untracked(() => {
+          this.resetearFormulario();
+          this.cargarSiguienteNumero();
+        });
       }
     });
+
+    effect(() => {
+      const lista = this.encargadosAlmacenActivos();
+      if (this.visible() && !this.cabeceraForm.controls.idEncargadoAlmacen.value) {
+        untracked(() => {
+          const titular =
+            lista.find((e) => e.esTitular) || (lista.length === 1 ? lista[0] : null);
+          if (titular) {
+            this.cabeceraForm.controls.idEncargadoAlmacen.setValue(titular.id);
+          }
+        });
+      }
+    });
+
+    effect(() => {
+      const listaEnc = this.encargados().filter((e) => e.estado !== '0');
+      if (this.visible() && !this.cabeceraForm.controls.idEncargado.value && listaEnc.length === 1) {
+        untracked(() => {
+          this.cabeceraForm.controls.idEncargado.setValue(listaEnc[0].id);
+        });
+      }
+    });
+  }
+
+  cargarSiguienteNumero(): void {
+    this.egresoService
+      .obtenerSiguienteNumero()
+      .pipe(
+        catchError(() => of('')),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((num) => this.siguienteNumero.set(num));
   }
 
   onEscape(): void {
@@ -554,10 +592,10 @@ export class EgresoFormModalComponent {
     this.busquedaSubjects.clear();
     this.setTipoOperacion('DESPACHO_ORDINARIO');
 
-    // Encargado de almacén: titular activo precargado por defecto
+    // Encargado de almacén: solo tiene preferencia si es titular o si es el único activo; de lo contrario null para que el usuario elija
     const listaAlmacen = this.encargadosAlmacenActivos();
     const titular =
-      listaAlmacen.find((e) => e.esTitular) || (listaAlmacen.length > 0 ? listaAlmacen[0] : null);
+      listaAlmacen.find((e) => e.esTitular) || (listaAlmacen.length === 1 ? listaAlmacen[0] : null);
     const titularId = titular ? titular.id : null;
 
     // Encargado: si hay uno solo activo, se precarga automáticamente

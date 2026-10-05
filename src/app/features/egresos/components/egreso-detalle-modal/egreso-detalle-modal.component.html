@@ -171,9 +171,9 @@
               </div>
               <p
                 class="text-sm font-semibold text-slate-800 truncate"
-                [title]="egreso()?.nombreEncargadoAlmacen || ''"
+                [title]="egreso()?.nombreEncargadoAlmacen || egreso()?.nombreUsuario || ''"
               >
-                {{ egreso()?.nombreEncargadoAlmacen || 'Encargado titular' }}
+                {{ egreso()?.nombreEncargadoAlmacen || egreso()?.nombreUsuario || 'No asignado' }}
               </p>
             </div>
 
@@ -284,7 +284,7 @@
                 class="text-sm font-semibold text-slate-800 truncate"
                 [title]="egreso()?.nombreEncargadoAlmacen || ''"
               >
-                {{ egreso()?.nombreEncargadoAlmacen || 'Encargado titular' }}
+                {{ egreso()?.nombreEncargadoAlmacen || egreso()?.nombreUsuario || 'No asignado' }}
               </p>
             </div>
           </div>

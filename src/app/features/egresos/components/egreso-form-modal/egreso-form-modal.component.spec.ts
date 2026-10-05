@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { of } from 'rxjs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthService } from '../../../../core';
 import { EgresoService } from '../../services';
 import { EgresoFormModalComponent } from './egreso-form-modal.component';
@@ -43,7 +43,11 @@ describe('Registro de egresos', () => {
         { provide: AuthService, useValue: { isAdmin: admin } },
         {
           provide: EgresoService,
-          useValue: { registrar, buscarArticulosPredictivo: () => of([articulo]) },
+          useValue: {
+            registrar,
+            buscarArticulosPredictivo: () => of([articulo]),
+            obtenerSiguienteNumero: () => of('E26-0001'),
+          },
         },
       ],
     });
