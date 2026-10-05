@@ -1,16 +1,25 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Service, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import {
+  catchError,
+  defer,
+  finalize,
+  map,
+  Observable,
+  of,
+  shareReplay,
+  tap,
+  throwError,
+} from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   ApiResponse,
   AuthUser,
-  getApiResponseData,
-  isJwtResponse,
   JwtResponse,
   LoginRequest,
   ModuloResponse,
+  normalizeModuloList,
 } from '../models';
 
 const STORAGE_KEYS = {
@@ -22,115 +31,237 @@ const STORAGE_KEYS = {
 
 const DEMO_TOKEN = 'demo-token-unsm-almacen-2026';
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function payload(response: unknown): unknown {
+  if (!isRecord(response)) return response;
+  if (response['exito'] === false || response['success'] === false) {
+    throw new Error('El servidor rechazó la operación.');
+  }
+  return response['datos'] ?? response['data'] ?? response;
+}
+
+function parseSession(value: unknown): JwtResponse {
+  if (!isRecord(value)) throw new Error('Respuesta de autenticación inválida.');
+  const token = value['token'] ?? value['accessToken'] ?? value['jwt'];
+  const usuario = value['usuario'] ?? value['username'] ?? value['sub'];
+  const nombre = value['nombre'] ?? value['fullName'] ?? value['name'] ?? usuario;
+  const rawProfile = value['perfil'] ?? value['role'] ?? value['rol'];
+  const perfil = typeof rawProfile === 'string' ? rawProfile.trim().toUpperCase() : '';
+  const debeCambiarClave = value['debeCambiarClave'] ?? false;
+  if (
+    typeof token !== 'string' ||
+    !token.trim() ||
+    typeof usuario !== 'string' ||
+    !usuario.trim() ||
+    typeof nombre !== 'string' ||
+    !perfil ||
+    typeof debeCambiarClave !== 'boolean'
+  ) {
+    throw new Error('Respuesta de autenticación inválida.');
+  }
+  return { token, usuario, nombre, perfil, debeCambiarClave };
+}
+
 @Service()
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-
   private readonly apiUrl = environment.apiUrl;
+  private readonly initialSession = this.restoreSession();
+  private readonly _token = signal<string | null>(this.initialSession?.token ?? null);
+  private readonly _currentUser = signal<AuthUser | null>(
+    this.initialSession
+      ? {
+          usuario: this.initialSession.usuario,
+          nombre: this.initialSession.nombre,
+          perfil: this.initialSession.perfil,
+          debeCambiarClave: this.initialSession.debeCambiarClave ?? false,
+        }
+      : null,
+  );
+  private readonly _modules = signal<ModuloResponse[]>(this.restoreModules());
+  private readonly _modulesLoaded = signal<boolean>(this._modules().length > 0);
+  private readonly _debeCambiarClave = signal(this.initialSession?.debeCambiarClave ?? false);
+  private modulesRequest?: Observable<ApiResponse<ModuloResponse[]>>;
 
-  // Estado reactivo basado en Signals
-  private readonly _token = signal<string | null>(this.getInitialToken());
-  private readonly _currentUser = signal<AuthUser | null>(this.getInitialUser());
-  private readonly _modules = signal<ModuloResponse[]>(this.getInitialModules());
-  private readonly _debeCambiarClave = signal<boolean>(this.getInitialDebeCambiarClave());
-
-  // Señales públicas de solo lectura
   readonly token = this._token.asReadonly();
   readonly currentUser = this._currentUser.asReadonly();
   readonly modules = this._modules.asReadonly();
+  readonly modulesLoaded = this._modulesLoaded.asReadonly();
   readonly debeCambiarClave = this._debeCambiarClave.asReadonly();
 
-  // Selectores computados (Derived State)
-  readonly isAuthenticated = computed<boolean>(() => !!this._token());
-  readonly isDemoMode = computed<boolean>(() => this._token() === DEMO_TOKEN);
-  readonly username = computed<string>(() => this._currentUser()?.usuario ?? '');
-  readonly userFullName = computed<string>(() => this._currentUser()?.nombre ?? '');
-  readonly userProfile = computed<string>(() => this._currentUser()?.perfil ?? '');
-  readonly isAdmin = computed<boolean>(
-    () => this._currentUser()?.perfil?.trim().toUpperCase() === 'ADMINISTRADOR',
+  readonly isAuthenticated = computed(() => !!this._token() && !!this._currentUser());
+  readonly isDemoMode = computed(() => this._token() === DEMO_TOKEN);
+  readonly username = computed(() => this._currentUser()?.usuario ?? '');
+  readonly userFullName = computed(() => this._currentUser()?.nombre ?? '');
+  readonly userProfile = computed(() => this._currentUser()?.perfil ?? '');
+  readonly isAdmin = computed(() =>
+    ['ADMINISTRADOR', 'ADMIN', 'ROLE_ADMIN'].includes(this.userProfile()),
   );
-  readonly authorizedModuleCodes = computed<Set<string>>(
-    () => new Set(this._modules().map((m) => m.codigo.trim().toUpperCase())),
+  readonly authorizedModuleCodes = computed<ReadonlySet<string>>(
+    () => new Set(this._modules().map((module) => module.codigo.trim().toUpperCase())),
   );
+  readonly navigationModules = computed(() =>
+    [...this._modules()]
+      .filter((module) => this.canAccessModule(module.codigo))
+      .sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre)),
+  );
+  readonly landingUrl = computed(() => '/dashboard');
 
-  /**
-   * Inicia sesión autenticando credenciales contra el backend.
-   * Almacena el token y los datos de perfil en el estado reactivo y en sessionStorage.
-   */
   login(credentials: LoginRequest): Observable<ApiResponse<JwtResponse>> {
-    return this.http.post<ApiResponse<JwtResponse>>(`${this.apiUrl}/auth/login`, credentials).pipe(
-      tap((response) => {
-        const rawData = getApiResponseData(response);
-        const jwtData =
-          rawData && typeof rawData === 'object'
-            ? (rawData as JwtResponse)
-            : isJwtResponse(response)
-              ? response
-              : null;
-        if (jwtData) {
-          this.establecerSesion(jwtData);
-        }
-      }),
+    return defer(() => {
+      this.clearSession();
+      return this.http.post<unknown>(`${this.apiUrl}/auth/login`, credentials);
+    }).pipe(
+      map((response) => parseSession(payload(response))),
+      tap((jwt) => this.establecerSesion(jwt)),
+      map((jwt) => ({ exito: true, datos: jwt })),
     );
   }
 
-  /**
-   * Consulta al backend los módulos autorizados y activos para el usuario en sesión actual.
-   * Actualiza el estado reactivo y el almacenamiento persistente de sesión.
-   */
   consultarMisModulos(): Observable<ApiResponse<ModuloResponse[]>> {
-    return this.http.get<ApiResponse<ModuloResponse[]>>(`${this.apiUrl}/auth/mis-modulos`).pipe(
-      tap((response) => {
-        const data = getApiResponseData(response);
-        const modulos = Array.isArray(data)
-          ? data
-          : Array.isArray(response)
-            ? (response as unknown as ModuloResponse[])
-            : [];
-        this._modules.set(modulos);
-        this.persistirEnStorage(STORAGE_KEYS.MODULES, JSON.stringify(modulos));
+    if (this.modulesRequest) return this.modulesRequest;
+    const sessionToken = this.token();
+    const request = this.http.get<unknown>(`${this.apiUrl}/auth/mis-modulos`).pipe(
+      map((response) => {
+        const data = payload(response);
+        let list: unknown[] = [];
+        if (Array.isArray(data)) {
+          list = data;
+        } else if (isRecord(data) && Array.isArray(data['content'])) {
+          list = data['content'];
+        } else if (isRecord(data) && Array.isArray(data['datos'])) {
+          list = data['datos'];
+        } else if (isRecord(data) && Array.isArray(data['data'])) {
+          list = data['data'];
+        }
+        return normalizeModuloList(list);
       }),
+      tap((modules) => {
+        if (this.token() !== sessionToken) return;
+        this._modules.set(modules);
+        this._modulesLoaded.set(true);
+        this.writeStorage(STORAGE_KEYS.MODULES, JSON.stringify(modules));
+      }),
+      map((modules) => ({ exito: true, datos: modules })),
+      catchError((error: unknown) => {
+        if (this._modules().length === 0 && this.token() === sessionToken) {
+          this._modulesLoaded.set(false);
+        }
+        return throwError(() => error);
+      }),
+      finalize(() => {
+        if (this.modulesRequest === request) this.modulesRequest = undefined;
+      }),
+      shareReplay({ bufferSize: 1, refCount: true }),
+    );
+    this.modulesRequest = request;
+    return request;
+  }
+
+  ensureModules(): Observable<boolean> {
+    if (!this.isAuthenticated()) return of(false);
+    if (this.modulesLoaded()) return of(true);
+    return this.consultarMisModulos().pipe(
+      map(() => this.isAuthenticated() && this.modulesLoaded()),
+      catchError(() => of(false)),
     );
   }
 
-  /**
-   * Verifica si el usuario autenticado tiene acceso a un módulo específico por su código.
-   */
-  hasModule(moduloCodigo: string): boolean {
-    return this.authorizedModuleCodes().has(moduloCodigo.trim().toUpperCase());
+  hasModule(code: string): boolean {
+    return this.authorizedModuleCodes().has(code.trim().toUpperCase());
   }
 
-  /**
-   * Limpia el estado reactivo de sesión y el almacenamiento local sin disparar navegación.
-   * Utilizado internamente o por interceptores ante respuestas 401.
-   */
-  clearSession(): void {
-    this._token.set(null);
-    this._currentUser.set(null);
-    this._modules.set([]);
-    this._debeCambiarClave.set(false);
-
-    this.removerDeStorage(STORAGE_KEYS.TOKEN);
-    this.removerDeStorage(STORAGE_KEYS.USER);
-    this.removerDeStorage(STORAGE_KEYS.MODULES);
-    this.removerDeStorage(STORAGE_KEYS.DEBE_CAMBIAR_CLAVE);
-  }
-
-  /**
-   * Cierra la sesión activa del usuario, limpia el almacenamiento y redirige a la pantalla de login.
-   */
-  logout(redirect: boolean = true): void {
-    this.clearSession();
-    if (redirect) {
-      void this.router.navigate(['/auth/login']);
+  canAccessUrl(url: string): boolean {
+    if (!this.isAuthenticated()) return false;
+    if (this.isAdmin()) return true;
+    const cleanUrl = url.split('?')[0].replace(/\/+$/, '');
+    if (cleanUrl === '' || cleanUrl === '/dashboard') return true;
+    if (cleanUrl === '/inventario' || cleanUrl === '/articulos') {
+      return this.canAccessModule('INVENTARIO_ARTICULOS');
     }
+    if (cleanUrl === '/proveedores' || cleanUrl === '/mantenimiento/proveedores') {
+      return this.canAccessModule('PROVEEDORES');
+    }
+    if (cleanUrl === '/clientes' || cleanUrl === '/mantenimiento/clientes') {
+      return this.canAccessModule('CLIENTES');
+    }
+    return this.modules().some((m) => {
+      const modUrl = m.url.split('?')[0].replace(/\/+$/, '');
+      return cleanUrl === modUrl || cleanUrl.startsWith(modUrl + '/');
+    });
   }
 
-  /**
-   * Genera una sesión simulada de pruebas en sessionStorage con perfil Administrador
-   * y módulos básicos habilitados, redirigiendo inmediatamente al dashboard principal ('/').
-   */
+  canAccessModule(code: string): boolean {
+    if (!this.isAuthenticated()) return false;
+    if (this.isAdmin()) return true;
+    const normalized = code.trim().toUpperCase();
+    if (normalized === 'DASHBOARD') return true;
+    if (normalized === 'INVENTARIO') {
+      return (
+        this.hasModule('INVENTARIO') ||
+        this.hasModule('INVENTARIO_ARTICULOS') ||
+        this.hasModule('INVENTARIO_FAMILIAS') ||
+        this.hasModule('INVENTARIO_MARCAS') ||
+        this.hasModule('ARTICULOS')
+      );
+    }
+    if (normalized === 'INVENTARIO_ARTICULOS' || normalized === 'ARTICULOS') {
+      return (
+        this.hasModule('INVENTARIO_ARTICULOS') ||
+        this.hasModule('ARTICULOS') ||
+        this.hasModule('INVENTARIO')
+      );
+    }
+    if (normalized === 'INVENTARIO_FAMILIAS' || normalized === 'FAMILIAS') {
+      return (
+        this.hasModule('INVENTARIO_FAMILIAS') ||
+        this.hasModule('FAMILIAS') ||
+        this.hasModule('INVENTARIO')
+      );
+    }
+    if (normalized === 'INVENTARIO_MARCAS' || normalized === 'MARCAS') {
+      return (
+        this.hasModule('INVENTARIO_MARCAS') ||
+        this.hasModule('MARCAS') ||
+        this.hasModule('INVENTARIO')
+      );
+    }
+    if (normalized === 'PROVEEDORES') {
+      return this.hasModule('PROVEEDORES') || this.isAdmin();
+    }
+    if (normalized === 'CLIENTES') {
+      return this.hasModule('CLIENTES') || this.isAdmin();
+    }
+    if (normalized === 'SEGURIDAD') {
+      return (
+        this.hasModule('SEGURIDAD') ||
+        this.hasModule('SEGURIDAD_USUARIOS') ||
+        this.hasModule('SEGURIDAD_PERFILES') ||
+        this.hasModule('USUARIOS') ||
+        this.hasModule('PERFILES')
+      );
+    }
+    if (normalized === 'SEGURIDAD_USUARIOS' || normalized === 'USUARIOS') {
+      return (
+        this.hasModule('SEGURIDAD_USUARIOS') ||
+        this.hasModule('USUARIOS') ||
+        this.hasModule('SEGURIDAD')
+      );
+    }
+    if (normalized === 'SEGURIDAD_PERFILES' || normalized === 'PERFILES') {
+      return (
+        this.hasModule('SEGURIDAD_PERFILES') ||
+        this.hasModule('PERFILES') ||
+        this.hasModule('SEGURIDAD')
+      );
+    }
+    return this.hasModule(normalized);
+  }
+
   iniciarSesionDemo(): void {
     const demoJwt: JwtResponse = {
       token: DEMO_TOKEN,
@@ -141,176 +272,106 @@ export class AuthService {
     };
 
     const demoModules: ModuloResponse[] = [
-      {
-        id: 1,
-        codigo: 'DASHBOARD',
-        nombre: 'Dashboard Principal',
-        url: '/dashboard',
-        icono: 'DASHBOARD',
-        orden: 1,
-      },
-      {
-        id: 2,
-        codigo: 'ARTICULOS',
-        nombre: 'Catálogo de Bienes',
-        url: '/articulos',
-        icono: 'ARTICULOS',
-        orden: 2,
-      },
-      {
-        id: 3,
-        codigo: 'KARDEX',
-        nombre: 'Control de Inventario',
-        url: '/kardex',
-        icono: 'KARDEX',
-        orden: 3,
-      },
-      {
-        id: 4,
-        codigo: 'INGRESOS',
-        nombre: 'Entradas de Almacén',
-        url: '/ingresos',
-        icono: 'INGRESOS',
-        orden: 4,
-      },
-      {
-        id: 5,
-        codigo: 'EGRESOS',
-        nombre: 'Despachos y Salidas',
-        url: '/egresos',
-        icono: 'EGRESOS',
-        orden: 5,
-      },
-      {
-        id: 6,
-        codigo: 'SOLICITUDES',
-        nombre: 'Pedidos y PECOSA',
-        url: '/solicitudes',
-        icono: 'SOLICITUDES',
-        orden: 6,
-      },
-      {
-        id: 7,
-        codigo: 'CLIENTES',
-        nombre: 'Clientes',
-        url: '/mantenimiento/clientes',
-        icono: 'CLIENTES',
-        orden: 7,
-      },
+      { id: 1, codigo: 'DASHBOARD', nombre: 'Dashboard Principal', url: '/dashboard', icono: 'DASHBOARD', orden: 1 },
+      { id: 2, codigo: 'INVENTARIO_ARTICULOS', nombre: 'Catálogo de Bienes', url: '/inventario/articulos', icono: 'ARTICULOS', orden: 2 },
+      { id: 3, codigo: 'KARDEX', nombre: 'Control de Inventario', url: '/kardex', icono: 'KARDEX', orden: 3 },
+      { id: 4, codigo: 'INGRESOS', nombre: 'Entradas de Almacén', url: '/ingresos', icono: 'INGRESOS', orden: 4 },
+      { id: 5, codigo: 'EGRESOS', nombre: 'Despachos y Salidas', url: '/egresos', icono: 'EGRESOS', orden: 5 },
+      { id: 6, codigo: 'PROVEEDORES', nombre: 'Proveedores', url: '/proveedores', icono: 'PROVEEDORES', orden: 6 },
+      { id: 7, codigo: 'CLIENTES', nombre: 'Clientes', url: '/clientes', icono: 'CLIENTES', orden: 7 },
     ];
 
     this.establecerSesion(demoJwt);
     this._modules.set(demoModules);
-    this.persistirEnStorage(STORAGE_KEYS.MODULES, JSON.stringify(demoModules));
-
-    void this.router.navigate(['/']);
+    this._modulesLoaded.set(true);
+    this.writeStorage(STORAGE_KEYS.MODULES, JSON.stringify(demoModules));
+    void this.router.navigate(['/dashboard']);
   }
 
-  /**
-   * Actualiza el estado de la bandera debeCambiarClave (ej. tras un cambio exitoso de contraseña).
-   */
-  setDebeCambiarClave(valor: boolean): void {
-    this._debeCambiarClave.set(valor);
-    this.persistirEnStorage(STORAGE_KEYS.DEBE_CAMBIAR_CLAVE, String(valor));
+  clearSession(): void {
+    this._token.set(null);
+    this._currentUser.set(null);
+    this._modules.set([]);
+    this._modulesLoaded.set(false);
+    this._debeCambiarClave.set(false);
+    this.modulesRequest = undefined;
+    for (const key of Object.values(STORAGE_KEYS)) this.removeStorage(key);
+  }
 
+  logout(redirect = true): void {
+    this.clearSession();
+    if (redirect) void this.router.navigate(['/auth/login']);
+  }
+
+  setDebeCambiarClave(value: boolean): void {
+    this._debeCambiarClave.set(value);
+    this.writeStorage(STORAGE_KEYS.DEBE_CAMBIAR_CLAVE, String(value));
     const current = this._currentUser();
     if (current) {
-      const updatedUser: AuthUser = { ...current, debeCambiarClave: valor };
-      this._currentUser.set(updatedUser);
-      this.persistirEnStorage(STORAGE_KEYS.USER, JSON.stringify(updatedUser));
+      const user = { ...current, debeCambiarClave: value };
+      this._currentUser.set(user);
+      this.writeStorage(STORAGE_KEYS.USER, JSON.stringify(user));
     }
   }
 
-  /**
-   * Establece internamente la sesión a partir de la respuesta JWT.
-   */
-  private establecerSesion(jwt: JwtResponse | Record<string, unknown>): void {
-    const raw = jwt as Record<string, unknown>;
-    const token = (raw['token'] ?? raw['accessToken'] ?? raw['jwt'] ?? '') as string;
-    const usuario = (raw['usuario'] ?? raw['username'] ?? raw['sub'] ?? '') as string;
-    const nombre = (raw['nombre'] ?? raw['fullName'] ?? raw['name'] ?? usuario) as string;
-    const perfil = (raw['perfil'] ?? raw['role'] ?? raw['rol'] ?? 'USUARIO') as string;
-    const debeCambiarClave = Boolean(raw['debeCambiarClave']);
-
-    if (!token) {
-      console.warn('[AuthService] No se encontró token en la respuesta de autenticación:', jwt);
-      return;
-    }
-
+  private establecerSesion(jwt: JwtResponse): void {
     const user: AuthUser = {
-      usuario,
-      nombre,
-      perfil,
-      debeCambiarClave,
+      usuario: jwt.usuario,
+      nombre: jwt.nombre,
+      perfil: jwt.perfil,
+      debeCambiarClave: jwt.debeCambiarClave ?? false,
     };
-
-    this._token.set(token);
+    this._token.set(jwt.token);
     this._currentUser.set(user);
-    this._debeCambiarClave.set(debeCambiarClave);
-
-    this.persistirEnStorage(STORAGE_KEYS.TOKEN, token);
-    this.persistirEnStorage(STORAGE_KEYS.USER, JSON.stringify(user));
-    this.persistirEnStorage(STORAGE_KEYS.DEBE_CAMBIAR_CLAVE, String(debeCambiarClave));
+    this._debeCambiarClave.set(user.debeCambiarClave);
+    this.writeStorage(STORAGE_KEYS.TOKEN, jwt.token);
+    this.writeStorage(STORAGE_KEYS.USER, JSON.stringify(user));
+    this.writeStorage(STORAGE_KEYS.DEBE_CAMBIAR_CLAVE, String(user.debeCambiarClave));
   }
 
-  // Métodos auxiliares seguros para recuperación inicial desde sessionStorage
-  private getInitialToken(): string | null {
-    return this.leerDeStorage(STORAGE_KEYS.TOKEN);
-  }
-
-  private getInitialUser(): AuthUser | null {
-    const raw = this.leerDeStorage(STORAGE_KEYS.USER);
-    if (!raw) return null;
+  private restoreSession(): JwtResponse | null {
     try {
-      return JSON.parse(raw) as AuthUser;
+      const token = this.readStorage(STORAGE_KEYS.TOKEN);
+      const raw = this.readStorage(STORAGE_KEYS.USER);
+      const user: unknown = raw ? JSON.parse(raw) : null;
+      return token && isRecord(user) ? parseSession({ ...user, token }) : null;
     } catch {
       return null;
     }
   }
 
-  private getInitialModules(): ModuloResponse[] {
-    const raw = this.leerDeStorage(STORAGE_KEYS.MODULES);
-    if (!raw) return [];
+  private restoreModules(): ModuloResponse[] {
     try {
-      return JSON.parse(raw) as ModuloResponse[];
+      const raw = this.readStorage(STORAGE_KEYS.MODULES);
+      if (!raw) return [];
+      const parsed: unknown = JSON.parse(raw);
+      return normalizeModuloList(parsed);
     } catch {
       return [];
     }
   }
 
-  private getInitialDebeCambiarClave(): boolean {
-    const raw = this.leerDeStorage(STORAGE_KEYS.DEBE_CAMBIAR_CLAVE);
-    return raw === 'true';
-  }
-
-  private isBrowser(): boolean {
-    return typeof window !== 'undefined' && typeof window.sessionStorage !== 'undefined';
-  }
-
-  private leerDeStorage(key: string): string | null {
-    if (!this.isBrowser()) return null;
+  private readStorage(key: string): string | null {
     try {
-      return window.sessionStorage.getItem(key);
+      return typeof window === 'undefined' ? null : window.sessionStorage.getItem(key);
     } catch {
       return null;
     }
   }
 
-  private persistirEnStorage(key: string, value: string): void {
-    if (!this.isBrowser()) return;
+  private writeStorage(key: string, value: string): void {
     try {
-      window.sessionStorage.setItem(key, value);
+      if (typeof window !== 'undefined') window.sessionStorage.setItem(key, value);
     } catch {
-      // Manejo silencioso ante restricciones de cuota o modo incógnito
+      /* La sesión sigue funcionando en memoria cuando el navegador impide persistirla. */
     }
   }
 
-  private removerDeStorage(key: string): void {
-    if (!this.isBrowser()) return;
+  private removeStorage(key: string): void {
     try {
-      window.sessionStorage.removeItem(key);
+      if (typeof window !== 'undefined') window.sessionStorage.removeItem(key);
     } catch {
-      // Manejo silencioso
+      /* El estado en memoria ya ha sido eliminado. */
     }
   }
 }

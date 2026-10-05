@@ -1,0 +1,450 @@
+<div class="space-y-6">
+  <!-- Cabecera del Módulo -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex items-center gap-3.5">
+      <div
+        class="size-12 rounded-2xl bg-unsm-green/10 text-unsm-green flex items-center justify-center shrink-0 border border-unsm-green/20 shadow-2xs"
+      >
+        <svg lucidePackageCheck class="size-6"></svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Egresos de Almacén</h1>
+        <p class="text-sm text-slate-500 mt-0.5">
+          Despachos oficiales, salidas a dependencias y control de bajas
+        </p>
+      </div>
+    </div>
+
+    <div>
+      <button
+        type="button"
+        (click)="abrirNuevoDespacho()"
+        [disabled]="cargandoCatalogos() || !!errorCatalogos()"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-unsm-green-dark hover:bg-unsm-green-border active:scale-[0.98] text-white text-sm font-semibold shadow-sm transition-all duration-150 cursor-pointer"
+      >
+        <svg lucidePlus class="size-4"></svg>
+        <span>Registrar Despacho</span>
+      </button>
+    </div>
+  </div>
+
+  @if (errorCatalogos()) {
+    <div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+      {{ errorCatalogos() }}
+      <button type="button" class="ml-2 underline font-semibold" (click)="cargarCatalogos()">
+        Reintentar carga
+      </button>
+    </div>
+  }
+
+  <!-- Barra de Filtros -->
+  <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 space-y-3">
+    <!-- Fila 1: Búsqueda, Tipo de Egreso y Acciones -->
+    <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+      <!-- Búsqueda por N° de comprobante (prefijo-correlativo) -->
+      <div class="relative flex-1 .min-w-[200px]">
+        <svg
+          lucideSearch
+          class="size-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+        ></svg>
+        <input
+          type="text"
+          [ngModel]="filtroTexto()"
+          (ngModelChange)="filtroTexto.set($event)"
+          (keyup.enter)="onBuscarTexto()"
+          placeholder="Buscar por N° de egreso"
+          aria-label="Buscar por N° de egreso"
+          class="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
+        />
+      </div>
+
+      <!-- Selector por Tipo de Egreso -->
+      <div class="w-full md:w-64">
+        <select
+          [ngModel]="tipoEgresoFiltro()"
+          (ngModelChange)="onCambioTipoEgreso($event)"
+          aria-label="Filtrar por tipo de egreso"
+          class="w-full h-10 px-3 rounded-xl border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+        >
+          <option value="TODOS">Todos los tipos de egreso</option>
+          <option value="DESPACHO_ORDINARIO">Despacho</option>
+          <option value="BAJA_DETERIORO">Dado de baja</option>
+        </select>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          type="button"
+          (click)="onBuscarTexto()"
+          class="px-4 h-10 rounded-xl bg-unsm-cyan hover:brightness-95 active:scale-[0.98] text-white text-sm font-semibold transition-all shadow-xs cursor-pointer flex items-center gap-2 outline-none focus:ring-2 focus:ring-unsm-cyan/40"
+        >
+          <svg lucideSearch class="size-4"></svg>
+          <span>Buscar</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="onLimpiarFiltros()"
+          title="Limpiar filtros"
+          aria-label="Limpiar filtros"
+          class="p-2.5 h-10 w-10 flex items-center justify-center rounded-xl bg-unsm-yellow hover:brightness-95 active:scale-[0.98] text-slate-900 border border-yellow-300 transition-all shadow-xs cursor-pointer outline-none focus:ring-2 focus:ring-unsm-yellow/40"
+        >
+          <svg
+            lucideRefreshCw
+            class="size-4 text-slate-900"
+            [class.animate-spin]="cargando()"
+          ></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Fila 2: Período Temporal Fijo y Estable -->
+    <div
+      class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-100"
+    >
+      <!-- Selector de Período con Botones Segmentados -->
+      <div
+        class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80 self-start sm:self-auto"
+      >
+        <button
+          type="button"
+          (click)="onCambioPeriodo('hoy')"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+          [class.bg-white]="periodoFiltro() === 'hoy'"
+          [class.text-slate-900]="periodoFiltro() === 'hoy'"
+          [class.shadow-2xs]="periodoFiltro() === 'hoy'"
+          [class.text-slate-600]="periodoFiltro() !== 'hoy'"
+          [class.hover:text-slate-900]="periodoFiltro() !== 'hoy'"
+        >
+          Hoy
+        </button>
+
+        <button
+          type="button"
+          (click)="onCambioPeriodo('todos')"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+          [class.bg-white]="periodoFiltro() === 'todos'"
+          [class.text-slate-900]="periodoFiltro() === 'todos'"
+          [class.shadow-2xs]="periodoFiltro() === 'todos'"
+          [class.text-slate-600]="periodoFiltro() !== 'todos'"
+          [class.hover:text-slate-900]="periodoFiltro() !== 'todos'"
+        >
+          Todo el tiempo
+        </button>
+
+        <button
+          type="button"
+          (click)="onCambioPeriodo('intervalo')"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+          [class.bg-white]="periodoFiltro() === 'intervalo'"
+          [class.text-slate-900]="periodoFiltro() === 'intervalo'"
+          [class.shadow-2xs]="periodoFiltro() === 'intervalo'"
+          [class.text-slate-600]="periodoFiltro() !== 'intervalo'"
+          [class.hover:text-slate-900]="periodoFiltro() !== 'intervalo'"
+        >
+          Rango de fechas
+        </button>
+      </div>
+
+      <!-- Cuadro de Fechas Fijo y Estable -->
+      <div
+        class="flex items-center gap-2.5 h-9 px-3 rounded-xl border border-slate-300 bg-white text-xs text-slate-700 transition-all focus-within:ring-2 focus-within:ring-unsm-green/20 focus-within:border-unsm-green self-stretch sm:self-auto shadow-2xs"
+        [class.opacity-40]="periodoFiltro() !== 'intervalo'"
+        [class.pointer-events-none]="periodoFiltro() !== 'intervalo'"
+      >
+        <label
+          for="fechaDesdeFiltroEgreso"
+          class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer"
+          >Desde:</label
+        >
+        <input
+          id="fechaDesdeFiltroEgreso"
+          type="date"
+          [ngModel]="fechaDesde()"
+          (ngModelChange)="fechaDesde.set($event); onCambioFechas()"
+          (click)="abrirSelectorFecha($event)"
+          [disabled]="periodoFiltro() !== 'intervalo'"
+          aria-label="Fecha inicial del intervalo"
+          class="h-7 px-1.5 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
+        />
+        <span class="text-slate-300 select-none font-light">|</span>
+        <label
+          for="fechaHastaFiltroEgreso"
+          class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer"
+          >Hasta:</label
+        >
+        <input
+          id="fechaHastaFiltroEgreso"
+          type="date"
+          [ngModel]="fechaHasta()"
+          (ngModelChange)="fechaHasta.set($event); onCambioFechas()"
+          (click)="abrirSelectorFecha($event)"
+          [disabled]="periodoFiltro() !== 'intervalo'"
+          aria-label="Fecha final del intervalo"
+          class="h-7 px-1.5 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla Paginada de Servidor (GET /api/v1/egresos) -->
+  <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
+    <div class="overflow-x-auto min-h-80">
+      <table class="w-full text-left text-sm text-slate-600 border-collapse">
+        <thead
+          class="bg-slate-50/80 text-xs font-semibold text-slate-700 border-b border-slate-200"
+        >
+          <tr>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">N° de Egreso</th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">
+              Destinatario / Cliente
+            </th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Área de Destino</th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Tipo de Egreso</th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Fecha</th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">
+              Operador Ventanilla
+            </th>
+            <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">Estado</th>
+            <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @if (cargando()) {
+            <tr>
+              <td colspan="8" class="py-16 text-center text-slate-500">
+                <div class="flex flex-col items-center justify-center gap-2">
+                  <svg lucideLoader2 class="size-8 text-unsm-green animate-spin"></svg>
+                  <p class="text-sm font-medium">Cargando comprobantes de egreso...</p>
+                </div>
+              </td>
+            </tr>
+          } @else if (errorListado()) {
+            <tr>
+              <td colspan="8" class="p-6 text-center text-red-800">
+                <p role="alert">{{ errorListado() }}</p>
+                <button
+                  type="button"
+                  class="mt-2 underline font-semibold"
+                  (click)="cargarEgresos()"
+                >
+                  Reintentar
+                </button>
+              </td>
+            </tr>
+          } @else {
+            @for (egr of egresos(); track egr.id) {
+              <tr
+                class="hover:bg-slate-50/60 transition-colors"
+                [class.opacity-80]="egr.estado === '0'"
+                [class.bg-slate-50/40]="egr.estado === '0'"
+              >
+                <!-- N° de Egreso (prefijo-correlativo) -->
+                <td
+                  class="py-3 px-4 font-mono font-semibold whitespace-nowrap"
+                  [class.text-slate-900]="egr.estado !== '0'"
+                  [class.text-slate-400]="egr.estado === '0'"
+                  [class.line-through]="egr.estado === '0'"
+                >
+                  {{ egr.numeroCompleto || '-' }}
+                </td>
+
+                <!-- Destinatario / Cliente -->
+                <td class="py-3 px-4 min-w-52">
+                  @if (egr.tipoEgreso !== 'DESPACHO_ORDINARIO') {
+                    <span class="text-xs text-slate-400 italic">
+                      — (Baja interna)
+                    </span>
+                  } @else {
+                    <p
+                      class="font-medium text-slate-800 line-clamp-1"
+                      [title]="egr.nombreCliente || '-'"
+                    >
+                      {{ egr.nombreCliente || 'Destinatario no especificado' }}
+                    </p>
+                  }
+                </td>
+
+                <!-- Área de Destino -->
+                <td class="py-3 px-4 min-w-44">
+                  @if (egr.tipoEgreso !== 'DESPACHO_ORDINARIO') {
+                    <span class="text-xs text-slate-600 truncate block" [title]="egr.motivoBaja || 'Baja interna de almacén'">
+                      {{ egr.motivoBaja || 'Baja interna' }}
+                    </span>
+                  } @else {
+                    <span class="text-slate-700 truncate block" [title]="egr.nombreArea || ''">{{
+                      egr.nombreArea || 'Área general'
+                    }}</span>
+                  }
+                </td>
+
+                <!-- Tipo de Egreso -->
+                <td class="py-3 px-4 whitespace-nowrap">
+                  @if (egr.tipoEgreso !== 'DESPACHO_ORDINARIO') {
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700"
+                    >
+                      Dado de baja
+                    </span>
+                  } @else {
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700"
+                    >
+                      Despacho
+                    </span>
+                  }
+                </td>
+
+                <!-- Fecha -->
+                <td class="py-3 px-4 whitespace-nowrap text-xs">
+                  <div class="flex items-center gap-1.5 text-slate-700">
+                    <svg lucideCalendar class="size-3.5 text-slate-400 shrink-0"></svg>
+                    <span>{{ egr.fecha | date: 'dd/MM/yyyy' }}</span>
+                  </div>
+                </td>
+
+                <!-- Operador de Ventanilla -->
+                <td class="py-3 px-4 whitespace-nowrap text-xs">
+                  <div class="flex items-center gap-1.5 text-slate-700">
+                    <svg lucideUser class="size-3.5 text-slate-400 shrink-0"></svg>
+                    <span class="font-medium text-slate-800">{{
+                      (egr.nombreUsuario || egr.nombreEncargadoAlmacen || '-') | titlecase
+                    }}</span>
+                  </div>
+                </td>
+
+                <!-- Estado -->
+                <td class="py-3 px-4 text-center whitespace-nowrap">
+                  @if (egr.estado === '0') {
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700"
+                    >
+                      Anulado
+                    </span>
+                  } @else {
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700"
+                    >
+                      Registrado
+                    </span>
+                  }
+                </td>
+
+                <!-- Acciones por Fila -->
+                <td class="py-3 px-4 text-center whitespace-nowrap">
+                  <div class="inline-flex items-center gap-1">
+                    <!-- Botón Modal Detalle / Visualización -->
+                    <button
+                      type="button"
+                      (click)="verDetalle(egr)"
+                      [disabled]="cargandoDetalleId() === egr.id"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-cyan hover:bg-unsm-cyan/10 transition-colors cursor-pointer disabled:opacity-40"
+                      title="Ver detalle del despacho"
+                      aria-label="Ver detalle del despacho"
+                    >
+                      @if (cargandoDetalleId() === egr.id) {
+                        <svg lucideLoader2 class="size-4 animate-spin text-unsm-cyan"></svg>
+                      } @else {
+                        <svg lucideEye class="size-4"></svg>
+                      }
+                    </button>
+
+                    <!-- Botón Ver / Imprimir Autorización de Salida en PDF -->
+                    <button
+                      type="button"
+                      (click)="abrirPdf(egr)"
+                      [disabled]="descargandoPdfId() === egr.id"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
+                      title="Ver autorización de salida PDF en nueva pestaña"
+                      aria-label="Ver autorización de salida PDF en nueva pestaña"
+                    >
+                      @if (descargandoPdfId() === egr.id) {
+                        <svg lucideLoader2 class="size-4 animate-spin text-rose-600"></svg>
+                      } @else {
+                        <svg lucideFileDown class="size-4"></svg>
+                      }
+                    </button>
+
+                    <!-- Botón Anular Despacho (Solo si activo) con confirmación SweetAlert2 -->
+                    @if (egr.estado === '1' && esAdministrador()) {
+                      <button
+                        type="button"
+                        (click)="anularDespacho(egr)"
+                        [disabled]="anulandoId() === egr.id"
+                        class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer disabled:opacity-40"
+                        title="Anular despacho y revertir stock al inventario"
+                        aria-label="Anular despacho de almacén"
+                      >
+                        @if (anulandoId() === egr.id) {
+                          <svg lucideLoader2 class="size-4 animate-spin text-rose-600"></svg>
+                        } @else {
+                          <svg lucideBan class="size-4"></svg>
+                        }
+                      </button>
+                    } @else if (egr.estado === '0') {
+                      <span
+                        class="p-1.5 text-slate-300 cursor-not-allowed select-none inline-flex"
+                        title="Despacho ya anulado"
+                      >
+                        <svg lucideBan class="size-4 opacity-30"></svg>
+                      </span>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="py-16 text-center text-slate-400">
+                  <div class="flex flex-col items-center justify-center gap-2">
+                    <svg lucidePackageCheck class="size-10 text-slate-300"></svg>
+                    <p class="text-sm font-medium text-slate-500">
+                      No se encontraron registros de egreso
+                    </p>
+                    <p class="text-xs text-slate-400">
+                      Modifique los filtros o registre un nuevo despacho para la ventanilla.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <app-pagination
+      [paginaActual]="paginaActual()"
+      [totalPaginas]="totalPaginas()"
+      [totalElementos]="totalElementos()"
+      [tamanioPagina]="tamanioPagina()"
+      [cargando]="cargando()"
+      etiqueta="despachos"
+      colorActivo="green"
+      (paginaChange)="cambiarPagina($event)"
+      (tamanioChange)="cambiarTamanio($event)"
+    />
+  </div>
+
+  <!-- Modal de Registro de Despacho -->
+  <app-egreso-form-modal
+    [visible]="modalRegistroVisible()"
+    [clientes]="clientes()"
+    [areas]="areas()"
+    [encargados]="encargados()"
+    [encargadosAlmacen]="encargadosAlmacen()"
+    (cerrar)="cerrarModalRegistro()"
+    (guardado)="onDespachoGuardado($event)"
+  ></app-egreso-form-modal>
+
+  <!-- Modal de Detalle / Visualización de Despacho -->
+  <app-egreso-detalle-modal
+    [visible]="modalDetalleVisible()"
+    [egreso]="egresoDetalle()"
+    (cerrar)="cerrarModalDetalle()"
+    (imprimir)="abrirPdf($event)"
+  ></app-egreso-detalle-modal>
+</div>

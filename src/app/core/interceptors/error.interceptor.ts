@@ -1,7 +1,9 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { DOCUMENT, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { getApiPath } from '../http/api-url';
 import { AuthService } from '../services/auth.service';
 
 /**
@@ -11,17 +13,19 @@ import { AuthService } from '../services/auth.service';
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
+  const apiPath = getApiPath(req.url, environment.apiUrl, inject(DOCUMENT).baseURI);
 
   return next(req).pipe(
-    catchError((error: HttpErrorResponse) => {
+    catchError((error: unknown) => {
+      if (apiPath === null || !(error instanceof HttpErrorResponse)) return throwError(() => error);
       switch (error.status) {
         case 401: {
           // 401 Unauthorized: Si es una petición protegida rechazada, limpia sesión y redirige
-          if (!req.url.includes('/auth/login')) {
+          if (apiPath !== '/auth/login') {
             authService.clearSession();
 
             const currentUrl = router.url;
-            if (!currentUrl.includes('/login')) {
+            if (currentUrl.split(/[?#]/, 1)[0] !== '/auth/login') {
               void router.navigate(['/auth/login'], {
                 queryParams: { returnUrl: currentUrl },
               });
@@ -32,10 +36,16 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
         case 403: {
           // 403 Forbidden: Detecta falta de permisos o cuenta inactiva
-          const rawMessage =
-            typeof error.error === 'object' && error.error !== null
-              ? (error.error.mensaje ?? error.error.message ?? '')
+          const body: unknown = error.error;
+          const candidate =
+            typeof body === 'object' && body !== null
+              ? 'mensaje' in body
+                ? body.mensaje
+                : 'message' in body
+                  ? body.message
+                  : ''
               : '';
+          const rawMessage = typeof candidate === 'string' ? candidate : '';
 
           const isInactive =
             rawMessage.toLowerCase().includes('inactiv') ||
@@ -54,7 +64,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             );
 
             // Refrescar lista de módulos si la petición rechazada no es la de mis-módulos
-            if (authService.isAuthenticated() && !req.url.includes('/auth/mis-modulos')) {
+            if (
+              authService.isAuthenticated() &&
+              apiPath !== '/auth/mis-modulos' &&
+              apiPath !== '/auth/login'
+            ) {
               authService.consultarMisModulos().subscribe({
                 error: (err) => console.error('Error al sincronizar módulos tras 403:', err),
               });

@@ -53,52 +53,54 @@ export interface AuthUser {
 }
 
 /**
- * Type guard para verificar si un objeto cumple con la estructura LoginRequest.
+ * Normaliza de forma segura un objeto proveniente del backend a la interfaz ModuloResponse.
+ * Tolera ids numéricos o string, campos opcionales de icono/orden y prefijos de ruta.
  */
-export function isLoginRequest(value: unknown): value is LoginRequest {
+export function normalizeModulo(value: unknown): ModuloResponse | null {
   if (typeof value !== 'object' || value === null) {
-    return false;
+    return null;
   }
-  const candidate = value as Record<string, unknown>;
-  return typeof candidate['usuario'] === 'string' && typeof candidate['clave'] === 'string';
+  const raw = value as Record<string, unknown>;
+
+  const id = typeof raw['id'] === 'number' ? raw['id'] : Number(raw['id']) || 0;
+  const codigo = String(raw['codigo'] ?? raw['code'] ?? '').trim().toUpperCase();
+  const nombre = String(raw['nombre'] ?? raw['name'] ?? codigo).trim();
+  const rawUrl = String(raw['url'] ?? raw['ruta'] ?? raw['path'] ?? '').trim();
+  const url = rawUrl ? (rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`) : '';
+  const icono =
+    typeof raw['icono'] === 'string'
+      ? raw['icono'].trim()
+      : typeof raw['icon'] === 'string'
+        ? raw['icon'].trim()
+        : null;
+  const orden =
+    typeof raw['orden'] === 'number'
+      ? raw['orden']
+      : Number(raw['orden']) || 0;
+
+  if (!codigo && !url && !nombre) {
+    return null;
+  }
+
+  const finalCodigo = codigo || (url ? url.replace(/^\//, '').replace(/\//g, '_').toUpperCase() : 'MODULO');
+  const resolvedUrl = url || (finalCodigo ? `/${finalCodigo.toLowerCase()}` : '/dashboard');
+
+  return {
+    id,
+    codigo: finalCodigo,
+    nombre: nombre || finalCodigo || url,
+    url: resolvedUrl,
+    icono,
+    orden,
+  };
 }
 
 /**
- * Type guard para verificar si un objeto cumple con la estructura JwtResponse.
+ * Normaliza una colección de módulos provenientes del backend.
  */
-export function isJwtResponse(value: unknown): value is JwtResponse {
-  if (typeof value !== 'object' || value === null) {
-    return false;
+export function normalizeModuloList(value: unknown): ModuloResponse[] {
+  if (!Array.isArray(value)) {
+    return [];
   }
-  const candidate = value as Record<string, unknown>;
-  const hasToken =
-    typeof candidate['token'] === 'string' || typeof candidate['accessToken'] === 'string';
-  const hasUsuario =
-    typeof candidate['usuario'] === 'string' || typeof candidate['username'] === 'string';
-  return hasToken && hasUsuario;
-}
-
-/**
- * Type guard para verificar si un objeto cumple con la estructura ModuloResponse.
- */
-export function isModuloResponse(value: unknown): value is ModuloResponse {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-  const candidate = value as Record<string, unknown>;
-  return (
-    typeof candidate['id'] === 'number' &&
-    typeof candidate['codigo'] === 'string' &&
-    typeof candidate['nombre'] === 'string' &&
-    typeof candidate['url'] === 'string' &&
-    (candidate['icono'] === null || typeof candidate['icono'] === 'string') &&
-    typeof candidate['orden'] === 'number'
-  );
-}
-
-/**
- * Type guard para verificar si un objeto corresponde a un arreglo de ModuloResponse.
- */
-export function isModuloResponseList(value: unknown): value is ModuloResponse[] {
-  return Array.isArray(value) && value.every(isModuloResponse);
+  return value.map(normalizeModulo).filter((m): m is ModuloResponse => m !== null);
 }

@@ -1,7 +1,9 @@
-<div class="h-screen w-screen overflow-hidden flex bg-slate-50 text-slate-800 antialiased font-sans">
+<div
+  class="h-screen w-screen overflow-hidden flex bg-slate-50 text-slate-800 antialiased font-sans"
+>
   <!-- Sidebar de Escritorio (fijo a la izquierda, ancho 260px) -->
-  <aside class="hidden lg:flex flex-col w-[260px] shrink-0 h-full bg-[#007A30] border-r border-[#006025] z-20">
-    <app-sidebar class="h-full flex flex-col" />
+  <aside class="hidden lg:flex flex-col w-65 shrink-0 h-full bg-unsm-green-dark z-20">
+    <app-sidebar class="h-full min-h-0 flex flex-col" />
   </aside>
 
   <!-- Menú lateral móvil / tablet como Drawer Flotante con Backdrop -->
@@ -15,12 +17,12 @@
 
     <!-- Drawer Flotante -->
     <aside
-      class="fixed inset-y-0 left-0 z-50 w-[260px] bg-[#007A30] shadow-2xl lg:hidden flex flex-col h-full animate-in slide-in-from-left duration-200"
+      class="fixed inset-y-0 left-0 z-50 w-65 bg-unsm-green-dark shadow-2xl lg:hidden flex flex-col h-full"
       role="dialog"
       aria-modal="true"
       aria-label="Menú lateral de navegación"
     >
-      <app-sidebar class="h-full flex flex-col" />
+      <app-sidebar class="h-full min-h-0 flex flex-col" />
     </aside>
   }
 

@@ -1,18 +1,17 @@
 import { NgOptimizedImage } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideEye, LucideEyeOff } from '@lucide/angular';
+import { finalize, switchMap } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { LoginRequest } from '../../../core/models';
 import { AuthService } from '../../../core/services';
 
 @Component({
   selector: 'app-login',
-  imports: [
-    ReactiveFormsModule,
-    NgOptimizedImage,
-    LucideEye,
-    LucideEyeOff,
-  ],
+  imports: [ReactiveFormsModule, NgOptimizedImage, LucideEye, LucideEyeOff],
   templateUrl: './login.component.html',
 })
 export class LoginComponent {
@@ -20,6 +19,9 @@ export class LoginComponent {
   protected readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
+  readonly developmentLoginEnabled =
+    !environment.production && environment.developmentLogin !== null;
 
   /**
    * Estado reactivo del componente
@@ -38,7 +40,7 @@ export class LoginComponent {
   });
 
   constructor() {
-    this.loginForm.valueChanges.subscribe(() => {
+    this.loginForm.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       if (this.errorMessage()) {
         this.errorMessage.set(null);
       }
@@ -83,41 +85,42 @@ export class LoginComponent {
       return;
     }
 
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
-    const credentials = { usuario, clave };
-
-    this.authService.login(credentials).subscribe({
-      next: () => {
-        this.authService.consultarMisModulos().subscribe({
-          next: () => this.finalizarNavegacion(),
-          error: () => this.finalizarNavegacion(),
-        });
-      },
-      error: (error: unknown) => {
-        this.isLoading.set(false);
-        this.procesarError(error);
-      },
-    });
+    this.authenticate({ usuario, clave });
   }
 
-  /**
-   * Inicia sesión simulada con perfil Administrador para pruebas sin API
-   */
-  onAccesoDemo(): void {
+  onDevelopmentLogin(): void {
+    if (!this.developmentLoginEnabled || !environment.developmentLogin) return;
+    this.authenticate(environment.developmentLogin);
+  }
+
+  private authenticate(credentials: LoginRequest): void {
+    if (this.isLoading()) return;
+    this.isLoading.set(true);
     this.errorMessage.set(null);
-    this.authService.iniciarSesionDemo();
+    this.authService
+      .login(credentials)
+      .pipe(
+        switchMap(() => this.authService.consultarMisModulos()),
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.isLoading.set(false)),
+      )
+      .subscribe({
+        next: () => this.finalizarNavegacion(),
+        error: (error: unknown) => {
+          this.authService.clearSession();
+          this.procesarError(error);
+        },
+      });
   }
 
   private finalizarNavegacion(): void {
-    this.isLoading.set(false);
-    if (this.authService.debeCambiarClave()) {
-      void this.router.navigate(['/cambiar-clave']);
-      return;
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    let destination = this.authService.landingUrl();
+    if (returnUrl?.startsWith('/') && !returnUrl.startsWith('//') && !returnUrl.includes('\\')) {
+      if (this.authService.canAccessUrl(returnUrl)) {
+        destination = returnUrl;
+      }
     }
-    const returnUrl = this.route.snapshot.queryParams['returnUrl'];
-    const destination = returnUrl && !returnUrl.includes('/login') ? returnUrl : '/';
     void this.router.navigateByUrl(destination);
   }
 
@@ -133,8 +136,21 @@ export class LoginComponent {
       return;
     }
 
+    if (typeof err?.status === 'number' && err.status >= 500) {
+      this.errorMessage.set('El servidor no está disponible. Inténtalo nuevamente.');
+      return;
+    }
+    if (error instanceof Error && !('status' in error)) {
+      this.errorMessage.set(error.message);
+      return;
+    }
+
     const backendMessage = err?.error?.mensaje || err?.error?.message;
-    if (backendMessage && !/bad credentials|unauthorized/i.test(backendMessage)) {
+    if (
+      typeof backendMessage === 'string' &&
+      backendMessage &&
+      !/bad credentials|unauthorized/i.test(backendMessage)
+    ) {
       this.errorMessage.set(backendMessage);
       return;
     }

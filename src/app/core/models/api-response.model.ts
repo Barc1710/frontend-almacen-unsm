@@ -46,27 +46,18 @@ export interface PageResponse<T> {
 }
 
 /**
- * Representación de error emitida por la API o capturada por el cliente.
- */
-export interface ApiError {
-  readonly status: number;
-  readonly message: string;
-  readonly error?: string;
-}
-
-/**
  * Type guard para validar si un valor desconocido corresponde a una ApiResponse.
  */
 export function isApiResponse<T = unknown>(value: unknown): value is ApiResponse<T> {
   return (
     typeof value === 'object' &&
     value !== null &&
-    ('exito' in value ||
-      'success' in value ||
-      'mensaje' in value ||
+    ('success' in value ||
+      'exito' in value ||
       'message' in value ||
-      'datos' in value ||
-      'data' in value)
+      'mensaje' in value ||
+      'data' in value ||
+      'datos' in value)
   );
 }
 
@@ -89,39 +80,10 @@ export function isPageResponse<T>(value: unknown): value is PageResponse<T> {
 }
 
 /**
- * Obtiene el índice de la página actual de forma unificada (base 0).
- */
-export function getPageNumber<T>(pageResponse: PageResponse<T>): number {
-  return pageResponse.page ?? pageResponse.number ?? 0;
-}
-
-/**
  * Extrae de forma segura los datos de una respuesta ApiResponse,
  * priorizando la clave del backend ('datos') sobre el alias de compatibilidad ('data').
  */
 export function getApiResponseData<T>(response: ApiResponse<T>): T | undefined {
   return response.datos !== undefined ? response.datos : response.data;
-}
-
-/**
- * Extrae de forma segura el mensaje de una respuesta ApiResponse,
- * priorizando la clave del backend ('mensaje') sobre el alias de compatibilidad ('message').
- */
-export function getApiResponseMessage(response: ApiResponse<unknown>): string {
-  return response.mensaje ?? response.message ?? '';
-}
-
-/**
- * Determina si la respuesta representa una operación exitosa,
- * priorizando la clave del backend ('exito') sobre el alias ('success').
- */
-export function isApiResponseSuccess(response: ApiResponse<unknown>): boolean {
-  if (response.exito !== undefined) {
-    return response.exito;
-  }
-  if (response.success !== undefined) {
-    return response.success;
-  }
-  return false;
 }
 
