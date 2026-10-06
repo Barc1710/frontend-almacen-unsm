@@ -245,248 +245,252 @@
             </button>
           </div>
 
-          <!-- Tabla de Renglones -->
-          <div class="rounded-xl border border-slate-200 overflow-visible shadow-2xs">
-            <div class="overflow-visible">
-              <table class="w-full text-left text-sm text-slate-600 border-collapse table-fixed">
-                <thead
-                  class="bg-slate-50 text-xs font-semibold text-slate-700 border-b border-slate-200"
+          <!-- Detalle de Artículos Responsivo y Unificado (Desktop y Móvil) -->
+          <div class="rounded-xl border border-slate-200 overflow-visible shadow-2xs bg-white">
+            <!-- Cabecera de columnas (Escritorio >= 640px) -->
+            <div
+              class="hidden sm:grid grid-cols-12 items-center gap-2.5 px-3 py-2.5 bg-slate-50 text-xs font-semibold text-slate-700 border-b border-slate-200 rounded-t-xl"
+            >
+              <div class="col-span-1 text-center font-semibold text-slate-700">#</div>
+              <div class="col-span-6 font-semibold text-slate-700">Artículo</div>
+              <div class="col-span-2 text-center font-semibold text-slate-700">U.M.</div>
+              <div class="col-span-2 text-right font-semibold text-slate-700">Cantidad Recibida</div>
+              <div class="col-span-1 text-center font-semibold text-slate-700">Acción</div>
+            </div>
+
+            <!-- Listado de Renglones -->
+            <div class="p-3 sm:p-0 space-y-3 sm:space-y-0 sm:divide-y sm:divide-slate-100 overflow-visible">
+              @for (fila of filas(); track fila.id; let idx = $index) {
+                <div
+                  class="rounded-xl border border-slate-200 bg-white p-3 space-y-2.5 sm:space-y-0 sm:border-0 sm:rounded-none sm:p-2.5 sm:grid sm:grid-cols-12 sm:items-center sm:gap-2.5 hover:bg-slate-50/60 transition-colors relative"
+                  [class.z-40]="fila.mostrarSugerencias"
                 >
-                  <tr>
-                    <th scope="col" class="py-3 px-3.5 w-12 text-center shrink-0">#</th>
-                    <th scope="col" class="py-3 px-3.5 font-semibold text-slate-700">
-                      Artículo
-                    </th>
-                    <th
-                      scope="col"
-                      class="py-3 px-3.5 w-28 text-center font-semibold text-slate-700 shrink-0"
+                  <!-- Cabecera en Móvil: Índice + Eliminar -->
+                  <div class="flex items-center justify-between sm:hidden pb-2 border-b border-slate-100">
+                    <span class="font-mono text-xs font-bold text-slate-700">
+                      Artículo #{{ idx + 1 }}
+                    </span>
+                    <button
+                      type="button"
+                      (click)="eliminarFila(idx)"
+                      [disabled]="guardando()"
+                      class="p-1 rounded-md text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+                      title="Eliminar fila"
+                      aria-label="Eliminar fila"
                     >
-                      U.M.
-                    </th>
-                    <th
-                      scope="col"
-                      class="py-3 px-3.5 w-44 text-right font-semibold text-slate-700 shrink-0"
-                    >
-                      Cantidad Recibida
-                    </th>
-                    <th
-                      scope="col"
-                      class="py-3 px-3.5 w-16 text-center font-semibold text-slate-700 shrink-0"
-                    >
-                      Acción
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                  @for (fila of filas(); track fila.id; let idx = $index) {
-                    <tr
-                      class="hover:bg-slate-50/50 transition-colors align-top"
-                      [class.relative]="fila.mostrarSugerencias"
-                      [class.z-40]="fila.mostrarSugerencias"
-                    >
-                      <!-- Número de Renglón -->
-                      <td class="py-3 px-3.5 text-center text-xs font-medium text-slate-400 pt-4 w-12">
-                        {{ idx + 1 }}
-                      </td>
+                      <svg lucideTrash class="size-4"></svg>
+                    </button>
+                  </div>
 
-                      <!-- Artículo / Búsqueda predictiva integrada como select (max-w-0 para truncamiento estricto) -->
-                      <td class="py-2.5 px-3.5 relative max-w-0">
-                        @if (fila.articulo) {
-                          <div
-                            class="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200 w-full min-w-0"
-                          >
-                            <div class="min-w-0 flex-1">
-                              <div class="flex items-center gap-2 min-w-0">
-                                <span
-                                  class="font-mono text-xs font-bold text-slate-900 bg-white px-1.5 py-0.5 rounded border border-slate-200 shrink-0"
-                                >
-                                  {{ fila.codigoArticulo }}
-                                </span>
-                                <span
-                                  class="text-xs font-semibold text-slate-800 truncate block min-w-0 flex-1"
-                                  [title]="fila.descripcionArticulo"
-                                >
-                                  {{ fila.descripcionArticulo }}
-                                </span>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              (click)="limpiarArticuloEnFila(fila)"
-                              class="p-1 rounded-md text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors shrink-0 cursor-pointer"
-                              title="Cambiar artículo"
-                              aria-label="Cambiar artículo"
+                  <!-- Número de Renglón (Escritorio) -->
+                  <div class="hidden sm:block sm:col-span-1 text-center font-mono text-xs text-slate-400">
+                    {{ idx + 1 }}
+                  </div>
+
+                  <!-- Selector de Artículo / Búsqueda predictiva flotante -->
+                  <div class="sm:col-span-6 relative">
+                    <label class="block sm:hidden text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                      Artículo <span class="text-unsm-red">*</span>
+                    </label>
+
+                    @if (fila.articulo) {
+                      <div
+                        class="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 border border-slate-200 w-full min-w-0"
+                      >
+                        <div class="min-w-0 flex-1">
+                          <div class="flex items-center gap-2 min-w-0">
+                            <span
+                              class="font-mono text-xs font-bold text-slate-900 bg-white px-1.5 py-0.5 rounded border border-slate-200 shrink-0"
                             >
-                              <svg lucideX class="size-3.5"></svg>
-                            </button>
+                              {{ fila.codigoArticulo }}
+                            </span>
+                            <span
+                              class="text-xs font-semibold text-slate-800 truncate block min-w-0 flex-1"
+                              [title]="fila.descripcionArticulo"
+                            >
+                              {{ fila.descripcionArticulo }}
+                            </span>
                           </div>
-                        } @else {
-                          <div
-                            class="relative w-full min-w-0"
-                            (focusout)="cerrarSugerencias(fila, $event)"
-                          >
-                            <div class="relative flex items-center w-full min-w-0">
-                              <svg
-                                lucideSearch
-                                class="size-3.5 text-slate-400 absolute left-3 pointer-events-none"
-                              ></svg>
-                              <input
-                                type="text"
-                                [ngModel]="fila.busquedaTexto"
-                                (ngModelChange)="onBuscarArticuloInput(fila, $event)"
-                                (focus)="onFocusArticulo(fila)"
-                                placeholder="Buscar o seleccionar artículo..."
-                                aria-label="Buscar artículo"
-                                class="w-full h-9 pl-8 pr-8 rounded-lg border text-xs text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
-                                [class.border-unsm-red]="fila.errorArticulo"
-                                [class.border-slate-300]="!fila.errorArticulo"
-                              />
-                              <div
-                                class="absolute right-2.5 text-slate-400 pointer-events-none flex items-center"
-                              >
-                                @if (fila.buscando) {
-                                  <svg lucideLoader2 class="size-3.5 animate-spin"></svg>
-                                } @else {
-                                  <svg lucideChevronDown class="size-3.5"></svg>
-                                }
-                              </div>
-                            </div>
-
-                            @if (fila.errorArticulo) {
-                              <p class="text-[11px] text-unsm-red mt-1">{{ fila.errorArticulo }}</p>
-                            }
-
-                            <!-- Menú flotante de resultados predictivos tipo combobox -->
-                            @if (fila.mostrarSugerencias && fila.sugerencias.length > 0) {
-                              <div
-                                class="absolute left-0 z-50 mt-1 w-[480px] max-w-[90vw] max-h-60 overflow-y-auto bg-white rounded-xl shadow-2xl border border-slate-200 divide-y divide-slate-100 ring-1 ring-black/5"
-                              >
-                                @for (sug of fila.sugerencias; track sug.id) {
-                                  <button
-                                    type="button"
-                                    (click)="seleccionarArticulo(fila, sug)"
-                                    class="w-full text-left p-2.5 hover:bg-unsm-green-light/50 transition-colors flex items-center justify-between gap-3 cursor-pointer group"
-                                  >
-                                    <div class="min-w-0 flex items-center gap-2 flex-1">
-                                      <span
-                                        class="font-mono text-xs font-bold text-slate-900 group-hover:text-unsm-green-dark bg-slate-50 px-2 py-0.5 rounded border border-slate-200 shrink-0 w-24 text-center"
-                                      >
-                                        {{ sug.codigo }}
-                                      </span>
-                                      <span class="text-xs text-slate-700 truncate" [title]="sug.descripcion">
-                                        {{ sug.descripcion }}
-                                      </span>
-                                    </div>
-                                    <span
-                                      class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 shrink-0 min-w-16 text-right tabular-nums"
-                                    >
-                                      {{ sug.simboloUnidadMedida || 'UND' }}
-                                    </span>
-                                  </button>
-                                }
-                              </div>
-                            } @else if (
-                              fila.mostrarSugerencias && fila.busquedaTexto.trim().length > 0
-                            ) {
-                              <div
-                                class="absolute left-0 z-50 mt-1 w-[480px] max-w-[90vw] p-3 bg-white rounded-xl shadow-2xl border border-slate-200 text-xs text-slate-500 text-center"
-                              >
-                                No se encontraron artículos que coincidan con la búsqueda.
-                              </div>
-                            }
-                          </div>
-                        }
-                      </td>
-
-                      <!-- Unidad de Medida -->
-                      <td class="py-2.5 px-3.5 text-center pt-3.5 w-28">
-                        <span
-                          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700"
-                        >
-                          {{ fila.simboloUnidadMedida || 'UND' }}
-                        </span>
-                      </td>
-
-                      <!-- Cantidad -->
-                      <td class="py-2.5 px-3.5 text-right w-44">
-                        <input
-                          type="number"
-                          [ngModel]="fila.cantidad"
-                          (ngModelChange)="onCantidadInput(fila, $event)"
-                          (blur)="onCantidadBlur(fila)"
-                          [step]="fila.permiteDecimales ? 'any' : '1'"
-                          [min]="fila.permiteDecimales ? '0.01' : '1'"
-                          [disabled]="!fila.articulo"
-                          class="w-full h-9 px-2 text-right rounded-lg border text-xs font-semibold text-slate-900 tabular-nums transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green disabled:bg-slate-100 disabled:text-slate-400"
-                          [class.border-unsm-red]="fila.errorCantidad"
-                          [class.border-slate-300]="!fila.errorCantidad"
-                        />
-                        @if (fila.errorCantidad) {
-                          <p class="text-[10px] text-unsm-red mt-0.5 text-right font-medium">
-                            {{ fila.errorCantidad }}
-                          </p>
-                        } @else if (fila.articulo) {
-                          <span
-                            class="block text-[10px] mt-0.5 text-right font-medium"
-                            [class.text-emerald-700]="fila.permiteDecimales"
-                            [class.text-slate-400]="!fila.permiteDecimales"
-                          >
-                            {{ fila.permiteDecimales ? 'Admite decimales' : 'Solo enteros' }}
-                          </span>
-                        }
-                      </td>
-
-                      <!-- Botón Eliminar Fila -->
-                      <td class="py-2.5 px-3.5 text-center pt-3 w-16">
+                        </div>
                         <button
                           type="button"
-                          (click)="eliminarFila(idx)"
-                          [disabled]="guardando()"
-                          class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
-                          title="Eliminar fila"
-                          aria-label="Eliminar fila"
+                          (click)="limpiarArticuloEnFila(fila)"
+                          class="p-1 rounded-md text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors shrink-0 cursor-pointer"
+                          title="Cambiar artículo"
+                          aria-label="Cambiar artículo"
                         >
-                          <svg lucideTrash class="size-4"></svg>
+                          <svg lucideX class="size-3.5"></svg>
                         </button>
-                      </td>
-                    </tr>
-                  }
-
-                  <!-- Botón rápido para seguir añadiendo filas directamente al pie de los artículos -->
-                  <tr
-                    class="border-t border-slate-100 bg-slate-50/30 hover:bg-slate-50/70 transition-colors"
-                  >
-                    <td colspan="5" class="py-2.5 px-3.5">
-                      <button
-                        type="button"
-                        (click)="agregarFila()"
-                        [disabled]="guardando()"
-                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-unsm-green-dark bg-unsm-green-light hover:bg-unsm-green/20 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
-                        title="Añadir otra fila de artículo"
+                      </div>
+                    } @else {
+                      <div
+                        class="relative w-full min-w-0"
+                        (focusout)="cerrarSugerencias(fila, $event)"
                       >
-                        <svg lucidePlus class="size-3.5"></svg>
-                        <span>Añadir fila</span>
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                        <div class="relative flex items-center w-full min-w-0">
+                          <svg
+                            lucideSearch
+                            class="size-3.5 text-slate-400 absolute left-3 pointer-events-none"
+                          ></svg>
+                          <input
+                            type="text"
+                            [ngModel]="fila.busquedaTexto"
+                            (ngModelChange)="onBuscarArticuloInput(fila, $event)"
+                            (focus)="onFocusArticulo(fila)"
+                            placeholder="Buscar o seleccionar artículo..."
+                            aria-label="Buscar artículo"
+                            class="w-full h-9 pl-8 pr-8 rounded-lg border text-xs text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white"
+                            [class.border-unsm-red]="fila.errorArticulo"
+                            [class.border-slate-300]="!fila.errorArticulo"
+                          />
+                          <div
+                            class="absolute right-2.5 text-slate-400 pointer-events-none flex items-center"
+                          >
+                            @if (fila.buscando) {
+                              <svg lucideLoader2 class="size-3.5 animate-spin"></svg>
+                            } @else {
+                              <svg lucideChevronDown class="size-3.5"></svg>
+                            }
+                          </div>
+                        </div>
+
+                        @if (fila.errorArticulo) {
+                          <p class="text-[11px] text-unsm-red mt-1">{{ fila.errorArticulo }}</p>
+                        }
+
+                        <!-- Menú flotante de resultados predictivos -->
+                        @if (fila.mostrarSugerencias && fila.sugerencias.length > 0) {
+                          <div
+                            class="absolute left-0 right-0 sm:right-auto sm:w-[480px] sm:max-w-[85vw] z-50 mt-1 max-h-60 overflow-y-auto bg-white rounded-xl shadow-2xl border border-slate-200 divide-y divide-slate-100 ring-1 ring-black/5"
+                          >
+                            @for (sug of fila.sugerencias; track sug.id) {
+                              <button
+                                type="button"
+                                (click)="seleccionarArticulo(fila, sug)"
+                                class="w-full text-left p-2.5 hover:bg-unsm-green-light/50 transition-colors flex items-center justify-between gap-3 cursor-pointer group"
+                              >
+                                <div class="min-w-0 flex items-center gap-2 flex-1">
+                                  <span
+                                    class="font-mono text-xs font-bold text-slate-900 group-hover:text-unsm-green-dark bg-slate-50 px-2 py-0.5 rounded border border-slate-200 shrink-0 w-24 text-center"
+                                  >
+                                    {{ sug.codigo }}
+                                  </span>
+                                  <span class="text-xs text-slate-700 truncate" [title]="sug.descripcion">
+                                    {{ sug.descripcion }}
+                                  </span>
+                                </div>
+                                <span
+                                  class="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 shrink-0 min-w-16 text-right tabular-nums"
+                                >
+                                  {{ sug.simboloUnidadMedida || 'UND' }}
+                                </span>
+                              </button>
+                            }
+                          </div>
+                        } @else if (
+                          fila.mostrarSugerencias && fila.busquedaTexto.trim().length > 0
+                        ) {
+                          <div
+                            class="absolute left-0 right-0 sm:right-auto sm:w-[480px] sm:max-w-[85vw] z-50 mt-1 p-3 bg-white rounded-xl shadow-2xl border border-slate-200 text-xs text-slate-500 text-center"
+                          >
+                            No se encontraron artículos que coincidan con la búsqueda.
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Campos U.M. y Cantidad (2 cols en móvil / inline grid en escritorio) -->
+                  <div class="grid grid-cols-2 gap-2.5 sm:contents">
+                    <!-- Unidad de Medida -->
+                    <div class="sm:col-span-2 text-center">
+                      <label class="block sm:hidden text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1 text-left">
+                        U.M.
+                      </label>
+                      <div class="h-9 px-2 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-xs font-semibold text-slate-700">
+                        {{ fila.simboloUnidadMedida || 'UND' }}
+                      </div>
+                    </div>
+
+                    <!-- Cantidad Recibida -->
+                    <div class="sm:col-span-2">
+                      <label class="block sm:hidden text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1 text-left">
+                        Cantidad <span class="text-unsm-red">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        [ngModel]="fila.cantidad"
+                        (ngModelChange)="onCantidadInput(fila, $event)"
+                        (blur)="onCantidadBlur(fila)"
+                        [step]="fila.permiteDecimales ? 'any' : '1'"
+                        [min]="fila.permiteDecimales ? '0.01' : '1'"
+                        [disabled]="!fila.articulo"
+                        aria-label="Cantidad recibida"
+                        class="w-full h-9 px-2.5 text-right rounded-lg border text-xs font-semibold text-slate-900 tabular-nums transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green disabled:bg-slate-100 disabled:text-slate-400 bg-white"
+                        [class.border-unsm-red]="fila.errorCantidad"
+                        [class.border-slate-300]="!fila.errorCantidad"
+                      />
+                      @if (fila.errorCantidad) {
+                        <p class="text-[10px] text-unsm-red mt-0.5 text-right font-medium">
+                          {{ fila.errorCantidad }}
+                        </p>
+                      } @else if (fila.articulo) {
+                        <span
+                          class="block text-[10px] mt-0.5 text-right font-medium"
+                          [class.text-emerald-700]="fila.permiteDecimales"
+                          [class.text-slate-400]="!fila.permiteDecimales"
+                        >
+                          {{ fila.permiteDecimales ? 'Admite decimales' : 'Solo enteros' }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Botón Eliminar Fila (Escritorio) -->
+                  <div class="hidden sm:flex sm:col-span-1 justify-center">
+                    <button
+                      type="button"
+                      (click)="eliminarFila(idx)"
+                      [disabled]="guardando()"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+                      title="Eliminar fila"
+                      aria-label="Eliminar fila"
+                    >
+                      <svg lucideTrash class="size-4"></svg>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Botón Añadir Fila -->
+            <div class="p-2.5 sm:px-3.5 sm:py-2.5 border-t border-slate-100 bg-slate-50/30 flex items-center justify-start">
+              <button
+                type="button"
+                (click)="agregarFila()"
+                [disabled]="guardando()"
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-semibold text-unsm-green-dark bg-unsm-green-light hover:bg-unsm-green/20 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+                title="Añadir otra fila de artículo"
+              >
+                <svg lucidePlus class="size-3.5"></svg>
+                <span>Añadir fila</span>
+              </button>
             </div>
 
             <!-- Resumen Totalizador -->
             <div
-              class="bg-slate-50/90 px-4 py-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
+              class="bg-slate-50/90 px-4 py-3 border-t border-slate-200 rounded-b-xl flex items-center justify-between gap-3 text-xs"
             >
               <div class="flex items-center gap-2 text-slate-600">
                 <span>Renglones:</span>
                 <strong class="text-slate-900 font-bold">{{ totalArticulos() }}</strong>
               </div>
 
-              <div class="flex items-center gap-3">
-                <span class="text-slate-600 font-semibold uppercase tracking-wider">
-                  Total Unidades:
+              <div class="flex items-center gap-2 sm:gap-3">
+                <span class="text-slate-600 font-semibold uppercase tracking-wider text-[11px] sm:text-xs">
+                  Total:
                 </span>
-                <span class="text-base font-bold text-unsm-green-dark tabular-nums">
+                <span class="text-sm sm:text-base font-bold text-unsm-green-dark tabular-nums">
                   {{ totalCantidad() | number: '1.0-2' }}
                 </span>
               </div>

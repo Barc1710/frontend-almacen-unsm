@@ -102,91 +102,116 @@
       </div>
     </div>
 
-    <!-- Fila 2: Período Temporal Fijo y Estable (Sin saltos de diseño) -->
+    <!-- Fila 2: Período Temporal Fijo y Estable con Exportación Integrada -->
     <div
-      class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-100"
+      class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-3 border-t border-slate-100"
     >
-      <!-- Selector de Período con Botones Segmentados -->
-      <div
-        class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80 self-start sm:self-auto"
-      >
-        <button
-          type="button"
-          (click)="onCambioPeriodo('hoy')"
-          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-          [class.bg-white]="periodoFiltro() === 'hoy'"
-          [class.text-slate-900]="periodoFiltro() === 'hoy'"
-          [class.shadow-2xs]="periodoFiltro() === 'hoy'"
-          [class.text-slate-600]="periodoFiltro() !== 'hoy'"
-          [class.hover:text-slate-900]="periodoFiltro() !== 'hoy'"
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <!-- Selector de Período con Botones Segmentados -->
+        <div
+          class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80 self-start sm:self-auto"
         >
-          Hoy
-        </button>
+          <button
+            type="button"
+            (click)="onCambioPeriodo('hoy')"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+            [class.bg-white]="periodoFiltro() === 'hoy'"
+            [class.text-slate-900]="periodoFiltro() === 'hoy'"
+            [class.shadow-2xs]="periodoFiltro() === 'hoy'"
+            [class.text-slate-600]="periodoFiltro() !== 'hoy'"
+            [class.hover:text-slate-900]="periodoFiltro() !== 'hoy'"
+          >
+            Hoy
+          </button>
 
-        <button
-          type="button"
-          (click)="onCambioPeriodo('todos')"
-          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-          [class.bg-white]="periodoFiltro() === 'todos'"
-          [class.text-slate-900]="periodoFiltro() === 'todos'"
-          [class.shadow-2xs]="periodoFiltro() === 'todos'"
-          [class.text-slate-600]="periodoFiltro() !== 'todos'"
-          [class.hover:text-slate-900]="periodoFiltro() !== 'todos'"
-        >
-          Todo el tiempo
-        </button>
+          <button
+            type="button"
+            (click)="onCambioPeriodo('todos')"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+            [class.bg-white]="periodoFiltro() === 'todos'"
+            [class.text-slate-900]="periodoFiltro() === 'todos'"
+            [class.shadow-2xs]="periodoFiltro() === 'todos'"
+            [class.text-slate-600]="periodoFiltro() !== 'todos'"
+            [class.hover:text-slate-900]="periodoFiltro() !== 'todos'"
+          >
+            Todo el tiempo
+          </button>
 
-        <button
-          type="button"
-          (click)="onCambioPeriodo('intervalo')"
-          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-          [class.bg-white]="periodoFiltro() === 'intervalo'"
-          [class.text-slate-900]="periodoFiltro() === 'intervalo'"
-          [class.shadow-2xs]="periodoFiltro() === 'intervalo'"
-          [class.text-slate-600]="periodoFiltro() !== 'intervalo'"
-          [class.hover:text-slate-900]="periodoFiltro() !== 'intervalo'"
+          <button
+            type="button"
+            (click)="onCambioPeriodo('intervalo')"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+            [class.bg-white]="periodoFiltro() === 'intervalo'"
+            [class.text-slate-900]="periodoFiltro() === 'intervalo'"
+            [class.shadow-2xs]="periodoFiltro() === 'intervalo'"
+            [class.text-slate-600]="periodoFiltro() !== 'intervalo'"
+            [class.hover:text-slate-900]="periodoFiltro() !== 'intervalo'"
+          >
+            Rango de fechas
+          </button>
+        </div>
+
+        <!-- Cuadro de Fechas Fijo y Estable -->
+        <div
+          class="flex items-center gap-1.5 sm:gap-2 h-9 px-2.5 sm:px-3 rounded-xl border border-slate-300 bg-white text-xs text-slate-700 transition-all focus-within:ring-2 focus-within:ring-unsm-green/20 focus-within:border-unsm-green self-stretch sm:self-auto shadow-2xs max-w-full overflow-hidden"
+          [class.opacity-40]="periodoFiltro() !== 'intervalo'"
+          [class.pointer-events-none]="periodoFiltro() !== 'intervalo'"
         >
-          Rango de fechas
-        </button>
+          <label
+            for="fechaDesdeFiltro"
+            class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer"
+            >Desde:</label
+          >
+          <input
+            id="fechaDesdeFiltro"
+            type="date"
+            [ngModel]="fechaDesde()"
+            (ngModelChange)="fechaDesde.set($event); onCambioFechas()"
+            (click)="abrirSelectorFecha($event)"
+            [disabled]="periodoFiltro() !== 'intervalo'"
+            aria-label="Fecha inicial del intervalo"
+            class="w-[108px] sm:w-[114px] h-7 px-1 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none shrink-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:m-0 [&::-webkit-calendar-picker-indicator]:p-0 [&::-webkit-calendar-picker-indicator]:opacity-80"
+          />
+          <span class="text-slate-300 select-none font-light shrink-0">|</span>
+          <label
+            for="fechaHastaFiltro"
+            class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer"
+            >Hasta:</label
+          >
+          <input
+            id="fechaHastaFiltro"
+            type="date"
+            [ngModel]="fechaHasta()"
+            (ngModelChange)="fechaHasta.set($event); onCambioFechas()"
+            (click)="abrirSelectorFecha($event)"
+            [disabled]="periodoFiltro() !== 'intervalo'"
+            aria-label="Fecha final del intervalo"
+            class="w-[108px] sm:w-[114px] h-7 px-1 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none shrink-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:m-0 [&::-webkit-calendar-picker-indicator]:p-0 [&::-webkit-calendar-picker-indicator]:opacity-80"
+          />
+        </div>
       </div>
 
-      <!-- Cuadro de Fechas Fijo y Estable -->
-      <div
-        class="flex items-center gap-2.5 h-9 px-3 rounded-xl border border-slate-300 bg-white text-xs text-slate-700 transition-all focus-within:ring-2 focus-within:ring-unsm-green/20 focus-within:border-unsm-green self-stretch sm:self-auto shadow-2xs"
-        [class.opacity-40]="periodoFiltro() !== 'intervalo'"
-        [class.pointer-events-none]="periodoFiltro() !== 'intervalo'"
-      >
-        <label
-          for="fechaDesdeFiltro"
-          class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer"
-          >Desde:</label
+      <!-- Botones de Exportación Compactos (Excel y PDF) -->
+      <div class="flex items-center gap-2 shrink-0 self-end lg:self-auto">
+        <button
+          type="button"
+          title="Exportar a Excel"
+          aria-label="Exportar a Excel"
+          class="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
         >
-        <input
-          id="fechaDesdeFiltro"
-          type="date"
-          [ngModel]="fechaDesde()"
-          (ngModelChange)="fechaDesde.set($event); onCambioFechas()"
-          (click)="abrirSelectorFecha($event)"
-          [disabled]="periodoFiltro() !== 'intervalo'"
-          aria-label="Fecha inicial del intervalo"
-          class="h-7 px-1.5 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
-        />
-        <span class="text-slate-300 select-none font-light">|</span>
-        <label
-          for="fechaHastaFiltro"
-          class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer"
-          >Hasta:</label
+          <svg lucideFileSpreadsheet class="size-4 text-unsm-green"></svg>
+          <span>Excel</span>
+        </button>
+
+        <button
+          type="button"
+          title="Exportar a PDF"
+          aria-label="Exportar a PDF"
+          class="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
         >
-        <input
-          id="fechaHastaFiltro"
-          type="date"
-          [ngModel]="fechaHasta()"
-          (ngModelChange)="fechaHasta.set($event); onCambioFechas()"
-          (click)="abrirSelectorFecha($event)"
-          [disabled]="periodoFiltro() !== 'intervalo'"
-          aria-label="Fecha final del intervalo"
-          class="h-7 px-1.5 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
-        />
+          <svg lucideFileText class="size-4 text-unsm-red"></svg>
+          <span>PDF</span>
+        </button>
       </div>
     </div>
   </div>

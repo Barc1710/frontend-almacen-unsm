@@ -3,6 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import {
   LucideBoxes,
+  LucideFileSpreadsheet,
+  LucideFileText,
   LucideLoader2,
   LucidePackage,
   LucidePencil,
@@ -31,6 +33,8 @@ import { ArticuloService } from '../../services';
     LucidePlus,
     LucideSearch,
     LucideRefreshCw,
+    LucideFileSpreadsheet,
+    LucideFileText,
     LucidePencil,
     LucideTrash,
     LucideToggleLeft,

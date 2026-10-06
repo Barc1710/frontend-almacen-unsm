@@ -88,13 +88,36 @@
           (click)="onLimpiarFiltros()"
           title="Limpiar filtros"
           aria-label="Limpiar filtros"
-          class="p-2.5 h-10 w-10 flex items-center justify-center rounded-xl bg-unsm-yellow hover:brightness-95 active:scale-[0.98] text-slate-900 border border-yellow-300 transition-all shadow-xs cursor-pointer outline-none focus:ring-2 focus:ring-unsm-yellow/40"
+          class="p-2.5 h-10 w-10 flex items-center justify-center rounded-xl bg-unsm-yellow hover:brightness-95 active:scale-[0.98] text-slate-900 border border-unsm-yellow/80 transition-all shadow-xs cursor-pointer outline-none focus:ring-2 focus:ring-unsm-yellow/40"
         >
           <svg
             lucideRefreshCw
             class="size-4 text-slate-900"
             [class.animate-spin]="cargando()"
           ></svg>
+        </button>
+      </div>
+
+      <!-- Botones de Exportación Compactos (Excel y PDF) -->
+      <div class="flex items-center gap-2 shrink-0 self-end lg:self-auto">
+        <button
+          type="button"
+          title="Exportar a Excel"
+          aria-label="Exportar a Excel"
+          class="inline-flex items-center gap-1.5 h-10 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+        >
+          <svg lucideFileSpreadsheet class="size-4 text-unsm-green"></svg>
+          <span>Excel</span>
+        </button>
+
+        <button
+          type="button"
+          title="Exportar a PDF"
+          aria-label="Exportar a PDF"
+          class="inline-flex items-center gap-1.5 h-10 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+        >
+          <svg lucideFileText class="size-4 text-unsm-red"></svg>
+          <span>PDF</span>
         </button>
       </div>
     </div>
