@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   DestroyRef,
   inject,
@@ -17,8 +16,6 @@ import { KardexTab } from '../../models';
 
 @Component({
   selector: 'app-kardex-main',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     KardexGeneralTabComponent,
     KardexArticuloTabComponent,

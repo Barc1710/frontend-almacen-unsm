@@ -79,12 +79,25 @@
 
       <!-- Botones de Acción -->
       <div class="flex items-center gap-2 shrink-0">
+        <!-- Botón Limpiar (Celeste de styles) -->
         <button
           type="button"
-          (click)="onLimpiarFiltros()"
-          title="Actualizar / Limpiar filtros"
-          aria-label="Actualizar / Limpiar filtros"
-          class="p-2.5 h-10 w-10 flex items-center justify-center rounded-xl bg-unsm-yellow hover:brightness-95 active:scale-[0.98] text-slate-900 border border-yellow-300 transition-all shadow-xs cursor-pointer outline-none focus:ring-2 focus:ring-unsm-yellow/40"
+          (click)="limpiarArticuloSeleccionado()"
+          title="Limpiar búsqueda y filtros"
+          aria-label="Limpiar búsqueda y filtros"
+          class="px-4 h-10 rounded-xl bg-unsm-cyan hover:brightness-95 active:scale-[0.98] text-white text-sm font-semibold transition-all shadow-xs cursor-pointer flex items-center gap-2 outline-none focus:ring-2 focus:ring-unsm-cyan/40"
+        >
+          <svg lucideRotateCcw class="size-4"></svg>
+          <span>Limpiar</span>
+        </button>
+
+        <!-- Botón Actualizar (Amarillo) -->
+        <button
+          type="button"
+          (click)="onRecargar()"
+          title="Actualizar datos"
+          aria-label="Actualizar datos"
+          class="p-2.5 h-10 w-10 flex items-center justify-center rounded-xl bg-unsm-yellow hover:brightness-95 active:scale-[0.98] text-slate-900 border border-unsm-yellow/80 transition-all shadow-xs cursor-pointer outline-none focus:ring-2 focus:ring-unsm-yellow/40"
         >
           <svg
             lucideRefreshCw
@@ -95,92 +108,117 @@
       </div>
     </div>
 
-    <!-- Fila 2: Período Temporal (En esta sección 'Todo el tiempo' es por defecto) -->
+    <!-- Fila 2: Período Temporal (En esta sección 'Todo el tiempo' es por defecto) y Exportación -->
     @if (articuloSeleccionado()) {
       <div
-        class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-100"
+        class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-3 border-t border-slate-100"
       >
-        <!-- Selector de Período con Botones Segmentados -->
-        <div
-          class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80 self-start sm:self-auto"
-        >
-          <button
-            type="button"
-            (click)="onCambioPeriodo('todos')"
-            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-            [class.bg-white]="periodoFiltro() === 'todos'"
-            [class.text-slate-900]="periodoFiltro() === 'todos'"
-            [class.shadow-2xs]="periodoFiltro() === 'todos'"
-            [class.text-slate-600]="periodoFiltro() !== 'todos'"
-            [class.hover:text-slate-900]="periodoFiltro() !== 'todos'"
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <!-- Selector de Período con Botones Segmentados -->
+          <div
+            class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80 self-start sm:self-auto"
           >
-            Todo el tiempo
-          </button>
+            <button
+              type="button"
+              (click)="onCambioPeriodo('todos')"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+              [class.bg-white]="periodoFiltro() === 'todos'"
+              [class.text-slate-900]="periodoFiltro() === 'todos'"
+              [class.shadow-2xs]="periodoFiltro() === 'todos'"
+              [class.text-slate-600]="periodoFiltro() !== 'todos'"
+              [class.hover:text-slate-900]="periodoFiltro() !== 'todos'"
+            >
+              Todo el tiempo
+            </button>
 
-          <button
-            type="button"
-            (click)="onCambioPeriodo('hoy')"
-            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-            [class.bg-white]="periodoFiltro() === 'hoy'"
-            [class.text-slate-900]="periodoFiltro() === 'hoy'"
-            [class.shadow-2xs]="periodoFiltro() === 'hoy'"
-            [class.text-slate-600]="periodoFiltro() !== 'hoy'"
-            [class.hover:text-slate-900]="periodoFiltro() !== 'hoy'"
-          >
-            Hoy
-          </button>
+            <button
+              type="button"
+              (click)="onCambioPeriodo('hoy')"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+              [class.bg-white]="periodoFiltro() === 'hoy'"
+              [class.text-slate-900]="periodoFiltro() === 'hoy'"
+              [class.shadow-2xs]="periodoFiltro() === 'hoy'"
+              [class.text-slate-600]="periodoFiltro() !== 'hoy'"
+              [class.hover:text-slate-900]="periodoFiltro() !== 'hoy'"
+            >
+              Hoy
+            </button>
 
-          <button
-            type="button"
-            (click)="onCambioPeriodo('intervalo')"
-            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-            [class.bg-white]="periodoFiltro() === 'intervalo'"
-            [class.text-slate-900]="periodoFiltro() === 'intervalo'"
-            [class.shadow-2xs]="periodoFiltro() === 'intervalo'"
-            [class.text-slate-600]="periodoFiltro() !== 'intervalo'"
-            [class.hover:text-slate-900]="periodoFiltro() !== 'intervalo'"
+            <button
+              type="button"
+              (click)="onCambioPeriodo('intervalo')"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+              [class.bg-white]="periodoFiltro() === 'intervalo'"
+              [class.text-slate-900]="periodoFiltro() === 'intervalo'"
+              [class.shadow-2xs]="periodoFiltro() === 'intervalo'"
+              [class.text-slate-600]="periodoFiltro() !== 'intervalo'"
+              [class.hover:text-slate-900]="periodoFiltro() !== 'intervalo'"
+            >
+              Rango de fechas
+            </button>
+          </div>
+
+          <!-- Cuadro de Fechas Fijo y Estable -->
+          <div
+            class="flex items-center gap-2.5 h-9 px-3 rounded-xl border border-slate-300 bg-white text-xs text-slate-700 transition-all focus-within:ring-2 focus-within:ring-unsm-green/20 focus-within:border-unsm-green self-stretch sm:self-auto shadow-2xs"
+            [class.opacity-40]="periodoFiltro() !== 'intervalo'"
+            [class.pointer-events-none]="periodoFiltro() !== 'intervalo'"
           >
-            Rango de fechas
-          </button>
+            <label
+              for="fechaDesdeArticulo"
+              class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer"
+              >Desde:</label
+            >
+            <input
+              id="fechaDesdeArticulo"
+              type="date"
+              [ngModel]="fechaDesde()"
+              (ngModelChange)="fechaDesde.set($event); onCambioFechas()"
+              (click)="abrirSelectorFecha($event)"
+              [disabled]="periodoFiltro() !== 'intervalo'"
+              aria-label="Fecha inicial kardex"
+              class="h-7 px-1.5 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
+            />
+            <span class="text-slate-300 select-none font-light">|</span>
+            <label
+              for="fechaHastaArticulo"
+              class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer"
+              >Hasta:</label
+            >
+            <input
+              id="fechaHastaArticulo"
+              type="date"
+              [ngModel]="fechaHasta()"
+              (ngModelChange)="fechaHasta.set($event); onCambioFechas()"
+              (click)="abrirSelectorFecha($event)"
+              [disabled]="periodoFiltro() !== 'intervalo'"
+              aria-label="Fecha final kardex"
+              class="h-7 px-1.5 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
+            />
+          </div>
         </div>
 
-        <!-- Cuadro de Fechas Fijo y Estable -->
-        <div
-          class="flex items-center gap-2.5 h-9 px-3 rounded-xl border border-slate-300 bg-white text-xs text-slate-700 transition-all focus-within:ring-2 focus-within:ring-unsm-green/20 focus-within:border-unsm-green self-stretch sm:self-auto shadow-2xs"
-          [class.opacity-40]="periodoFiltro() !== 'intervalo'"
-          [class.pointer-events-none]="periodoFiltro() !== 'intervalo'"
-        >
-          <label
-            for="fechaDesdeArticulo"
-            class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer"
-            >Desde:</label
+        <!-- Botones de Exportación Compactos (Excel y PDF) -->
+        <div class="flex items-center gap-2 shrink-0 self-end lg:self-auto">
+          <button
+            type="button"
+            title="Exportar a Excel"
+            aria-label="Exportar a Excel"
+            class="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
           >
-          <input
-            id="fechaDesdeArticulo"
-            type="date"
-            [ngModel]="fechaDesde()"
-            (ngModelChange)="fechaDesde.set($event); onCambioFechas()"
-            (click)="abrirSelectorFecha($event)"
-            [disabled]="periodoFiltro() !== 'intervalo'"
-            aria-label="Fecha inicial kardex"
-            class="h-7 px-1.5 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
-          />
-          <span class="text-slate-300 select-none font-light">|</span>
-          <label
-            for="fechaHastaArticulo"
-            class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer"
-            >Hasta:</label
+            <svg lucideFileSpreadsheet class="size-4 text-unsm-green"></svg>
+            <span>Excel</span>
+          </button>
+
+          <button
+            type="button"
+            title="Exportar a PDF"
+            aria-label="Exportar a PDF"
+            class="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
           >
-          <input
-            id="fechaHastaArticulo"
-            type="date"
-            [ngModel]="fechaHasta()"
-            (ngModelChange)="fechaHasta.set($event); onCambioFechas()"
-            (click)="abrirSelectorFecha($event)"
-            [disabled]="periodoFiltro() !== 'intervalo'"
-            aria-label="Fecha final kardex"
-            class="h-7 px-1.5 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
-          />
+            <svg lucideFileText class="size-4 text-unsm-red"></svg>
+            <span>PDF</span>
+          </button>
         </div>
       </div>
     }
@@ -205,143 +243,74 @@
   } @else {
     <!-- Vista con Artículo Seleccionado -->
     @let art = articuloSeleccionado()!;
+    @let bal = balance();
 
-    <!-- Cabecera del Producto (Código normal, sin recuadro y con datos complementarios) -->
+    <!-- Cabecera del Producto e Información de Balance Integrada -->
     <div class="bg-white p-4.5 rounded-2xl shadow-xs border border-slate-200/80 space-y-3">
       <div>
-        <div class="flex flex-wrap items-center gap-2 text-xs font-mono text-slate-500 mb-1">
-          <span class="font-semibold text-slate-700">Código:</span>
-          <span class="text-slate-900 font-bold">{{ art.codigo }}</span>
-          <span class="text-slate-300">•</span>
-          <span class="font-semibold text-slate-700">Unidad:</span>
-          <span class="text-slate-900">{{ art.simboloUnidadMedida || 'UND' }}</span>
-          <span class="text-slate-300">•</span>
-          <span
-            class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold"
-            [class.bg-emerald-50]="art.activo"
-            [class.text-emerald-700]="art.activo"
-            [class.bg-slate-100]="!art.activo"
-            [class.text-slate-600]="!art.activo"
-          >
-            {{ art.activo ? 'Operativo' : 'Inactivo' }}
-          </span>
-        </div>
-        <h2 class="text-lg font-bold text-slate-900">
-          {{ art.descripcion }}
+        <h2 class="text-lg font-bold text-slate-900 flex flex-wrap items-center gap-2">
+          <span class="text-unsm-green font-mono">{{ art.codigo }}</span>
+          <span class="text-slate-300 font-normal">-</span>
+          <span>{{ art.descripcion }}</span>
         </h2>
       </div>
 
-      <!-- Datos Complementarios del Producto -->
+      <!-- Fila Inferior: Familia, Marca y Almacén (Izquierda) + Balance del Período (Derecha) -->
       <div
-        class="flex flex-wrap items-center gap-y-2 gap-x-5 pt-3 border-t border-slate-100 text-xs text-slate-600"
+        class="flex flex-col lg:flex-row lg:items-center justify-between gap-y-2.5 gap-x-5 pt-3 border-t border-slate-100 text-xs text-slate-600"
       >
-        @if (art.nombreFamilia) {
+        <!-- Datos de Catálogo -->
+        <div class="flex flex-wrap items-center gap-y-1.5 gap-x-4 sm:gap-x-5">
           <div class="flex items-center gap-1.5">
             <span class="text-slate-400">Familia:</span>
-            <span class="font-medium text-slate-800">{{ art.nombreFamilia }}</span>
+            <span class="font-medium text-slate-800">{{ art.nombreFamilia || '-' }}</span>
           </div>
-        }
-        @if (art.nombreMarca) {
           <div class="flex items-center gap-1.5">
             <span class="text-slate-400">Marca:</span>
-            <span class="font-medium text-slate-800">{{ art.nombreMarca }}</span>
+            <span class="font-medium text-slate-800">{{ art.nombreMarca || '-' }}</span>
           </div>
-        }
-        @if (art.nombreUbicacion) {
           <div class="flex items-center gap-1.5">
-            <span class="text-slate-400">Ubicación:</span>
-            <span class="font-medium text-slate-800">{{ art.nombreUbicacion }}</span>
-          </div>
-        }
-        <div class="flex items-center gap-1.5">
-          <span class="text-slate-400">Stock en Sistema:</span>
-          <span class="font-mono font-bold text-slate-900 tabular-nums">
-            {{ art.saldo | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
-            {{ art.simboloUnidadMedida || '' }}
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tarjetas de Balance del Periodo (KPIs con Iconos y Estilos Mejorados) -->
-    @let bal = balance();
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-      <!-- Stock Inicial -->
-      <div
-        class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 flex items-center gap-3.5"
-      >
-        <div
-          class="size-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0"
-        >
-          <svg lucideBoxes class="size-5 text-blue-600"></svg>
-        </div>
-        <div class="min-w-0 flex-1">
-          <div class="text-xs font-medium text-slate-500">Stock Inicial</div>
-          <div class="text-lg font-bold font-mono text-slate-900 tabular-nums">
-            {{ bal.stockInicial | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
-            <span class="text-xs font-normal text-slate-400">{{
-              art.simboloUnidadMedida || ''
-            }}</span>
+            <span class="text-slate-400">Almacén:</span>
+            <span class="font-medium text-slate-800">{{ art.nombreUbicacion || '-' }}</span>
           </div>
         </div>
-      </div>
 
-      <!-- Total Entradas -->
-      <div
-        class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 flex items-center gap-3.5"
-      >
-        <div
-          class="size-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0"
-        >
-          <svg lucideArrowDownLeft class="size-5 text-emerald-600"></svg>
-        </div>
-        <div class="min-w-0 flex-1">
-          <div class="text-xs font-medium text-emerald-700">Total Entradas</div>
-          <div class="text-lg font-bold font-mono text-emerald-700 tabular-nums">
-            +{{ bal.totalEntradas | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
-            <span class="text-xs font-normal text-emerald-500">{{
-              art.simboloUnidadMedida || ''
-            }}</span>
+        <!-- Balance y Saldo Actual a la Derecha -->
+        <div class="flex flex-wrap items-center gap-x-3.5 sm:gap-x-4 gap-y-1.5 self-start lg:self-auto">
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400">Inicial:</span>
+            <span class="font-mono font-semibold text-slate-700 tabular-nums">
+              {{ bal.stockInicial | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
+            </span>
           </div>
-        </div>
-      </div>
 
-      <!-- Total Salidas -->
-      <div
-        class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 flex items-center gap-3.5"
-      >
-        <div
-          class="size-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0"
-        >
-          <svg lucideArrowUpRight class="size-5 text-amber-600"></svg>
-        </div>
-        <div class="min-w-0 flex-1">
-          <div class="text-xs font-medium text-amber-700">Total Salidas</div>
-          <div class="text-lg font-bold font-mono text-amber-700 tabular-nums">
-            -{{ bal.totalSalidas | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
-            <span class="text-xs font-normal text-amber-500">{{
-              art.simboloUnidadMedida || ''
-            }}</span>
+          <span class="text-slate-200 hidden sm:inline select-none">|</span>
+
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400">Entradas:</span>
+            <span class="font-mono font-semibold text-unsm-green-dark tabular-nums">
+              +{{ bal.totalEntradas | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
+            </span>
           </div>
-        </div>
-      </div>
 
-      <!-- Saldo Actual -->
-      <div
-        class="bg-white p-4 rounded-2xl shadow-xs border border-unsm-green/30 bg-unsm-green-light/30 flex items-center gap-3.5"
-      >
-        <div
-          class="size-10 rounded-xl bg-unsm-green/10 border border-unsm-green/20 flex items-center justify-center shrink-0"
-        >
-          <svg lucideScale class="size-5 text-unsm-green-dark"></svg>
-        </div>
-        <div class="min-w-0 flex-1">
-          <div class="text-xs font-medium text-unsm-green-dark">Saldo Actual</div>
-          <div class="text-lg font-bold font-mono text-unsm-green-dark tabular-nums">
-            {{ bal.saldoActual | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
-            <span class="text-xs font-normal text-unsm-green">{{
-              art.simboloUnidadMedida || ''
-            }}</span>
+          <span class="text-slate-200 hidden sm:inline select-none">|</span>
+
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400">Salidas:</span>
+            <span class="font-mono font-semibold text-amber-600 tabular-nums">
+              -{{ bal.totalSalidas | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
+            </span>
+          </div>
+
+          <!-- Saldo Actual Destacado -->
+          <div
+            class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-unsm-green-light border border-unsm-green/20 text-unsm-green-dark shrink-0 ml-0 sm:ml-1"
+          >
+            <span class="text-[11px] font-semibold">Saldo:</span>
+            <span class="font-mono font-bold text-xs tabular-nums">
+              {{ bal.saldoActual | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
+              <span class="text-[11px] font-normal text-unsm-green font-sans">{{ art.simboloUnidadMedida || '' }}</span>
+            </span>
           </div>
         </div>
       </div>
@@ -385,7 +354,7 @@
               </tr>
             } @else if (errorListado()) {
               <tr>
-                <td colspan="8" class="p-6 text-center text-red-800">
+                <td colspan="8" class="p-6 text-center text-unsm-red">
                   <p role="alert">{{ errorListado() }}</p>
                   <button
                     type="button"
@@ -452,7 +421,7 @@
                   <!-- Entrada (tabular-nums) -->
                   <td class="py-3 px-4 text-right whitespace-nowrap font-mono tabular-nums text-xs">
                     @if (mov.entrada > 0) {
-                      <span class="font-semibold text-emerald-700">
+                      <span class="font-semibold text-unsm-green-dark">
                         +{{ mov.entrada | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
                       </span>
                     } @else {

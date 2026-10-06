@@ -1,6 +1,5 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
@@ -14,15 +13,14 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import {
-  LucideArrowDownLeft,
-  LucideArrowUpRight,
-  LucideBoxes,
   LucideCalendar,
   LucideClipboardList,
+  LucideFileSpreadsheet,
+  LucideFileText,
   LucideLoader2,
   LucidePackage,
   LucideRefreshCw,
-  LucideScale,
+  LucideRotateCcw,
   LucideSearch,
   LucideUser,
   LucideX,
@@ -43,8 +41,6 @@ import { KardexService } from '../../services';
 
 @Component({
   selector: 'app-kardex-articulo-tab',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     DatePipe,
@@ -52,16 +48,15 @@ import { KardexService } from '../../services';
     PaginationComponent,
     LucideSearch,
     LucideRefreshCw,
+    LucideRotateCcw,
+    LucideFileSpreadsheet,
+    LucideFileText,
     LucidePackage,
     LucideCalendar,
     LucideUser,
     LucideLoader2,
     LucideClipboardList,
     LucideX,
-    LucideBoxes,
-    LucideArrowDownLeft,
-    LucideArrowUpRight,
-    LucideScale,
   ],
   templateUrl: './kardex-articulo-tab.component.html',
 })
@@ -305,12 +300,10 @@ export class KardexArticuloTabComponent implements OnInit {
     }
   }
 
-  onLimpiarFiltros(): void {
-    this.periodoFiltro.set('todos');
-    this.fechaDesde.set('');
-    this.fechaHasta.set('');
-    this.paginaActual.set(0);
-    this.cargarKardexArticulo();
+  onRecargar(): void {
+    if (this.articuloSeleccionado()?.id) {
+      this.cargarKardexArticulo();
+    }
   }
 
   limpiarArticuloSeleccionado(): void {

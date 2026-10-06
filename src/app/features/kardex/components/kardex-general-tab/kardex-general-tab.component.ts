@@ -1,6 +1,5 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
   Component,
   DestroyRef,
   inject,
@@ -14,6 +13,8 @@ import {
   LucideBookOpen,
   LucideCalendar,
   LucideClipboardList,
+  LucideFileSpreadsheet,
+  LucideFileText,
   LucideLoader2,
   LucideRefreshCw,
   LucideSearch,
@@ -32,8 +33,6 @@ import { KardexService } from '../../services';
 
 @Component({
   selector: 'app-kardex-general-tab',
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     DatePipe,
@@ -41,6 +40,8 @@ import { KardexService } from '../../services';
     PaginationComponent,
     LucideSearch,
     LucideRefreshCw,
+    LucideFileSpreadsheet,
+    LucideFileText,
     LucideCalendar,
     LucideUser,
     LucideLoader2,

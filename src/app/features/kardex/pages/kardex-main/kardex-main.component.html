@@ -9,6 +9,9 @@
       </div>
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-slate-900">Kardex</h1>
+        <p class="text-sm text-slate-500 mt-0.5">
+          Control de movimientos, auditoría de existencias y saldos de almacén
+        </p>
       </div>
     </div>
 
@@ -20,8 +23,8 @@
         type="button"
         (click)="cambiarPestana('general')"
         class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
-        [class.bg-white]="activeTab() === 'general'"
-        [class.text-slate-900]="activeTab() === 'general'"
+        [class.bg-unsm-green]="activeTab() === 'general'"
+        [class.text-white]="activeTab() === 'general'"
         [class.shadow-2xs]="activeTab() === 'general'"
         [class.text-slate-600]="activeTab() !== 'general'"
         [class.hover:text-slate-900]="activeTab() !== 'general'"
@@ -29,7 +32,8 @@
         <svg
           lucideClipboardList
           class="size-3.5"
-          [class.text-unsm-green]="activeTab() === 'general'"
+          [class.text-white]="activeTab() === 'general'"
+          [class.text-slate-500]="activeTab() !== 'general'"
         ></svg>
         <span>General</span>
       </button>
@@ -38,8 +42,8 @@
         type="button"
         (click)="cambiarPestana('articulo')"
         class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
-        [class.bg-white]="activeTab() === 'articulo'"
-        [class.text-slate-900]="activeTab() === 'articulo'"
+        [class.bg-unsm-green]="activeTab() === 'articulo'"
+        [class.text-white]="activeTab() === 'articulo'"
         [class.shadow-2xs]="activeTab() === 'articulo'"
         [class.text-slate-600]="activeTab() !== 'articulo'"
         [class.hover:text-slate-900]="activeTab() !== 'articulo'"
@@ -47,7 +51,8 @@
         <svg
           lucideBookOpen
           class="size-3.5"
-          [class.text-unsm-green]="activeTab() === 'articulo'"
+          [class.text-white]="activeTab() === 'articulo'"
+          [class.text-slate-500]="activeTab() !== 'articulo'"
         ></svg>
         <span>Por Artículo</span>
       </button>

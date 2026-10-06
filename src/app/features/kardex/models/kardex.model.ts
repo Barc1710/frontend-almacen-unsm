@@ -56,7 +56,7 @@ export const TIPO_MOVIMIENTO_BADGES: Record<TipoMovimiento, TipoMovimientoBadgeC
   },
   INGRESO: {
     label: 'Ingreso',
-    badgeClass: 'bg-emerald-50 text-emerald-700',
+    badgeClass: 'bg-unsm-green-light text-unsm-green-dark',
   },
   EGRESO: {
     label: 'Egreso',
@@ -64,7 +64,7 @@ export const TIPO_MOVIMIENTO_BADGES: Record<TipoMovimiento, TipoMovimientoBadgeC
   },
   REVERSO_EGRESO: {
     label: 'Reverso Egreso',
-    badgeClass: 'bg-cyan-50 text-cyan-700',
+    badgeClass: 'bg-unsm-cyan/10 text-unsm-cyan',
   },
   REVERSO_INGRESO: {
     label: 'Reverso Ingreso',
@@ -76,6 +76,6 @@ export const TIPO_MOVIMIENTO_BADGES: Record<TipoMovimiento, TipoMovimientoBadgeC
   },
   BAJA: {
     label: 'Baja',
-    badgeClass: 'bg-rose-50 text-rose-700',
+    badgeClass: 'bg-unsm-red/10 text-unsm-red',
   },
 };
