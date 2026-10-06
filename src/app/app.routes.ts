@@ -49,6 +49,12 @@ export const routes: Routes = [
       { path: 'ingresos', canActivate: [moduleGuard('INGRESOS')], loadComponent: loadIngresos },
       { path: 'egresos', canActivate: [moduleGuard('EGRESOS')], loadComponent: loadEgresos },
       { path: 'despachos', pathMatch: 'full', redirectTo: 'egresos' },
+      {
+        path: 'kardex',
+        canActivate: [moduleGuard('KARDEX')],
+        loadChildren: () =>
+          import('./features/kardex/kardex.routes').then((m) => m.KARDEX_ROUTES),
+      },
       { path: 'cambiar-clave', pathMatch: 'full', redirectTo: '' },
       // Rutas dinámicas universales para módulos y submódulos cargados desde la base de datos
       { path: ':modulo', canActivate: [moduleGuard()], loadComponent: loadDashboard },

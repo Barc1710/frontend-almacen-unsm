@@ -1,0 +1,516 @@
+<div class="space-y-6">
+  <!-- Barra de Filtros y Búsqueda (Patrón unificado de Ingresos / Egresos) -->
+  <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 space-y-3">
+    <!-- Fila 1: Buscador predictivo de artículos y botón de recarga -->
+    <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+      <!-- Buscador Predictivo -->
+      <div class="relative flex-1 min-w-[200px]">
+        <svg
+          lucideSearch
+          class="size-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+        ></svg>
+        <input
+          type="text"
+          [ngModel]="busquedaQuery()"
+          (ngModelChange)="onInputBusqueda($event)"
+          (blur)="cerrarDropdown()"
+          placeholder="Buscar artículo por código o descripción..."
+          aria-label="Buscar artículo para Kardex"
+          class="w-full h-10 pl-10 pr-10 rounded-xl border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
+        />
+
+        @if (buscandoPredictivo()) {
+          <svg
+            lucideLoader2
+            class="size-4 text-unsm-green absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin"
+          ></svg>
+        } @else if (busquedaQuery().trim().length > 0) {
+          <button
+            type="button"
+            (click)="onInputBusqueda('')"
+            class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+          >
+            <svg lucideX class="size-4"></svg>
+          </button>
+        }
+
+        <!-- Dropdown de resultados predictivos -->
+        @if (dropdownAbierto()) {
+          <div
+            class="absolute left-0 right-0 mt-1.5 bg-white rounded-xl shadow-lg border border-slate-200 z-30 max-h-72 overflow-y-auto divide-y divide-slate-100"
+          >
+            @if (resultadosBusqueda().length === 0 && !buscandoPredictivo()) {
+              <div class="p-4 text-center text-xs text-slate-500">
+                No se encontraron artículos con "{{ busquedaQuery() }}"
+              </div>
+            } @else {
+              @for (art of resultadosBusqueda(); track art.id) {
+                <div
+                  (mousedown)="seleccionarArticulo(art)"
+                  class="p-3 hover:bg-slate-50 cursor-pointer transition-colors flex items-center justify-between gap-3 text-left"
+                >
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2">
+                      <span class="font-mono text-xs font-semibold text-slate-900">
+                        {{ art.codigo }}
+                      </span>
+                      <span class="text-xs text-slate-400 font-medium">
+                        {{ art.simboloUnidadMedida || 'UND' }}
+                      </span>
+                    </div>
+                    <p class="text-sm font-medium text-slate-800 truncate mt-0.5">
+                      {{ art.descripcion }}
+                    </p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <span class="text-xs font-mono font-semibold text-slate-700 tabular-nums">
+                      Stock: {{ art.saldo | number : (art.permiteDecimales ? '1.2-2' : '1.0-0') }}
+                    </span>
+                    <div class="text-[11px] text-slate-400">
+                      {{ art.activo ? 'Operativo' : 'Inactivo' }}
+                    </div>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          type="button"
+          (click)="onLimpiarFiltros()"
+          title="Actualizar / Limpiar filtros"
+          aria-label="Actualizar / Limpiar filtros"
+          class="p-2.5 h-10 w-10 flex items-center justify-center rounded-xl bg-unsm-yellow hover:brightness-95 active:scale-[0.98] text-slate-900 border border-yellow-300 transition-all shadow-xs cursor-pointer outline-none focus:ring-2 focus:ring-unsm-yellow/40"
+        >
+          <svg
+            lucideRefreshCw
+            class="size-4 text-slate-900"
+            [class.animate-spin]="cargandoKardex()"
+          ></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Fila 2: Período Temporal (En esta sección 'Todo el tiempo' es por defecto) -->
+    @if (articuloSeleccionado()) {
+      <div
+        class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-100"
+      >
+        <!-- Selector de Período con Botones Segmentados -->
+        <div
+          class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80 self-start sm:self-auto"
+        >
+          <button
+            type="button"
+            (click)="onCambioPeriodo('todos')"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+            [class.bg-white]="periodoFiltro() === 'todos'"
+            [class.text-slate-900]="periodoFiltro() === 'todos'"
+            [class.shadow-2xs]="periodoFiltro() === 'todos'"
+            [class.text-slate-600]="periodoFiltro() !== 'todos'"
+            [class.hover:text-slate-900]="periodoFiltro() !== 'todos'"
+          >
+            Todo el tiempo
+          </button>
+
+          <button
+            type="button"
+            (click)="onCambioPeriodo('hoy')"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+            [class.bg-white]="periodoFiltro() === 'hoy'"
+            [class.text-slate-900]="periodoFiltro() === 'hoy'"
+            [class.shadow-2xs]="periodoFiltro() === 'hoy'"
+            [class.text-slate-600]="periodoFiltro() !== 'hoy'"
+            [class.hover:text-slate-900]="periodoFiltro() !== 'hoy'"
+          >
+            Hoy
+          </button>
+
+          <button
+            type="button"
+            (click)="onCambioPeriodo('intervalo')"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+            [class.bg-white]="periodoFiltro() === 'intervalo'"
+            [class.text-slate-900]="periodoFiltro() === 'intervalo'"
+            [class.shadow-2xs]="periodoFiltro() === 'intervalo'"
+            [class.text-slate-600]="periodoFiltro() !== 'intervalo'"
+            [class.hover:text-slate-900]="periodoFiltro() !== 'intervalo'"
+          >
+            Rango de fechas
+          </button>
+        </div>
+
+        <!-- Cuadro de Fechas Fijo y Estable -->
+        <div
+          class="flex items-center gap-2.5 h-9 px-3 rounded-xl border border-slate-300 bg-white text-xs text-slate-700 transition-all focus-within:ring-2 focus-within:ring-unsm-green/20 focus-within:border-unsm-green self-stretch sm:self-auto shadow-2xs"
+          [class.opacity-40]="periodoFiltro() !== 'intervalo'"
+          [class.pointer-events-none]="periodoFiltro() !== 'intervalo'"
+        >
+          <label
+            for="fechaDesdeArticulo"
+            class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer"
+            >Desde:</label
+          >
+          <input
+            id="fechaDesdeArticulo"
+            type="date"
+            [ngModel]="fechaDesde()"
+            (ngModelChange)="fechaDesde.set($event); onCambioFechas()"
+            (click)="abrirSelectorFecha($event)"
+            [disabled]="periodoFiltro() !== 'intervalo'"
+            aria-label="Fecha inicial kardex"
+            class="h-7 px-1.5 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
+          />
+          <span class="text-slate-300 select-none font-light">|</span>
+          <label
+            for="fechaHastaArticulo"
+            class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer"
+            >Hasta:</label
+          >
+          <input
+            id="fechaHastaArticulo"
+            type="date"
+            [ngModel]="fechaHasta()"
+            (ngModelChange)="fechaHasta.set($event); onCambioFechas()"
+            (click)="abrirSelectorFecha($event)"
+            [disabled]="periodoFiltro() !== 'intervalo'"
+            aria-label="Fecha final kardex"
+            class="h-7 px-1.5 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
+          />
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Estado Vacío Asistido (cuando no hay producto seleccionado) -->
+  @if (!articuloSeleccionado()) {
+    <div
+      class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-12 text-center max-w-md mx-auto space-y-3"
+    >
+      <div
+        class="size-12 rounded-2xl bg-unsm-green/10 text-unsm-green flex items-center justify-center mx-auto border border-unsm-green/20"
+      >
+        <svg lucidePackage class="size-6"></svg>
+      </div>
+      <h3 class="text-base font-bold text-slate-900">Seleccione un artículo</h3>
+      <p class="text-xs text-slate-500">
+        Busque un bien o insumo en el buscador superior o haga clic en "Auditar" desde la pestaña
+        General para consultar su libro mayor contable.
+      </p>
+    </div>
+  } @else {
+    <!-- Vista con Artículo Seleccionado -->
+    @let art = articuloSeleccionado()!;
+
+    <!-- Cabecera del Producto (Código normal, sin recuadro y con datos complementarios) -->
+    <div class="bg-white p-4.5 rounded-2xl shadow-xs border border-slate-200/80 space-y-3">
+      <div>
+        <div class="flex flex-wrap items-center gap-2 text-xs font-mono text-slate-500 mb-1">
+          <span class="font-semibold text-slate-700">Código:</span>
+          <span class="text-slate-900 font-bold">{{ art.codigo }}</span>
+          <span class="text-slate-300">•</span>
+          <span class="font-semibold text-slate-700">Unidad:</span>
+          <span class="text-slate-900">{{ art.simboloUnidadMedida || 'UND' }}</span>
+          <span class="text-slate-300">•</span>
+          <span
+            class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold"
+            [class.bg-emerald-50]="art.activo"
+            [class.text-emerald-700]="art.activo"
+            [class.bg-slate-100]="!art.activo"
+            [class.text-slate-600]="!art.activo"
+          >
+            {{ art.activo ? 'Operativo' : 'Inactivo' }}
+          </span>
+        </div>
+        <h2 class="text-lg font-bold text-slate-900">
+          {{ art.descripcion }}
+        </h2>
+      </div>
+
+      <!-- Datos Complementarios del Producto -->
+      <div
+        class="flex flex-wrap items-center gap-y-2 gap-x-5 pt-3 border-t border-slate-100 text-xs text-slate-600"
+      >
+        @if (art.nombreFamilia) {
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400">Familia:</span>
+            <span class="font-medium text-slate-800">{{ art.nombreFamilia }}</span>
+          </div>
+        }
+        @if (art.nombreMarca) {
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400">Marca:</span>
+            <span class="font-medium text-slate-800">{{ art.nombreMarca }}</span>
+          </div>
+        }
+        @if (art.nombreUbicacion) {
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400">Ubicación:</span>
+            <span class="font-medium text-slate-800">{{ art.nombreUbicacion }}</span>
+          </div>
+        }
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-400">Stock en Sistema:</span>
+          <span class="font-mono font-bold text-slate-900 tabular-nums">
+            {{ art.saldo | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
+            {{ art.simboloUnidadMedida || '' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjetas de Balance del Periodo (KPIs con Iconos y Estilos Mejorados) -->
+    @let bal = balance();
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <!-- Stock Inicial -->
+      <div
+        class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 flex items-center gap-3.5"
+      >
+        <div
+          class="size-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0"
+        >
+          <svg lucideBoxes class="size-5 text-blue-600"></svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="text-xs font-medium text-slate-500">Stock Inicial</div>
+          <div class="text-lg font-bold font-mono text-slate-900 tabular-nums">
+            {{ bal.stockInicial | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
+            <span class="text-xs font-normal text-slate-400">{{
+              art.simboloUnidadMedida || ''
+            }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Entradas -->
+      <div
+        class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 flex items-center gap-3.5"
+      >
+        <div
+          class="size-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0"
+        >
+          <svg lucideArrowDownLeft class="size-5 text-emerald-600"></svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="text-xs font-medium text-emerald-700">Total Entradas</div>
+          <div class="text-lg font-bold font-mono text-emerald-700 tabular-nums">
+            +{{ bal.totalEntradas | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
+            <span class="text-xs font-normal text-emerald-500">{{
+              art.simboloUnidadMedida || ''
+            }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Salidas -->
+      <div
+        class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 flex items-center gap-3.5"
+      >
+        <div
+          class="size-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0"
+        >
+          <svg lucideArrowUpRight class="size-5 text-amber-600"></svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="text-xs font-medium text-amber-700">Total Salidas</div>
+          <div class="text-lg font-bold font-mono text-amber-700 tabular-nums">
+            -{{ bal.totalSalidas | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
+            <span class="text-xs font-normal text-amber-500">{{
+              art.simboloUnidadMedida || ''
+            }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Saldo Actual -->
+      <div
+        class="bg-white p-4 rounded-2xl shadow-xs border border-unsm-green/30 bg-unsm-green-light/30 flex items-center gap-3.5"
+      >
+        <div
+          class="size-10 rounded-xl bg-unsm-green/10 border border-unsm-green/20 flex items-center justify-center shrink-0"
+        >
+          <svg lucideScale class="size-5 text-unsm-green-dark"></svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="text-xs font-medium text-unsm-green-dark">Saldo Actual</div>
+          <div class="text-lg font-bold font-mono text-unsm-green-dark tabular-nums">
+            {{ bal.saldoActual | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
+            <span class="text-xs font-normal text-unsm-green">{{
+              art.simboloUnidadMedida || ''
+            }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla Cronológica de Movimientos (Ordenado con el último cambio primero) -->
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
+      <div class="overflow-x-auto min-h-80">
+        <table class="w-full text-left text-sm text-slate-600 border-collapse">
+          <thead
+            class="bg-slate-50/80 text-xs font-semibold text-slate-700 border-b border-slate-200"
+          >
+            <tr>
+              <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700 w-12 text-center">
+                #
+              </th>
+              <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">N° Comprobante</th>
+              <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Fecha</th>
+              <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">Tipo</th>
+              <th scope="col" class="py-3.5 px-4 text-right font-semibold text-slate-700">
+                Entrada
+              </th>
+              <th scope="col" class="py-3.5 px-4 text-right font-semibold text-slate-700">
+                Salida
+              </th>
+              <th scope="col" class="py-3.5 px-4 text-right font-semibold text-slate-700">
+                Saldo Resultante
+              </th>
+              <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Responsable</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @if (cargandoKardex()) {
+              <tr>
+                <td colspan="8" class="py-16 text-center text-slate-500">
+                  <div class="flex flex-col items-center justify-center gap-2">
+                    <svg lucideLoader2 class="size-8 text-unsm-green animate-spin"></svg>
+                    <p class="text-sm font-medium">Cargando movimientos de Kardex...</p>
+                  </div>
+                </td>
+              </tr>
+            } @else if (errorListado()) {
+              <tr>
+                <td colspan="8" class="p-6 text-center text-red-800">
+                  <p role="alert">{{ errorListado() }}</p>
+                  <button
+                    type="button"
+                    class="mt-2 underline font-semibold cursor-pointer"
+                    (click)="cargarKardexArticulo()"
+                  >
+                    Reintentar
+                  </button>
+                </td>
+              </tr>
+            } @else if (movimientos().length === 0) {
+              <tr>
+                <td colspan="8" class="py-16 text-center text-slate-500">
+                  <div class="flex flex-col items-center justify-center gap-2">
+                    <div
+                      class="size-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-1"
+                    >
+                      <svg lucideClipboardList class="size-6"></svg>
+                    </div>
+                    <p class="text-sm font-semibold text-slate-800">Sin movimientos registrados</p>
+                    <p class="text-xs text-slate-400 max-w-sm">
+                      No existen movimientos de entrada o salida para este artículo en el periodo
+                      indicado.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+              @for (mov of movimientos(); track mov.id; let idx = $index) {
+                <tr class="hover:bg-slate-50/60 transition-colors">
+                  <!-- Índice correlativo -->
+                  <td class="py-3 px-4 text-center font-mono text-xs text-slate-400">
+                    {{ paginaActual() * tamanioPagina() + idx + 1 }}
+                  </td>
+
+                  <!-- N° Comprobante -->
+                  <td class="py-3 px-4 font-mono font-semibold text-slate-900 whitespace-nowrap">
+                    {{ mov.documentoReferencia || '-' }}
+                  </td>
+
+                  <!-- Fecha y Hora -->
+                  <td class="py-3 px-4 whitespace-nowrap text-xs">
+                    <div class="flex items-center gap-1.5 text-slate-700">
+                      <svg lucideCalendar class="size-3.5 text-slate-400 shrink-0"></svg>
+                      <span>{{ mov.fecha | date : 'dd/MM/yyyy' }}</span>
+                    </div>
+                    @if (mov.fecha) {
+                      <p class="text-[11px] font-mono text-slate-400 mt-0.5">
+                        {{ mov.fecha | date : 'HH:mm' }}
+                      </p>
+                    }
+                  </td>
+
+                  <!-- Tipo de Movimiento Badge -->
+                  <td class="py-3 px-4 text-center whitespace-nowrap">
+                    @let badge = obtenerBadge(mov.tipoMovimiento);
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ badge.badgeClass }}"
+                    >
+                      {{ badge.label }}
+                    </span>
+                  </td>
+
+                  <!-- Entrada (tabular-nums) -->
+                  <td class="py-3 px-4 text-right whitespace-nowrap font-mono tabular-nums text-xs">
+                    @if (mov.entrada > 0) {
+                      <span class="font-semibold text-emerald-700">
+                        +{{ mov.entrada | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
+                      </span>
+                    } @else {
+                      <span class="text-slate-300">-</span>
+                    }
+                  </td>
+
+                  <!-- Salida (tabular-nums) -->
+                  <td class="py-3 px-4 text-right whitespace-nowrap font-mono tabular-nums text-xs">
+                    @if (mov.salida > 0) {
+                      <span class="font-semibold text-amber-700">
+                        -{{ mov.salida | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
+                      </span>
+                    } @else {
+                      <span class="text-slate-300">-</span>
+                    }
+                  </td>
+
+                  <!-- Saldo Resultante (tabular-nums) -->
+                  <td
+                    class="py-3 px-4 text-right whitespace-nowrap font-mono tabular-nums text-xs font-bold text-slate-900"
+                  >
+                    {{ mov.saldoResultante | number : (permiteDecimales() ? '1.2-2' : '1.0-0') }}
+                  </td>
+
+                  <!-- Responsable -->
+                  <td class="py-3 px-4 whitespace-nowrap text-xs">
+                    <div
+                      class="flex items-center gap-1.5 text-slate-700"
+                      [title]="mov.usuarioResponsable"
+                    >
+                      <svg lucideUser class="size-3.5 text-slate-400 shrink-0"></svg>
+                      <span class="font-medium text-slate-800 truncate max-w-[150px]">
+                        {{ mov.usuarioResponsable || 'Almacén Central' }}
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <div class="p-3 border-t border-slate-200/80 bg-slate-50/50">
+        <app-pagination
+          [paginaActual]="paginaActual()"
+          [totalPaginas]="totalPaginas()"
+          [totalElementos]="totalElementos()"
+          [tamanioPagina]="tamanioPagina()"
+          [cargando]="cargandoKardex()"
+          etiqueta="movimientos"
+          colorActivo="green"
+          (paginaChange)="cambiarPagina($event)"
+          (tamanioChange)="cambiarTamanio($event)"
+        />
+      </div>
+    </div>
+  }
+</div>

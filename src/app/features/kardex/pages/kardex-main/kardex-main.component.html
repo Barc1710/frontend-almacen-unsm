@@ -1,0 +1,68 @@
+<div class="space-y-6">
+  <!-- Cabecera del Módulo -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex items-center gap-3.5">
+      <div
+        class="size-12 rounded-2xl bg-unsm-green/10 text-unsm-green flex items-center justify-center shrink-0 border border-unsm-green/20 shadow-2xs"
+      >
+        <svg lucideClipboardList class="size-6"></svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Kardex</h1>
+      </div>
+    </div>
+
+    <!-- Selector de Pestañas Segmentado (General / Por Artículo) -->
+    <div
+      class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80 self-start sm:self-auto"
+    >
+      <button
+        type="button"
+        (click)="cambiarPestana('general')"
+        class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+        [class.bg-white]="activeTab() === 'general'"
+        [class.text-slate-900]="activeTab() === 'general'"
+        [class.shadow-2xs]="activeTab() === 'general'"
+        [class.text-slate-600]="activeTab() !== 'general'"
+        [class.hover:text-slate-900]="activeTab() !== 'general'"
+      >
+        <svg
+          lucideClipboardList
+          class="size-3.5"
+          [class.text-unsm-green]="activeTab() === 'general'"
+        ></svg>
+        <span>General</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="cambiarPestana('articulo')"
+        class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+        [class.bg-white]="activeTab() === 'articulo'"
+        [class.text-slate-900]="activeTab() === 'articulo'"
+        [class.shadow-2xs]="activeTab() === 'articulo'"
+        [class.text-slate-600]="activeTab() !== 'articulo'"
+        [class.hover:text-slate-900]="activeTab() !== 'articulo'"
+      >
+        <svg
+          lucideBookOpen
+          class="size-3.5"
+          [class.text-unsm-green]="activeTab() === 'articulo'"
+        ></svg>
+        <span>Por Artículo</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Contenido Dinámico de la Pestaña Activa -->
+  @if (activeTab() === 'general') {
+    <app-kardex-general-tab
+      (auditarArticulo)="onAuditarArticuloDesdeGeneral($event)"
+    />
+  } @else if (activeTab() === 'articulo') {
+    <app-kardex-articulo-tab
+      [articuloId]="selectedArticuloId()"
+      (articuloSeleccionadoChange)="onArticuloSeleccionadoEnTab2($event)"
+    />
+  }
+</div>

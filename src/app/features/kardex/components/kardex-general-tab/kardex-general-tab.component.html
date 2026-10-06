@@ -1,0 +1,335 @@
+<div class="space-y-6">
+  <!-- Barra de Filtros (Patrón estandarizado de Ingresos / Egresos) -->
+  <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 space-y-3">
+    <!-- Fila 1: Búsqueda, Tipo de Movimiento y Acciones -->
+    <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+      <!-- Búsqueda rápida -->
+      <div class="relative flex-1 min-w-[200px]">
+        <svg
+          lucideSearch
+          class="size-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+        ></svg>
+        <input
+          type="text"
+          [ngModel]="filtroTexto()"
+          (ngModelChange)="filtroTexto.set($event)"
+          (keyup.enter)="onBuscarTexto()"
+          placeholder="Buscar por artículo o N° comprobante..."
+          aria-label="Buscar movimientos de Kardex"
+          class="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
+        />
+      </div>
+
+      <!-- Selector de Tipo de Movimiento -->
+      <div class="w-full md:w-64">
+        <select
+          [ngModel]="tipoMovimientoFiltro()"
+          (ngModelChange)="onCambioTipoMovimiento($event)"
+          aria-label="Filtrar por tipo de movimiento"
+          class="w-full h-10 px-3 rounded-xl border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+        >
+          <option value="TODOS">Todos los tipos de movimiento</option>
+          <option value="SALDO_INICIAL">Saldo Inicial</option>
+          <option value="INGRESO">Ingreso</option>
+          <option value="EGRESO">Egreso</option>
+          <option value="REVERSO_EGRESO">Reverso Egreso</option>
+          <option value="REVERSO_INGRESO">Reverso Ingreso</option>
+          <option value="AJUSTE">Ajuste</option>
+          <option value="BAJA">Dado de baja</option>
+        </select>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          type="button"
+          (click)="onBuscarTexto()"
+          class="px-4 h-10 rounded-xl bg-unsm-cyan hover:brightness-95 active:scale-[0.98] text-white text-sm font-semibold transition-all shadow-xs cursor-pointer flex items-center gap-2 outline-none focus:ring-2 focus:ring-unsm-cyan/40"
+        >
+          <svg lucideSearch class="size-4"></svg>
+          <span>Buscar</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="onLimpiarFiltros()"
+          title="Limpiar filtros"
+          aria-label="Limpiar filtros"
+          class="p-2.5 h-10 w-10 flex items-center justify-center rounded-xl bg-unsm-yellow hover:brightness-95 active:scale-[0.98] text-slate-900 border border-yellow-300 transition-all shadow-xs cursor-pointer outline-none focus:ring-2 focus:ring-unsm-yellow/40"
+        >
+          <svg
+            lucideRefreshCw
+            class="size-4 text-slate-900"
+            [class.animate-spin]="cargando()"
+          ></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Fila 2: Período Temporal Fijo y Estable -->
+    <div
+      class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-100"
+    >
+      <!-- Selector de Período con Botones Segmentados -->
+      <div
+        class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80 self-start sm:self-auto"
+      >
+        <button
+          type="button"
+          (click)="onCambioPeriodo('hoy')"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+          [class.bg-white]="periodoFiltro() === 'hoy'"
+          [class.text-slate-900]="periodoFiltro() === 'hoy'"
+          [class.shadow-2xs]="periodoFiltro() === 'hoy'"
+          [class.text-slate-600]="periodoFiltro() !== 'hoy'"
+          [class.hover:text-slate-900]="periodoFiltro() !== 'hoy'"
+        >
+          Hoy
+        </button>
+
+        <button
+          type="button"
+          (click)="onCambioPeriodo('todos')"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+          [class.bg-white]="periodoFiltro() === 'todos'"
+          [class.text-slate-900]="periodoFiltro() === 'todos'"
+          [class.shadow-2xs]="periodoFiltro() === 'todos'"
+          [class.text-slate-600]="periodoFiltro() !== 'todos'"
+          [class.hover:text-slate-900]="periodoFiltro() !== 'todos'"
+        >
+          Todo el tiempo
+        </button>
+
+        <button
+          type="button"
+          (click)="onCambioPeriodo('intervalo')"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+          [class.bg-white]="periodoFiltro() === 'intervalo'"
+          [class.text-slate-900]="periodoFiltro() === 'intervalo'"
+          [class.shadow-2xs]="periodoFiltro() === 'intervalo'"
+          [class.text-slate-600]="periodoFiltro() !== 'intervalo'"
+          [class.hover:text-slate-900]="periodoFiltro() !== 'intervalo'"
+        >
+          Rango de fechas
+        </button>
+      </div>
+
+      <!-- Cuadro de Fechas Fijo y Estable -->
+      <div
+        class="flex items-center gap-2.5 h-9 px-3 rounded-xl border border-slate-300 bg-white text-xs text-slate-700 transition-all focus-within:ring-2 focus-within:ring-unsm-green/20 focus-within:border-unsm-green self-stretch sm:self-auto shadow-2xs"
+        [class.opacity-40]="periodoFiltro() !== 'intervalo'"
+        [class.pointer-events-none]="periodoFiltro() !== 'intervalo'"
+      >
+        <label
+          for="fechaDesdeFiltro"
+          class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer"
+          >Desde:</label
+        >
+        <input
+          id="fechaDesdeFiltro"
+          type="date"
+          [ngModel]="fechaDesde()"
+          (ngModelChange)="fechaDesde.set($event); onCambioFechas()"
+          (click)="abrirSelectorFecha($event)"
+          [disabled]="periodoFiltro() !== 'intervalo'"
+          aria-label="Fecha inicial"
+          class="h-7 px-1.5 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
+        />
+        <span class="text-slate-300 select-none font-light">|</span>
+        <label
+          for="fechaHastaFiltro"
+          class="text-slate-400 font-medium text-[11px] shrink-0 select-none cursor-pointer"
+          >Hasta:</label
+        >
+        <input
+          id="fechaHastaFiltro"
+          type="date"
+          [ngModel]="fechaHasta()"
+          (ngModelChange)="fechaHasta.set($event); onCambioFechas()"
+          (click)="abrirSelectorFecha($event)"
+          [disabled]="periodoFiltro() !== 'intervalo'"
+          aria-label="Fecha final"
+          class="h-7 px-1.5 py-0 bg-transparent text-slate-800 cursor-pointer text-xs font-medium outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:my-auto [&::-webkit-calendar-picker-indicator]:align-middle [&::-webkit-calendar-picker-indicator]:opacity-80"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Movimientos de Kardex (Estilo exacto de Ingresos / Egresos) -->
+  <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
+    <div class="overflow-x-auto min-h-80">
+      <table class="w-full text-left text-sm text-slate-600 border-collapse">
+        <thead
+          class="bg-slate-50/80 text-xs font-semibold text-slate-700 border-b border-slate-200"
+        >
+          <tr>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">N° Comprobante</th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Artículo</th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Fecha</th>
+            <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">Tipo</th>
+            <th scope="col" class="py-3.5 px-4 text-right font-semibold text-slate-700">Entrada</th>
+            <th scope="col" class="py-3.5 px-4 text-right font-semibold text-slate-700">Salida</th>
+            <th scope="col" class="py-3.5 px-4 text-right font-semibold text-slate-700">Saldo</th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Responsable</th>
+            <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @if (cargando()) {
+            <tr>
+              <td colspan="9" class="py-16 text-center text-slate-500">
+                <div class="flex flex-col items-center justify-center gap-2">
+                  <svg lucideLoader2 class="size-8 text-unsm-green animate-spin"></svg>
+                  <p class="text-sm font-medium">Cargando movimientos de Kardex...</p>
+                </div>
+              </td>
+            </tr>
+          } @else if (errorListado()) {
+            <tr>
+              <td colspan="9" class="p-6 text-center text-red-800">
+                <p role="alert">{{ errorListado() }}</p>
+                <button
+                  type="button"
+                  class="mt-2 underline font-semibold cursor-pointer"
+                  (click)="cargarMovimientos()"
+                >
+                  Reintentar
+                </button>
+              </td>
+            </tr>
+          } @else if (movimientos().length === 0) {
+            <tr>
+              <td colspan="9" class="py-16 text-center text-slate-500">
+                <div class="flex flex-col items-center justify-center gap-2">
+                  <div
+                    class="size-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mb-1"
+                  >
+                    <svg lucideClipboardList class="size-6"></svg>
+                  </div>
+                  <p class="text-sm font-semibold text-slate-800">No se encontraron movimientos</p>
+                  <p class="text-xs text-slate-400 max-w-sm">
+                    No existen registros de kardex con los filtros aplicados.
+                  </p>
+                </div>
+              </td>
+            </tr>
+          } @else {
+            @for (mov of movimientos(); track mov.id) {
+              <tr class="hover:bg-slate-50/60 transition-colors">
+                <!-- N° Comprobante -->
+                <td class="py-3 px-4 font-mono font-semibold text-slate-900 whitespace-nowrap">
+                  {{ mov.documentoReferencia || '-' }}
+                </td>
+
+                <!-- Artículo (descripción + código correlativo) -->
+                <td class="py-3 px-4 min-w-56">
+                  <p
+                    class="font-medium text-slate-800 line-clamp-1"
+                    [title]="mov.descripcionArticulo"
+                  >
+                    {{ mov.descripcionArticulo }}
+                  </p>
+                  <p class="text-xs text-slate-400 font-mono mt-0.5">
+                    {{ mov.codigoArticulo }}
+                  </p>
+                </td>
+
+                <!-- Fecha y Hora -->
+                <td class="py-3 px-4 whitespace-nowrap text-xs">
+                  <div class="flex items-center gap-1.5 text-slate-700">
+                    <svg lucideCalendar class="size-3.5 text-slate-400 shrink-0"></svg>
+                    <span>{{ mov.fecha | date : 'dd/MM/yyyy' }}</span>
+                  </div>
+                  @if (mov.fecha) {
+                    <p class="text-[11px] font-mono text-slate-400 mt-0.5">
+                      {{ mov.fecha | date : 'HH:mm' }}
+                    </p>
+                  }
+                </td>
+
+                <!-- Tipo de Movimiento Badge -->
+                <td class="py-3 px-4 text-center whitespace-nowrap">
+                  @let badge = obtenerBadge(mov.tipoMovimiento);
+                  <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ badge.badgeClass }}"
+                  >
+                    {{ badge.label }}
+                  </span>
+                </td>
+
+                <!-- Entrada (tabular-nums) -->
+                <td class="py-3 px-4 text-right whitespace-nowrap font-mono tabular-nums text-xs">
+                  @if (mov.entrada > 0) {
+                    <span class="font-semibold text-emerald-700">
+                      +{{ mov.entrada | number : (mov.permiteDecimales ? '1.2-2' : '1.0-0') }}
+                    </span>
+                  } @else {
+                    <span class="text-slate-300">-</span>
+                  }
+                </td>
+
+                <!-- Salida (tabular-nums) -->
+                <td class="py-3 px-4 text-right whitespace-nowrap font-mono tabular-nums text-xs">
+                  @if (mov.salida > 0) {
+                    <span class="font-semibold text-amber-700">
+                      -{{ mov.salida | number : (mov.permiteDecimales ? '1.2-2' : '1.0-0') }}
+                    </span>
+                  } @else {
+                    <span class="text-slate-300">-</span>
+                  }
+                </td>
+
+                <!-- Saldo Resultante (tabular-nums) -->
+                <td class="py-3 px-4 text-right whitespace-nowrap font-mono tabular-nums text-xs font-bold text-slate-900">
+                  {{ mov.saldoResultante | number : (mov.permiteDecimales ? '1.2-2' : '1.0-0') }}
+                </td>
+
+                <!-- Responsable -->
+                <td class="py-3 px-4 whitespace-nowrap text-xs">
+                  <div class="flex items-center gap-1.5 text-slate-700" [title]="mov.usuarioResponsable">
+                    <svg lucideUser class="size-3.5 text-slate-400 shrink-0"></svg>
+                    <span class="font-medium text-slate-800 truncate max-w-[150px]">
+                      {{ mov.usuarioResponsable || 'Almacén Central' }}
+                    </span>
+                  </div>
+                </td>
+
+                <!-- Acciones -->
+                <td class="py-3 px-4 text-center whitespace-nowrap">
+                  <div class="inline-flex items-center gap-1">
+                    <button
+                      type="button"
+                      (click)="irAAuditarArticulo(mov.idArticulo)"
+                      class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-unsm-green-dark bg-unsm-green-light hover:bg-unsm-green/20 transition-all cursor-pointer border border-unsm-green/30"
+                      title="Auditar libro mayor de este artículo"
+                    >
+                      <svg lucideBookOpen class="size-3.5"></svg>
+                      <span>Auditar</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación conectada al backend -->
+    <div class="p-3 border-t border-slate-200/80 bg-slate-50/50">
+      <app-pagination
+        [paginaActual]="paginaActual()"
+        [totalPaginas]="totalPaginas()"
+        [totalElementos]="totalElementos()"
+        [tamanioPagina]="tamanioPagina()"
+        [cargando]="cargando()"
+        etiqueta="movimientos"
+        colorActivo="green"
+        (paginaChange)="cambiarPagina($event)"
+        (tamanioChange)="cambiarTamanio($event)"
+      />
+    </div>
+  </div>
+</div>
