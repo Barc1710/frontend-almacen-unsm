@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
-import { catchError, map, Observable, shareReplay, throwError } from 'rxjs';
+import { catchError, map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   ApiResponse,
@@ -24,11 +24,6 @@ import {
 export class ArticuloService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = environment.apiUrl;
-
-  private familiasCache$?: Observable<Familia[]>;
-  private marcasCache$?: Observable<Marca[]>;
-  private ubicacionesCache$?: Observable<Ubicacion[]>;
-  private unidadesMedidaCache$?: Observable<UnidadMedida[]>;
 
   listar(filtros: ArticuloFiltros = {}): Observable<PageResponse<Articulo>> {
     let params = new HttpParams();
@@ -165,53 +160,22 @@ export class ArticuloService {
   }
 
   listarUnidadesMedidaActivas(): Observable<UnidadMedida[]> {
-    return (this.unidadesMedidaCache$ ??= this.fetchCatalog<UnidadMedida>(
-      '/unidades-medida/activas',
-      '/unidades-medida?size=200',
-      () => {
-        this.unidadesMedidaCache$ = undefined;
-      },
-    ));
+    return this.fetchCatalog<UnidadMedida>('/unidades-medida/activas', '/unidades-medida?size=200');
   }
 
   listarFamiliasActivas(): Observable<Familia[]> {
-    return (this.familiasCache$ ??= this.fetchCatalog<Familia>(
-      '/familias/activos',
-      '/familias?size=200',
-      () => {
-        this.familiasCache$ = undefined;
-      },
-    ));
+    return this.fetchCatalog<Familia>('/familias/activos', '/familias?size=200');
   }
 
   listarMarcasActivas(): Observable<Marca[]> {
-    return (this.marcasCache$ ??= this.fetchCatalog<Marca>(
-      '/marcas/activos',
-      '/marcas?size=200',
-      () => {
-        this.marcasCache$ = undefined;
-      },
-    ));
+    return this.fetchCatalog<Marca>('/marcas/activos', '/marcas?size=200');
   }
 
   listarUbicacionesActivas(): Observable<Ubicacion[]> {
-    return (this.ubicacionesCache$ ??= this.fetchCatalog<Ubicacion>(
-      '/ubicaciones/activos',
-      '/ubicaciones?size=200',
-      () => {
-        this.ubicacionesCache$ = undefined;
-      },
-    ));
+    return this.fetchCatalog<Ubicacion>('/ubicaciones/activos', '/ubicaciones?size=200');
   }
 
-  /**
-   * Carga catálogos auxiliares con fallback paginado y shareReplay resiliente ante errores.
-   */
-  private fetchCatalog<T>(
-    activeUrl: string,
-    fallbackUrl: string,
-    resetCache: () => void,
-  ): Observable<T[]> {
+  private fetchCatalog<T>(activeUrl: string, fallbackUrl: string): Observable<T[]> {
     return this.http.get<unknown>(`${this.apiUrl}${activeUrl}`).pipe(
       map((res) => this.extractList<T>(res)),
       catchError(() =>
@@ -219,11 +183,6 @@ export class ArticuloService {
           .get<unknown>(`${this.apiUrl}${fallbackUrl}`)
           .pipe(map((res) => this.extractList<T>(res))),
       ),
-      catchError((err) => {
-        resetCache();
-        return throwError(() => err);
-      }),
-      shareReplay({ bufferSize: 1, refCount: false }),
     );
   }
 
