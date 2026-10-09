@@ -12,6 +12,16 @@ const loadArticulos = () =>
     (m) => m.ArticulosListComponent,
   );
 
+const loadFamilias = () =>
+  import(
+    './features/familias-marcas/pages/familias-list/familias-list.component'
+  ).then((m) => m.FamiliasListComponent);
+
+const loadMarcas = () =>
+  import(
+    './features/familias-marcas/pages/marcas-list/marcas-list.component'
+  ).then((m) => m.MarcasListComponent);
+
 const loadIngresos = () =>
   import('./features/ingresos/pages/ingresos-list/ingresos-list.component').then(
     (m) => m.IngresosListComponent,
@@ -44,8 +54,20 @@ export const routes: Routes = [
         canActivate: [moduleGuard('INVENTARIO_ARTICULOS')],
         loadComponent: loadArticulos,
       },
+      {
+        path: 'inventario/familias',
+        canActivate: [moduleGuard('INVENTARIO_FAMILIAS')],
+        loadComponent: loadFamilias,
+      },
+      {
+        path: 'inventario/marcas',
+        canActivate: [moduleGuard('INVENTARIO_MARCAS')],
+        loadComponent: loadMarcas,
+      },
       { path: 'inventario', pathMatch: 'full', redirectTo: 'inventario/articulos' },
       { path: 'articulos', pathMatch: 'full', redirectTo: 'inventario/articulos' },
+      { path: 'familias', pathMatch: 'full', redirectTo: 'inventario/familias' },
+      { path: 'marcas', pathMatch: 'full', redirectTo: 'inventario/marcas' },
       { path: 'ingresos', canActivate: [moduleGuard('INGRESOS')], loadComponent: loadIngresos },
       { path: 'egresos', canActivate: [moduleGuard('EGRESOS')], loadComponent: loadEgresos },
       { path: 'despachos', pathMatch: 'full', redirectTo: 'egresos' },
