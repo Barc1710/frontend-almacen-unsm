@@ -62,14 +62,14 @@
 
       <div class="w-full lg:w-48">
         <select
-          [ngModel]="estadoFiltro()"
-          (ngModelChange)="onCambioEstado($event)"
-          aria-label="Filtrar por estado"
+          [ngModel]="activoFiltro()"
+          (ngModelChange)="onCambioActivo($event)"
+          aria-label="Filtrar por estado activo"
           class="w-full h-10 px-3 rounded-xl border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
         >
-          <option value="1">Vigentes</option>
-          <option value="0">Dados de baja</option>
-          <option value="">Todos los estados</option>
+          <option [ngValue]="true">Activos</option>
+          <option [ngValue]="false">Inactivos</option>
+          <option [ngValue]="null">Todos</option>
         </select>
       </div>
 
@@ -138,9 +138,6 @@
             <th scope="col" class="py-3.5 px-4 text-right font-semibold text-slate-700">
               Saldo actual
             </th>
-            <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">
-              Operatividad
-            </th>
             <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">Estado</th>
             <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">
               Acciones
@@ -150,7 +147,7 @@
         <tbody class="divide-y divide-slate-100">
           @if (cargando()) {
             <tr>
-              <td colspan="8" class="py-16 text-center text-slate-500">
+              <td colspan="7" class="py-16 text-center text-slate-500">
                 <div class="flex flex-col items-center justify-center gap-2">
                   <svg lucideLoader2 class="size-8 text-unsm-green animate-spin"></svg>
                   <p class="text-sm font-medium">Cargando artículos...</p>
@@ -242,22 +239,6 @@
                 </td>
 
                 <td class="py-3 px-4 text-center whitespace-nowrap">
-                  @if (art.estado === '1') {
-                    <span
-                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700"
-                    >
-                      Vigente
-                    </span>
-                  } @else {
-                    <span
-                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-unsm-red"
-                    >
-                      De baja
-                    </span>
-                  }
-                </td>
-
-                <td class="py-3 px-4 text-center whitespace-nowrap">
                   <div class="inline-flex items-center gap-1">
                     <button
                       type="button"
@@ -270,24 +251,22 @@
                       <svg lucidePencil class="size-4"></svg>
                     </button>
 
-                    @if (art.estado === '1') {
-                      <button
-                        type="button"
-                        (click)="darDeBaja(art)"
-                        [disabled]="procesandoFilaId() === art.id"
-                        class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
-                        title="Dar de baja"
-                        aria-label="Dar de baja artículo"
-                      >
-                        <svg lucideTrash class="size-4"></svg>
-                      </button>
-                    }
+                    <button
+                      type="button"
+                      (click)="eliminarArticulo(art)"
+                      [disabled]="procesandoFilaId() === art.id"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
+                      title="Eliminar artículo"
+                      aria-label="Eliminar artículo"
+                    >
+                      <svg lucideTrash class="size-4"></svg>
+                    </button>
                   </div>
                 </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="8" class="py-16 text-center text-slate-400">
+                <td colspan="7" class="py-16 text-center text-slate-400">
                   <div class="flex flex-col items-center justify-center gap-2">
                     <svg lucidePackage class="size-10 text-slate-300"></svg>
                     <p class="text-sm font-medium text-slate-500">

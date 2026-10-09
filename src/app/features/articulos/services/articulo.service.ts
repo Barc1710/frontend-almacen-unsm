@@ -39,6 +39,9 @@ export class ArticuloService {
     append('codigo', filtros.codigo);
     append('descripcion', filtros.descripcion);
     append('idFamilia', filtros.idFamilia);
+    if (filtros.activo !== undefined && filtros.activo !== null) {
+      append('activo', String(filtros.activo));
+    }
     append('estado', filtros.estado);
     if (filtros.soloConStock !== undefined) {
       append('soloConStock', String(filtros.soloConStock));

@@ -59,7 +59,7 @@ export class ArticulosListComponent implements OnInit {
 
   readonly filtroTexto = signal('');
   readonly familiaFiltro = signal<number | null>(null);
-  readonly estadoFiltro = signal('1');
+  readonly activoFiltro = signal<boolean | null>(true);
 
   readonly familias = signal<Familia[]>([]);
   readonly marcas = signal<Marca[]>([]);
@@ -100,7 +100,7 @@ export class ArticulosListComponent implements OnInit {
       .listar({
         filtro: this.filtroTexto(),
         idFamilia: this.familiaFiltro(),
-        estado: this.estadoFiltro() || undefined,
+        activo: this.activoFiltro(),
         page: this.paginaActual(),
         size: this.tamanioPagina(),
         sort: 'id,desc',
@@ -138,8 +138,8 @@ export class ArticulosListComponent implements OnInit {
     this.cargarArticulos();
   }
 
-  onCambioEstado(estado: string): void {
-    this.estadoFiltro.set(estado);
+  onCambioActivo(activo: boolean | null): void {
+    this.activoFiltro.set(activo);
     this.paginaActual.set(0);
     this.cargarArticulos();
   }
@@ -147,7 +147,7 @@ export class ArticulosListComponent implements OnInit {
   onLimpiarFiltros(): void {
     this.filtroTexto.set('');
     this.familiaFiltro.set(null);
-    this.estadoFiltro.set('1');
+    this.activoFiltro.set(true);
     this.paginaActual.set(0);
     this.cargarArticulos();
   }
@@ -224,7 +224,7 @@ export class ArticulosListComponent implements OnInit {
     });
   }
 
-  async darDeBaja(articulo: Articulo): Promise<void> {
+  async eliminarArticulo(articulo: Articulo): Promise<void> {
     if (this.procesandoFilaId() !== null) return;
 
     const tieneStock = (articulo.saldo ?? 0) > 0;
@@ -232,18 +232,18 @@ export class ArticulosListComponent implements OnInit {
     const unidad = articulo.simboloUnidadMedida ? ` ${articulo.simboloUnidadMedida}` : '';
 
     const resultado = await this.notificationService.confirm({
-      title: '¿Dar de baja artículo?',
+      title: '¿Eliminar artículo?',
       text: tieneStock
-        ? `¡ADVERTENCIA! Este artículo aún cuenta con existencias (${cantidadFormateada}${unidad}). ¿Desea darlo de baja de todos modos?`
-        : `El artículo "${articulo.codigo} - ${articulo.descripcion}" pasará a estado inactivo.`,
+        ? `¡ADVERTENCIA! Este artículo aún cuenta con existencias (${cantidadFormateada}${unidad}). ¿Desea eliminarlo de todos modos?`
+        : `¿Está seguro de eliminar el artículo "${articulo.codigo} - ${articulo.descripcion}"?`,
       icon: tieneStock ? 'warning' : 'question',
-      confirmButtonText: 'Sí, dar de baja',
+      confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar',
       focusCancel: tieneStock,
       confirmButtonClass:
-        'bg-unsm-red text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:opacity-90 ml-2 cursor-pointer',
+        'bg-rose-600 hover:bg-rose-700 text-white font-semibold px-4 py-2 rounded-xl text-sm shadow-xs transition-colors cursor-pointer',
       cancelButtonClass:
-        'bg-slate-200 hover:bg-slate-300 text-slate-800 px-4 py-2 rounded-lg font-medium mr-2 cursor-pointer',
+        'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm border border-slate-300 ml-2 transition-colors cursor-pointer',
     });
 
     if (resultado.isConfirmed) {
@@ -251,14 +251,14 @@ export class ArticulosListComponent implements OnInit {
       this.articuloService.eliminar(articulo.id).subscribe({
         next: () => {
           this.procesandoFilaId.set(null);
-          this.notificationService.toast('Artículo dado de baja');
+          this.notificationService.toast('Artículo eliminado');
           this.cargarArticulos();
         },
         error: () => {
           this.procesandoFilaId.set(null);
           this.notificationService.error(
-            'Error al dar de baja',
-            'No se pudo desactivar el artículo en el sistema.',
+            'Error al eliminar',
+            'No se pudo eliminar el artículo en el sistema.',
           );
         },
       });

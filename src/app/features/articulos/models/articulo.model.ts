@@ -63,6 +63,7 @@ export interface ArticuloFiltros {
   codigo?: string;
   descripcion?: string;
   idFamilia?: number | null;
+  activo?: boolean | null;
   estado?: string;
   soloConStock?: boolean;
   page?: number;
