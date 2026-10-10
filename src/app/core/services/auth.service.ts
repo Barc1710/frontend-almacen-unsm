@@ -95,7 +95,7 @@ export class AuthService {
   readonly userFullName = computed(() => this._currentUser()?.nombre ?? '');
   readonly userProfile = computed(() => this._currentUser()?.perfil ?? '');
   readonly isAdmin = computed(() =>
-    ['ADMINISTRADOR', 'ADMIN', 'ROLE_ADMIN'].includes(this.userProfile()),
+    ['ADMINISTRADOR', 'ADMIN', 'ROLE_ADMIN', 'ROLE_ADMINISTRADOR'].includes(this.userProfile()),
   );
   readonly authorizedModuleCodes = computed<ReadonlySet<string>>(
     () => new Set(this._modules().map((module) => module.codigo.trim().toUpperCase())),
@@ -179,6 +179,12 @@ export class AuthService {
     if (cleanUrl === '/inventario' || cleanUrl === '/articulos') {
       return this.canAccessModule('INVENTARIO_ARTICULOS');
     }
+    if (cleanUrl === '/egresos' || cleanUrl === '/despachos') {
+      return this.canAccessModule('EGRESOS');
+    }
+    if (cleanUrl === '/ingresos') {
+      return this.canAccessModule('INGRESOS');
+    }
     return this.modules().some((m) => {
       const modUrl = m.url.split('?')[0].replace(/\/+$/, '');
       return cleanUrl === modUrl || cleanUrl.startsWith(modUrl + '/');
@@ -190,6 +196,16 @@ export class AuthService {
     if (this.isAdmin()) return true;
     const normalized = code.trim().toUpperCase();
     if (normalized === 'DASHBOARD') return true;
+    if (normalized === 'EGRESOS' || normalized === 'DESPACHOS' || normalized === 'SALIDAS') {
+      return (
+        this.hasModule('EGRESOS') ||
+        this.hasModule('DESPACHOS') ||
+        this.hasModule('SALIDAS')
+      );
+    }
+    if (normalized === 'INGRESOS' || normalized === 'ENTRADAS') {
+      return this.hasModule('INGRESOS') || this.hasModule('ENTRADAS');
+    }
     if (normalized === 'INVENTARIO') {
       return (
         this.hasModule('INVENTARIO') ||
