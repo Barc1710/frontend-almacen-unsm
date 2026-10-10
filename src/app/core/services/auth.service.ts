@@ -243,6 +243,27 @@ export class AuthService {
         this.hasModule('SEGURIDAD')
       );
     }
+    if (normalized === 'ENCARGADOS') {
+      return (
+        this.hasModule('ENCARGADOS') ||
+        this.hasModule('ENCARGADOS_JEFE') ||
+        this.hasModule('ENCARGADOS_ALMACEN') ||
+        this.hasModule('JEFE')
+      );
+    }
+    if (normalized === 'ENCARGADOS_JEFE' || normalized === 'JEFE') {
+      return (
+        this.hasModule('ENCARGADOS_JEFE') ||
+        this.hasModule('JEFE') ||
+        this.hasModule('ENCARGADOS')
+      );
+    }
+    if (normalized === 'ENCARGADOS_ALMACEN') {
+      return (
+        this.hasModule('ENCARGADOS_ALMACEN') ||
+        this.hasModule('ENCARGADOS')
+      );
+    }
     return this.hasModule(normalized);
   }
 
