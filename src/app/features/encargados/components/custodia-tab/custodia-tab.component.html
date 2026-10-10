@@ -1,0 +1,254 @@
+<div class="space-y-4">
+  <!-- Barra de Filtros y Acciones -->
+  <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80">
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <!-- Buscador Rápido -->
+      <div class="relative flex-1 max-w-xl">
+        <svg
+          lucideSearch
+          class="size-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"
+        ></svg>
+        <input
+          type="text"
+          [ngModel]="filtroTexto()"
+          (ngModelChange)="filtroTexto.set($event)"
+          (keyup.enter)="onBuscarTexto()"
+          placeholder="Buscar por nombres, apellidos o DNI..."
+          aria-label="Buscar personal de custodia"
+          class="w-full h-10 pl-10 pr-4 rounded-xl border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
+        />
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          (click)="onBuscarTexto()"
+          class="px-4 h-10 rounded-xl bg-unsm-cyan hover:brightness-95 active:scale-[0.98] text-white text-sm font-semibold transition-all shadow-xs cursor-pointer flex items-center gap-2 outline-none focus:ring-2 focus:ring-unsm-cyan/40"
+        >
+          <svg lucideSearch class="size-4"></svg>
+          <span>Buscar</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="onLimpiarFiltros()"
+          title="Limpiar filtros"
+          aria-label="Limpiar filtros"
+          class="p-2.5 h-10 w-10 flex items-center justify-center rounded-xl bg-unsm-yellow hover:brightness-95 active:scale-[0.98] text-slate-900 border border-unsm-yellow/80 transition-all shadow-xs cursor-pointer outline-none focus:ring-2 focus:ring-unsm-yellow/40"
+        >
+          <svg
+            lucideRefreshCw
+            class="size-4 text-slate-900"
+            [class.animate-spin]="cargando()"
+          ></svg>
+        </button>
+
+        <button
+          type="button"
+          (click)="abrirNuevo()"
+          class="inline-flex items-center gap-2 px-4 h-10 rounded-xl bg-unsm-green hover:bg-unsm-green-dark active:scale-[0.98] text-white text-sm font-semibold shadow-xs transition-all duration-150 cursor-pointer ml-auto sm:ml-2"
+        >
+          <svg lucidePlus class="size-4"></svg>
+          <span class="hidden sm:inline">Nuevo Encargado</span>
+          <span class="sm:hidden">Nuevo</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Tabla de Personal de Custodia -->
+  <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
+    <div class="overflow-x-auto min-h-80">
+      <table class="w-full text-left text-sm text-slate-600 border-collapse">
+        <thead class="bg-slate-50/80 text-xs font-semibold text-slate-700 border-b border-slate-200">
+          <tr>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700 w-14 text-center">#</th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">
+              Nombres
+            </th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">
+              Apellidos
+            </th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700 w-32 text-center">
+              DNI
+            </th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700 w-44 text-center">
+              Titular de Turno
+            </th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700 w-28 text-center">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @if (cargando()) {
+            <tr>
+              <td colspan="6" class="py-16 text-center text-slate-400">
+                <div class="flex flex-col items-center justify-center gap-2">
+                  <svg lucideLoader2 class="size-8 animate-spin text-unsm-green"></svg>
+                  <span class="text-sm font-medium">Cargando personal de custodia...</span>
+                </div>
+              </td>
+            </tr>
+          } @else if (errorCarga()) {
+            <tr>
+              <td colspan="6" class="py-12 text-center text-unsm-red">
+                <div class="flex flex-col items-center justify-center gap-2">
+                  <svg lucideCircleAlert class="size-8 text-unsm-red"></svg>
+                  <span class="text-sm font-semibold">{{ errorCarga() }}</span>
+                  <button
+                    type="button"
+                    (click)="cargarPersonal()"
+                    class="mt-2 px-3 py-1.5 rounded-lg bg-unsm-green text-white text-xs font-semibold cursor-pointer"
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @else if (personalAlmacen().length === 0) {
+            <tr>
+              <td colspan="6" class="py-16 text-center text-slate-400">
+                <div class="flex flex-col items-center justify-center gap-2">
+                  <svg lucideInbox class="size-8 text-slate-300"></svg>
+                  <span class="text-sm font-medium">No se encontró personal de custodia registrado</span>
+                  @if (filtroTexto()) {
+                    <button
+                      type="button"
+                      (click)="onLimpiarFiltros()"
+                      class="text-xs text-unsm-cyan hover:underline cursor-pointer mt-1"
+                    >
+                      Limpiar búsqueda
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @else {
+            @for (persona of personalAlmacen(); track persona.id; let idx = $index) {
+              <tr class="hover:bg-slate-50/70 transition-colors">
+                <!-- Número de fila -->
+                <td class="py-3.5 px-4 text-center font-mono text-xs text-slate-400">
+                  {{ paginaActual() * tamanioPagina() + idx + 1 }}
+                </td>
+
+                <!-- Nombres con Avatar -->
+                <td class="py-3.5 px-4 font-semibold text-slate-800">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="size-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
+                      [class.bg-emerald-100]="persona.esTitular"
+                      [class.text-emerald-800]="persona.esTitular"
+                      [class.bg-slate-100]="!persona.esTitular"
+                      [class.text-slate-600]="!persona.esTitular"
+                    >
+                      {{ persona.nombres.charAt(0).toUpperCase() }}
+                    </div>
+                    <span>{{ persona.nombres }}</span>
+                  </div>
+                </td>
+
+                <!-- Apellidos -->
+                <td class="py-3.5 px-4 font-medium text-slate-700">
+                  {{ persona.apellidos }}
+                </td>
+
+                <!-- DNI -->
+                <td class="py-3.5 px-4 text-center font-mono tabular-nums text-sm text-slate-700">
+                  {{ persona.dni || '—' }}
+                </td>
+
+                <!-- Titular de Turno (Switch interactivo estilo Artículos) -->
+                <td class="py-3.5 px-4 text-center whitespace-nowrap">
+                  <button
+                    type="button"
+                    (click)="alternarTitular(persona)"
+                    [disabled]="procesandoTitularId() === persona.id"
+                    [title]="
+                      persona.esTitular
+                        ? 'Titular activo (clic para desmarcar)'
+                        : 'Sin titularidad (clic para asignar titular)'
+                    "
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-50"
+                    [class.text-unsm-green-dark]="persona.esTitular"
+                    [class.bg-unsm-green-light]="persona.esTitular"
+                    [class.text-slate-500]="!persona.esTitular"
+                    [class.bg-slate-100]="!persona.esTitular"
+                  >
+                    @if (procesandoTitularId() === persona.id) {
+                      <svg lucideLoader2 class="size-4 animate-spin text-slate-500"></svg>
+                      <span>Actualizando...</span>
+                    } @else if (persona.esTitular) {
+                      <svg lucideToggleRight class="size-5 text-unsm-green"></svg>
+                      <span>Titular</span>
+                    } @else {
+                      <svg lucideToggleLeft class="size-5 text-slate-400"></svg>
+                      <span>No Titular</span>
+                    }
+                  </button>
+                </td>
+
+
+                <!-- Acciones -->
+                <td class="py-3.5 px-4 text-center">
+                  <div class="flex items-center justify-center gap-1">
+                    <button
+                      type="button"
+                      (click)="abrirEditar(persona)"
+                      title="Editar personal"
+                      aria-label="Editar personal"
+                      class="p-1.5 rounded-lg text-slate-500 hover:text-unsm-green hover:bg-unsm-green/10 transition-colors cursor-pointer"
+                    >
+                      <svg lucidePencil class="size-4"></svg>
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="eliminar(persona)"
+                      [disabled]="procesandoFilaId() === persona.id"
+                      title="Eliminar personal"
+                      aria-label="Eliminar personal"
+                      class="p-1.5 rounded-lg text-slate-500 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
+                    >
+                      @if (procesandoFilaId() === persona.id) {
+                        <svg lucideLoader2 class="size-4 animate-spin text-unsm-red"></svg>
+                      } @else {
+                        <svg lucideTrash class="size-4"></svg>
+                      }
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    @if (!cargando() && totalPaginas() > 0) {
+      <div class="border-t border-slate-200/80 px-4 py-3">
+        <app-pagination
+          [paginaActual]="paginaActual()"
+          [totalPaginas]="totalPaginas()"
+          [totalElementos]="totalElementos()"
+          [tamanioPagina]="tamanioPagina()"
+          [cargando]="cargando()"
+          etiqueta="personas"
+          colorActivo="green"
+          (paginaChange)="cambiarPagina($event)"
+          (tamanioChange)="cambiarTamanio($event)"
+        />
+      </div>
+    }
+  </div>
+
+  <!-- Modal de Registro y Edición -->
+  <app-custodia-form-modal
+    [visible]="modalVisible()"
+    [personal]="personalSeleccionado()"
+    (cerrar)="cerrarModal()"
+    (guardado)="onGuardado($event)"
+  />
+</div>

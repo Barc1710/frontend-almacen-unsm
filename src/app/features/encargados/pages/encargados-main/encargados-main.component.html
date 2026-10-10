@@ -1,0 +1,76 @@
+<div class="space-y-6">
+  <!-- Cabecera del Módulo -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div class="flex items-center gap-3.5">
+      <div
+        class="size-12 rounded-2xl bg-unsm-green/10 text-unsm-green flex items-center justify-center shrink-0 border border-unsm-green/20 shadow-2xs"
+      >
+        <svg lucideUserCheck class="size-6"></svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+          Encargados
+        </h1>
+        <p class="text-sm text-slate-500 mt-0.5">
+          Gestión del Jefe de Almacén y Encargados de Almacén
+        </p>
+      </div>
+    </div>
+
+    <!-- Selector de Pestañas Segmentado -->
+    <div
+      class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80 self-start sm:self-auto shadow-2xs"
+      role="tablist"
+      aria-label="Pestañas de gestión de encargados"
+    >
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'encargados'"
+        (click)="cambiarPestana('encargados')"
+        class="px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 select-none"
+        [class.bg-unsm-green]="activeTab() === 'encargados'"
+        [class.text-white]="activeTab() === 'encargados'"
+        [class.shadow-2xs]="activeTab() === 'encargados'"
+        [class.text-slate-600]="activeTab() !== 'encargados'"
+        [class.hover:text-slate-900]="activeTab() !== 'encargados'"
+      >
+        <svg
+          lucideUsers
+          class="size-4"
+          [class.text-white]="activeTab() === 'encargados'"
+          [class.text-slate-500]="activeTab() !== 'encargados'"
+        ></svg>
+        <span>Jefe</span>
+      </button>
+
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'custodia'"
+        (click)="cambiarPestana('custodia')"
+        class="px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-2 select-none"
+        [class.bg-unsm-green]="activeTab() === 'custodia'"
+        [class.text-white]="activeTab() === 'custodia'"
+        [class.shadow-2xs]="activeTab() === 'custodia'"
+        [class.text-slate-600]="activeTab() !== 'custodia'"
+        [class.hover:text-slate-900]="activeTab() !== 'custodia'"
+      >
+        <svg
+          lucideWarehouse
+          class="size-4"
+          [class.text-white]="activeTab() === 'custodia'"
+          [class.text-slate-500]="activeTab() !== 'custodia'"
+        ></svg>
+        <span>Encargados de Almacén</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Contenido Dinámico de la Pestaña Activa -->
+  @if (activeTab() === 'encargados') {
+    <app-encargados-tab />
+  } @else if (activeTab() === 'custodia') {
+    <app-custodia-tab />
+  }
+</div>
