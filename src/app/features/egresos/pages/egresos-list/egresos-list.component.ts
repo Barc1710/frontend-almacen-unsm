@@ -7,6 +7,8 @@ import {
   LucideCalendar,
   LucideEye,
   LucideFileDown,
+  LucideFileSpreadsheet,
+  LucideFileText,
   LucideLoader2,
   LucidePackageCheck,
   LucidePlus,
@@ -14,8 +16,8 @@ import {
   LucideSearch,
   LucideUser,
 } from '@lucide/angular';
-import { forkJoin, Subscription } from 'rxjs';
-import { AuthService, NotificationService, obtenerFechaHoy } from '../../../../core';
+import { catchError, forkJoin, of, Subscription } from 'rxjs';
+import { NotificationService, obtenerFechaHoy } from '../../../../core';
 import { PaginationComponent } from '../../../../shared';
 import { EgresoDetalleModalComponent, EgresoFormModalComponent } from '../../components';
 import {
@@ -42,6 +44,8 @@ import { EgresoService } from '../../services';
     LucidePlus,
     LucideSearch,
     LucideRefreshCw,
+    LucideFileSpreadsheet,
+    LucideFileText,
     LucideEye,
     LucideFileDown,
     LucideBan,
@@ -73,7 +77,6 @@ import { EgresoService } from '../../services';
   `,
 })
 export class EgresosListComponent implements OnInit {
-  readonly esAdministrador = inject(AuthService).isAdmin;
   private consultaEgresos?: Subscription;
   readonly errorListado = signal<string | null>(null);
   readonly errorCatalogos = signal<string | null>(null);
@@ -135,15 +138,18 @@ export class EgresosListComponent implements OnInit {
           this.cargandoCatalogos.set(false);
         },
         error: () => {
-          this.cargandoCatalogos.set(false);
           this.errorCatalogos.set(
-            'No se pudieron cargar los datos necesarios para registrar un egreso.',
+            'No se pudieron cargar los datos necesarios para registrar un egreso. Intente nuevamente.'
           );
+          this.cargandoCatalogos.set(false);
         },
       });
   }
 
   cargarEgresos(): void {
+    if (this.errorCatalogos()) {
+      this.cargarCatalogos();
+    }
     this.consultaEgresos?.unsubscribe();
     this.errorListado.set(null);
     this.cargando.set(true);
@@ -335,7 +341,7 @@ export class EgresosListComponent implements OnInit {
   }
 
   anularDespacho(egreso: Egreso): void {
-    if (!this.esAdministrador() || egreso.estado === '0' || this.anulandoId() !== null) {
+    if (egreso.estado === '0' || this.anulandoId() !== null) {
       return;
     }
 
@@ -347,7 +353,7 @@ export class EgresosListComponent implements OnInit {
         confirmButtonText: 'Sí, anular comprobante',
         cancelButtonText: 'Cancelar',
         confirmButtonClass:
-          'bg-rose-600 hover:bg-rose-700 text-white font-semibold px-4 py-2 rounded-xl text-sm shadow-xs transition-colors cursor-pointer',
+          'bg-unsm-red text-white font-semibold px-4 py-2 rounded-xl text-sm shadow-xs hover:opacity-90 transition-colors cursor-pointer',
         cancelButtonClass:
           'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm border border-slate-300 ml-2 transition-colors cursor-pointer',
       })

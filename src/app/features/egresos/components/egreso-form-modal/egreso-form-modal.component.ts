@@ -19,7 +19,6 @@ import {
   Validators,
 } from '@angular/forms';
 import {
-  LucideAlertCircle,
   LucideChevronDown,
   LucideCircleAlert,
   LucideLoader2,
@@ -42,7 +41,6 @@ import {
   TipoEgreso,
 } from '../../models';
 import { EgresoService } from '../../services';
-import { AuthService } from '../../../../core';
 import { ModalDialogDirective } from '../../../../shared/directives/modal-dialog.directive';
 
 export interface FilaEgresoDetalle {
@@ -90,12 +88,10 @@ interface CabeceraEgresoForm {
     LucideSearch,
     LucideChevronDown,
     LucideCircleAlert,
-    LucideAlertCircle,
   ],
   templateUrl: './egreso-form-modal.component.html',
 })
 export class EgresoFormModalComponent {
-  readonly esAdministrador = inject(AuthService).isAdmin;
   private readonly egresoService = inject(EgresoService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -255,7 +251,7 @@ export class EgresoFormModalComponent {
   }
 
   setTipoOperacion(tipo: TipoEgreso): void {
-    if (this.guardando() || (tipo !== 'DESPACHO_ORDINARIO' && !this.esAdministrador())) return;
+    if (this.guardando()) return;
     this.tipoOperacion.set(tipo);
     this.cabeceraForm.controls.tipoEgreso.setValue(tipo);
 
@@ -659,6 +655,15 @@ export class EgresoFormModalComponent {
         this.filas.set([...this.filas()]);
       });
     this.busquedaSubscriptions.set(fila.id, subscription);
+  }
+
+  obtenerNombreEncargadoAlmacen(enc: EncargadoAlmacen): string {
+    const nombre =
+      enc.nombreCompleto?.trim() ||
+      [enc.nombres, enc.apellidos].filter(Boolean).join(' ').trim() ||
+      enc.nombre?.trim() ||
+      '';
+    return `${nombre}${enc.esTitular ? ' (Titular)' : ''}`;
   }
 
   private handleError(err: unknown): void {

@@ -16,8 +16,12 @@ export interface Proveedor {
 
 export interface EncargadoAlmacen {
   readonly id: number;
-  readonly nombre: string;
-  readonly estado: string;
+  readonly nombres?: string;
+  readonly apellidos?: string;
+  readonly nombreCompleto?: string | null;
+  readonly nombre?: string;
+  readonly dni?: string | null;
+  readonly estado?: string;
   readonly esTitular: boolean;
   readonly cargo?: string | null;
 }

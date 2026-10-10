@@ -68,6 +68,20 @@ const SIDEBAR_GROUPS: readonly GroupConfig[] = [
       );
     },
   },
+  {
+    codigo: 'ENCARGADOS',
+    nombre: 'Encargados',
+    url: '/encargados',
+    defaultIcon: 'ENCARGADOS',
+    matches: (codigo, url) => {
+      if (url === '/encargados' && codigo === 'ENCARGADOS') return false;
+      return (
+        url.startsWith('/encargados/') ||
+        codigo.startsWith('ENCARGADOS_') ||
+        ['ENCARGADOS_JEFE', 'ENCARGADOS_ALMACEN', 'JEFE'].includes(codigo)
+      );
+    },
+  },
 ];
 
 @Component({
@@ -109,7 +123,51 @@ export class SidebarComponent {
 
   readonly items = computed<SidebarItem[]>(() => {
     const rawModules = this.authService.modules();
-    const sorted = [...rawModules].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
+    const effectiveModules = [...rawModules];
+
+    if (this.authService.isAdmin()) {
+      // Remover módulo antiguo único 'ENCARGADOS' (/encargados) si existiera en la lista
+      const oldIndex = effectiveModules.findIndex(
+        (m) => m.codigo.trim().toUpperCase() === 'ENCARGADOS' && m.url.trim() === '/encargados',
+      );
+      if (oldIndex !== -1) {
+        effectiveModules.splice(oldIndex, 1);
+      }
+
+      const hasJefe = effectiveModules.some(
+        (m) =>
+          m.codigo.trim().toUpperCase() === 'ENCARGADOS_JEFE' ||
+          m.url.trim() === '/encargados/jefe',
+      );
+      if (!hasJefe) {
+        effectiveModules.push({
+          id: 12,
+          codigo: 'ENCARGADOS_JEFE',
+          nombre: 'Jefe',
+          url: '/encargados/jefe',
+          icono: 'user-check',
+          orden: 12,
+        });
+      }
+
+      const hasAlmacen = effectiveModules.some(
+        (m) =>
+          m.codigo.trim().toUpperCase() === 'ENCARGADOS_ALMACEN' ||
+          m.url.trim() === '/encargados/almacen',
+      );
+      if (!hasAlmacen) {
+        effectiveModules.push({
+          id: 13,
+          codigo: 'ENCARGADOS_ALMACEN',
+          nombre: 'Almacén',
+          url: '/encargados/almacen',
+          icono: 'warehouse',
+          orden: 13,
+        });
+      }
+    }
+
+    const sorted = effectiveModules.sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
 
     const topLevelItems: SidebarItem[] = [];
     const groupSubmodulesMap = new Map<string, SidebarItem[]>();
@@ -124,10 +182,17 @@ export class SidebarComponent {
       const url = rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`;
       const icono = getSidebarIcon(mod.icono || codigo);
 
+      let nombreItem = mod.nombre;
+      if (codigo === 'ENCARGADOS' || url === '/encargados') {
+        nombreItem = 'Encargados';
+      } else if (codigo === 'ENCARGADOS_ALMACEN' || url === '/encargados/almacen') {
+        nombreItem = 'Almacén';
+      }
+
       const item: SidebarItem = {
         id: mod.id,
         codigo,
-        nombre: mod.nombre,
+        nombre: nombreItem,
         url,
         icono,
         orden: mod.orden ?? 0,

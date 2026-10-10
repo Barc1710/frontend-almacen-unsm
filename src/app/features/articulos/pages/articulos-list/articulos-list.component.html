@@ -62,14 +62,14 @@
 
       <div class="w-full lg:w-48">
         <select
-          [ngModel]="estadoFiltro()"
-          (ngModelChange)="onCambioEstado($event)"
-          aria-label="Filtrar por estado"
+          [ngModel]="activoFiltro()"
+          (ngModelChange)="onCambioActivo($event)"
+          aria-label="Filtrar por estado activo"
           class="w-full h-10 px-3 rounded-xl border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
         >
-          <option value="1">Vigentes</option>
-          <option value="0">Dados de baja</option>
-          <option value="">Todos los estados</option>
+          <option [ngValue]="true">Activos</option>
+          <option [ngValue]="false">Inactivos</option>
+          <option [ngValue]="null">Todos</option>
         </select>
       </div>
 
@@ -88,13 +88,36 @@
           (click)="onLimpiarFiltros()"
           title="Limpiar filtros"
           aria-label="Limpiar filtros"
-          class="p-2.5 h-10 w-10 flex items-center justify-center rounded-xl bg-unsm-yellow hover:brightness-95 active:scale-[0.98] text-slate-900 border border-yellow-300 transition-all shadow-xs cursor-pointer outline-none focus:ring-2 focus:ring-unsm-yellow/40"
+          class="p-2.5 h-10 w-10 flex items-center justify-center rounded-xl bg-unsm-yellow hover:brightness-95 active:scale-[0.98] text-slate-900 border border-unsm-yellow/80 transition-all shadow-xs cursor-pointer outline-none focus:ring-2 focus:ring-unsm-yellow/40"
         >
           <svg
             lucideRefreshCw
             class="size-4 text-slate-900"
             [class.animate-spin]="cargando()"
           ></svg>
+        </button>
+      </div>
+
+      <!-- Botones de Exportación Compactos (Excel y PDF) -->
+      <div class="flex items-center gap-2 shrink-0 self-end lg:self-auto">
+        <button
+          type="button"
+          title="Exportar a Excel"
+          aria-label="Exportar a Excel"
+          class="inline-flex items-center gap-1.5 h-10 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+        >
+          <svg lucideFileSpreadsheet class="size-4 text-unsm-green"></svg>
+          <span>Excel</span>
+        </button>
+
+        <button
+          type="button"
+          title="Exportar a PDF"
+          aria-label="Exportar a PDF"
+          class="inline-flex items-center gap-1.5 h-10 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-700 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+        >
+          <svg lucideFileText class="size-4 text-unsm-red"></svg>
+          <span>PDF</span>
         </button>
       </div>
     </div>
@@ -115,9 +138,6 @@
             <th scope="col" class="py-3.5 px-4 text-right font-semibold text-slate-700">
               Saldo actual
             </th>
-            <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">
-              Operatividad
-            </th>
             <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">Estado</th>
             <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">
               Acciones
@@ -127,11 +147,24 @@
         <tbody class="divide-y divide-slate-100">
           @if (cargando()) {
             <tr>
-              <td colspan="8" class="py-16 text-center text-slate-500">
+              <td colspan="7" class="py-16 text-center text-slate-500">
                 <div class="flex flex-col items-center justify-center gap-2">
                   <svg lucideLoader2 class="size-8 text-unsm-green animate-spin"></svg>
                   <p class="text-sm font-medium">Cargando artículos...</p>
                 </div>
+              </td>
+            </tr>
+          } @else if (errorListado()) {
+            <tr>
+              <td colspan="7" class="p-6 text-center text-unsm-red">
+                <p role="alert">{{ errorListado() }}</p>
+                <button
+                  type="button"
+                  class="mt-2 underline font-semibold cursor-pointer"
+                  (click)="cargarArticulos()"
+                >
+                  Reintentar
+                </button>
               </td>
             </tr>
           } @else {
@@ -157,8 +190,8 @@
                 </td>
 
                 <td class="py-3 px-4 whitespace-nowrap text-xs">
-                  <p class="text-slate-700">{{ art.nombreMarca || '-' }}</p>
-                  <p class="text-slate-400 mt-0.5">{{ art.nombreUbicacion || '-' }}</p>
+                  <p class="text-slate-700">{{ art.nombreMarca || '' }}</p>
+                  <p class="text-slate-400 mt-0.5">{{ art.nombreUbicacion || '' }}</p>
                 </td>
 
                 <td class="py-3 px-4 text-right whitespace-nowrap">
@@ -219,22 +252,6 @@
                 </td>
 
                 <td class="py-3 px-4 text-center whitespace-nowrap">
-                  @if (art.estado === '1') {
-                    <span
-                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700"
-                    >
-                      Vigente
-                    </span>
-                  } @else {
-                    <span
-                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-unsm-red"
-                    >
-                      De baja
-                    </span>
-                  }
-                </td>
-
-                <td class="py-3 px-4 text-center whitespace-nowrap">
                   <div class="inline-flex items-center gap-1">
                     <button
                       type="button"
@@ -247,24 +264,22 @@
                       <svg lucidePencil class="size-4"></svg>
                     </button>
 
-                    @if (art.estado === '1') {
-                      <button
-                        type="button"
-                        (click)="darDeBaja(art)"
-                        [disabled]="procesandoFilaId() === art.id"
-                        class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
-                        title="Dar de baja"
-                        aria-label="Dar de baja artículo"
-                      >
-                        <svg lucideTrash class="size-4"></svg>
-                      </button>
-                    }
+                    <button
+                      type="button"
+                      (click)="eliminarArticulo(art)"
+                      [disabled]="procesandoFilaId() === art.id"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
+                      title="Eliminar artículo"
+                      aria-label="Eliminar artículo"
+                    >
+                      <svg lucideTrash class="size-4"></svg>
+                    </button>
                   </div>
                 </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="8" class="py-16 text-center text-slate-400">
+                <td colspan="7" class="py-16 text-center text-slate-400">
                   <div class="flex flex-col items-center justify-center gap-2">
                     <svg lucidePackage class="size-10 text-slate-300"></svg>
                     <p class="text-sm font-medium text-slate-500">

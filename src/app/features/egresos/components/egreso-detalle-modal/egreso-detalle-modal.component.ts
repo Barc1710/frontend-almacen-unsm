@@ -1,7 +1,6 @@
 import { DatePipe, TitleCasePipe } from '@angular/common';
 import { Component, computed, input, output } from '@angular/core';
 import {
-  LucideAlertCircle,
   LucideBuilding2,
   LucideCalendar,
   LucideCircleAlert,
@@ -24,7 +23,6 @@ import { EgresoConDetalles } from '../../models';
     LucideX,
     LucidePackage,
     LucideCircleAlert,
-    LucideAlertCircle,
     LucideTag,
     LucideCalendar,
     LucideUser,
