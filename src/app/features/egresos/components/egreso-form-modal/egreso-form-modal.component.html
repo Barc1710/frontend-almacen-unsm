@@ -51,41 +51,39 @@
         <!-- Contenido de la Modal -->
         <div class="p-6 overflow-visible space-y-4">
           <!-- Selector de Tipo de Operación: Despacho vs Dar de baja -->
-          @if (esAdministrador()) {
-            <div class="flex items-center gap-2">
-              <div
-                class="p-1 rounded-xl bg-slate-100 border border-slate-200/80 inline-flex items-center gap-1"
+          <div class="flex items-center gap-2">
+            <div
+              class="p-1 rounded-xl bg-slate-100 border border-slate-200/80 inline-flex items-center gap-1"
+            >
+              <button
+                type="button"
+                [disabled]="guardando()"
+                (click)="setTipoOperacion('DESPACHO_ORDINARIO')"
+                class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                [class.bg-white]="!esOperacionBaja()"
+                [class.text-unsm-green-dark]="!esOperacionBaja()"
+                [class.shadow-2xs]="!esOperacionBaja()"
+                [class.text-slate-600]="esOperacionBaja()"
+                [class.hover:text-slate-900]="esOperacionBaja()"
               >
-                <button
-                  type="button"
-                  [disabled]="guardando()"
-                  (click)="setTipoOperacion('DESPACHO_ORDINARIO')"
-                  class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-                  [class.bg-white]="!esOperacionBaja()"
-                  [class.text-unsm-green-dark]="!esOperacionBaja()"
-                  [class.shadow-2xs]="!esOperacionBaja()"
-                  [class.text-slate-600]="esOperacionBaja()"
-                  [class.hover:text-slate-900]="esOperacionBaja()"
-                >
-                  Despacho
-                </button>
+                Despacho
+              </button>
 
-                <button
-                  type="button"
-                  [disabled]="guardando()"
-                  (click)="setTipoOperacion('BAJA_DETERIORO')"
-                  class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-                  [class.bg-white]="esOperacionBaja()"
-                  [class.text-red-700]="esOperacionBaja()"
-                  [class.shadow-2xs]="esOperacionBaja()"
-                  [class.text-slate-600]="!esOperacionBaja()"
-                  [class.hover:text-red-700]="!esOperacionBaja()"
-                >
-                  Dar de baja
-                </button>
-              </div>
+              <button
+                type="button"
+                [disabled]="guardando()"
+                (click)="setTipoOperacion('BAJA_DETERIORO')"
+                class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                [class.bg-white]="esOperacionBaja()"
+                [class.text-red-700]="esOperacionBaja()"
+                [class.shadow-2xs]="esOperacionBaja()"
+                [class.text-slate-600]="!esOperacionBaja()"
+                [class.hover:text-red-700]="!esOperacionBaja()"
+              >
+                Dar de baja
+              </button>
             </div>
-          }
+          </div>
 
           <!-- Banner de Error General -->
           @if (errorGeneral()) {
@@ -107,7 +105,7 @@
               class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-3"
               role="alert"
             >
-              <svg lucideAlertCircle class="size-5 text-amber-600 shrink-0 mt-0.5"></svg>
+              <svg lucideCircleAlert class="size-5 text-amber-600 shrink-0 mt-0.5"></svg>
               <div class="flex-1">
                 <p class="text-sm font-semibold text-amber-800">Artículo ya agregado</p>
                 <p class="text-xs text-amber-700 mt-0.5">{{ alertaDuplicado() }}</p>
@@ -243,7 +241,7 @@
                     <option [ngValue]="null">Seleccionar encargado de almacén</option>
                     @for (alm of encargadosAlmacenActivos(); track alm.id) {
                       <option [ngValue]="alm.id">
-                        {{ alm.nombre }}{{ alm.esTitular ? ' (Titular)' : '' }}
+                        {{ obtenerNombreEncargadoAlmacen(alm) }}
                       </option>
                     }
                   </select>
@@ -296,7 +294,7 @@
                     <option [ngValue]="null">Seleccionar encargado de almacén</option>
                     @for (alm of encargadosAlmacenActivos(); track alm.id) {
                       <option [ngValue]="alm.id">
-                        {{ alm.nombre }}{{ alm.esTitular ? ' (Titular)' : '' }}
+                        {{ obtenerNombreEncargadoAlmacen(alm) }}
                       </option>
                     }
                   </select>
@@ -615,7 +613,7 @@
               <div
                 class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5"
               >
-                <svg lucideAlertCircle class="size-4 text-amber-600 shrink-0"></svg>
+                <svg lucideCircleAlert class="size-4 text-amber-600 shrink-0"></svg>
                 <span
                   >Existen artículos que superan el saldo disponible en almacén. Corrija las
                   cantidades para guardar.</span

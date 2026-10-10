@@ -28,15 +28,6 @@
     </div>
   </div>
 
-  @if (errorCatalogos()) {
-    <div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-      {{ errorCatalogos() }}
-      <button type="button" class="ml-2 underline font-semibold cursor-pointer" (click)="cargarCatalogos()">
-        Reintentar carga
-      </button>
-    </div>
-  }
-
   <!-- Barra de Filtros -->
   <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 space-y-3">
     <!-- Fila 1: Búsqueda y Proveedor -->
@@ -249,7 +240,7 @@
             </tr>
           } @else if (errorListado()) {
             <tr>
-              <td colspan="7" class="p-6 text-center text-red-800">
+              <td colspan="7" class="p-6 text-center text-unsm-red">
                 <p role="alert">{{ errorListado() }}</p>
                 <button
                   type="button"
@@ -274,7 +265,7 @@
                   [class.text-slate-400]="ing.estado === '0'"
                   [class.line-through]="ing.estado === '0'"
                 >
-                  <div>{{ ing.numeroOrden || '-' }}</div>
+                  <div>{{ ing.numeroOrden || '' }}</div>
                   @if (ing.numeroOrdenCompra) {
                     <p class="text-[11px] font-sans font-normal text-slate-400 mt-0.5">
                       O.C.: {{ ing.numeroOrdenCompra }}
@@ -286,7 +277,7 @@
                 <td class="py-3 px-4 min-w-56">
                   <p
                     class="font-medium text-slate-800 line-clamp-1"
-                    [title]="ing.nombreProveedor || '-'"
+                    [title]="ing.nombreProveedor || ''"
                   >
                     {{ ing.nombreProveedor || 'Proveedor no especificado' }}
                   </p>
@@ -379,7 +370,7 @@
                       }
                     </button>
 
-                    @if (ing.estado === '1' && esAdministrador()) {
+                    @if (ing.estado === '1') {
                       <button
                         type="button"
                         (click)="anularIngreso(ing)"
@@ -394,13 +385,6 @@
                           <svg lucideBan class="size-4"></svg>
                         }
                       </button>
-                    } @else if (ing.estado === '0') {
-                      <span
-                        class="p-1.5 text-slate-300 cursor-not-allowed select-none inline-flex"
-                        title="Comprobante ya anulado"
-                      >
-                        <svg lucideBan class="size-4 opacity-30"></svg>
-                      </span>
                     } @else {
                       <span
                         class="p-1.5 text-slate-300 cursor-not-allowed select-none inline-flex"
@@ -440,7 +424,7 @@
       [tamanioPagina]="tamanioPagina()"
       [cargando]="cargando()"
       etiqueta="ingresos"
-      colorActivo="cyan"
+      colorActivo="green"
       (paginaChange)="cambiarPagina($event)"
       (tamanioChange)="cambiarTamanio($event)"
     />

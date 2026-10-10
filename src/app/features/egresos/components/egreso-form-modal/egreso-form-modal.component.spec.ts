@@ -106,12 +106,11 @@ describe('Registro de egresos', () => {
     expect(component.filas()[0].idArticulo).toBe(10);
   });
 
-  it('impide que un operador seleccione bajas', () => {
+  it('permite seleccionar bajas sin restricción de rol', () => {
     admin.set(false);
     const fixture = abrir();
     fixture.componentInstance.setTipoOperacion('BAJA_DETERIORO');
-    expect(fixture.componentInstance.tipoOperacion()).toBe('DESPACHO_ORDINARIO');
-    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Bajas por Deterioro');
+    expect(fixture.componentInstance.tipoOperacion()).toBe('BAJA_DETERIORO');
   });
 
   it('selecciona una sugerencia mediante click, también generado por activación de teclado', () => {

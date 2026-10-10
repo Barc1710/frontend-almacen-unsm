@@ -65,7 +65,7 @@
             class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start gap-3"
             role="alert"
           >
-            <svg lucideAlertCircle class="size-5 text-amber-600 shrink-0 mt-0.5"></svg>
+            <svg lucideCircleAlert class="size-5 text-amber-600 shrink-0 mt-0.5"></svg>
             <div class="flex-1">
               <p class="text-sm font-semibold text-amber-800">Artículo ya agregado</p>
               <p class="text-xs text-amber-700 mt-0.5">{{ alertaDuplicado() }}</p>
@@ -171,7 +171,7 @@
                 <option [ngValue]="null">Seleccionar encargado</option>
                 @for (enc of encargadosAlmacen(); track enc.id) {
                   <option [ngValue]="enc.id">
-                    {{ enc.nombre }}{{ enc.esTitular ? ' (Titular)' : '' }}
+                    {{ obtenerNombreEncargadoAlmacen(enc) }}
                   </option>
                 }
               </select>

@@ -20,7 +20,6 @@ import {
   Validators,
 } from '@angular/forms';
 import {
-  LucideAlertCircle,
   LucideChevronDown,
   LucideCircleAlert,
   LucideLoader2,
@@ -130,7 +129,6 @@ interface CabeceraForm {
     LucideTrash,
     LucideSearch,
     LucideCircleAlert,
-    LucideAlertCircle,
     LucideChevronDown,
   ],
   templateUrl: './ingreso-form-modal.component.html',
@@ -649,6 +647,15 @@ export class IngresoFormModalComponent implements OnInit {
         }
       });
     this.busquedaSubscriptions.set(fila.id, subscription);
+  }
+
+  obtenerNombreEncargadoAlmacen(enc: EncargadoAlmacen): string {
+    const nombre =
+      enc.nombreCompleto?.trim() ||
+      [enc.nombres, enc.apellidos].filter(Boolean).join(' ').trim() ||
+      enc.nombre?.trim() ||
+      '';
+    return `${nombre}${enc.esTitular ? ' (Titular)' : ''}`;
   }
 
   private handleError(err: unknown): void {

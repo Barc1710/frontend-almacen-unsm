@@ -20,22 +20,13 @@
         type="button"
         (click)="abrirNuevoDespacho()"
         [disabled]="cargandoCatalogos() || !!errorCatalogos()"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-unsm-green-dark hover:bg-unsm-green-border active:scale-[0.98] text-white text-sm font-semibold shadow-sm transition-all duration-150 cursor-pointer"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-unsm-green hover:bg-unsm-green-dark active:scale-[0.98] text-white text-sm font-semibold shadow-sm transition-all duration-150 cursor-pointer"
       >
         <svg lucidePlus class="size-4"></svg>
         <span>Registrar Despacho</span>
       </button>
     </div>
   </div>
-
-  @if (errorCatalogos()) {
-    <div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-      {{ errorCatalogos() }}
-      <button type="button" class="ml-2 underline font-semibold" (click)="cargarCatalogos()">
-        Reintentar carga
-      </button>
-    </div>
-  }
 
   <!-- Barra de Filtros -->
   <div class="bg-white p-4 rounded-2xl shadow-xs border border-slate-200/80 space-y-3">
@@ -249,11 +240,11 @@
             </tr>
           } @else if (errorListado()) {
             <tr>
-              <td colspan="8" class="p-6 text-center text-red-800">
+              <td colspan="8" class="p-6 text-center text-unsm-red">
                 <p role="alert">{{ errorListado() }}</p>
                 <button
                   type="button"
-                  class="mt-2 underline font-semibold"
+                  class="mt-2 underline font-semibold cursor-pointer"
                   (click)="cargarEgresos()"
                 >
                   Reintentar
@@ -274,7 +265,7 @@
                   [class.text-slate-400]="egr.estado === '0'"
                   [class.line-through]="egr.estado === '0'"
                 >
-                  {{ egr.numeroCompleto || '-' }}
+                  {{ egr.numeroCompleto || '' }}
                 </td>
 
                 <!-- Destinatario / Cliente -->
@@ -286,7 +277,7 @@
                   } @else {
                     <p
                       class="font-medium text-slate-800 line-clamp-1"
-                      [title]="egr.nombreCliente || '-'"
+                      [title]="egr.nombreCliente || ''"
                     >
                       {{ egr.nombreCliente || 'Destinatario no especificado' }}
                     </p>
@@ -336,7 +327,7 @@
                   <div class="flex items-center gap-1.5 text-slate-700">
                     <svg lucideUser class="size-3.5 text-slate-400 shrink-0"></svg>
                     <span class="font-medium text-slate-800">{{
-                      (egr.nombreUsuario || egr.nombreEncargadoAlmacen || '-') | titlecase
+                      (egr.nombreUsuario || egr.nombreEncargadoAlmacen || '') | titlecase
                     }}</span>
                   </div>
                 </td>
@@ -394,7 +385,7 @@
                     </button>
 
                     <!-- Botón Anular Despacho (Solo si activo) con confirmación SweetAlert2 -->
-                    @if (egr.estado === '1' && esAdministrador()) {
+                    @if (egr.estado === '1') {
                       <button
                         type="button"
                         (click)="anularDespacho(egr)"
@@ -409,7 +400,7 @@
                           <svg lucideBan class="size-4"></svg>
                         }
                       </button>
-                    } @else if (egr.estado === '0') {
+                    } @else {
                       <span
                         class="p-1.5 text-slate-300 cursor-not-allowed select-none inline-flex"
                         title="Despacho ya anulado"

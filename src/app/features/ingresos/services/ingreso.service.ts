@@ -295,7 +295,7 @@ export class IngresoService {
       rawNumeroCompleto ||
       (prefijo && correlativo
         ? `${prefijo}-${String(correlativo).padStart(4, '0')}`
-        : numeroOrdenCompra || rawNumeroOrden || '-');
+        : numeroOrdenCompra || rawNumeroOrden || '');
 
     const totalItems = raw['totalItems'];
     const totalArticulos = raw['totalArticulos'];
