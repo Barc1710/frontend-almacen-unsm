@@ -263,15 +263,15 @@
         <div class="flex flex-wrap items-center gap-y-1.5 gap-x-4 sm:gap-x-5">
           <div class="flex items-center gap-1.5">
             <span class="text-slate-400">Familia:</span>
-            <span class="font-medium text-slate-800">{{ art.nombreFamilia || '-' }}</span>
+            <span class="font-medium text-slate-800">{{ art.nombreFamilia || '' }}</span>
           </div>
           <div class="flex items-center gap-1.5">
             <span class="text-slate-400">Marca:</span>
-            <span class="font-medium text-slate-800">{{ art.nombreMarca || '-' }}</span>
+            <span class="font-medium text-slate-800">{{ art.nombreMarca || '' }}</span>
           </div>
           <div class="flex items-center gap-1.5">
             <span class="text-slate-400">Almacén:</span>
-            <span class="font-medium text-slate-800">{{ art.nombreUbicacion || '-' }}</span>
+            <span class="font-medium text-slate-800">{{ art.nombreUbicacion || '' }}</span>
           </div>
         </div>
 
@@ -392,7 +392,7 @@
 
                   <!-- N° Comprobante -->
                   <td class="py-3 px-4 font-mono font-semibold text-slate-900 whitespace-nowrap">
-                    {{ mov.documentoReferencia || '-' }}
+                    {{ mov.documentoReferencia || '' }}
                   </td>
 
                   <!-- Fecha y Hora -->

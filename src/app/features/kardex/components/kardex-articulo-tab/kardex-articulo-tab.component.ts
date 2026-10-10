@@ -257,14 +257,11 @@ export class KardexArticuloTabComponent implements OnInit {
           this.totalPaginas.set(page.totalPages ?? 0);
           this.cargandoKardex.set(false);
         },
-        error: (err: unknown) => {
+        error: () => {
           this.cargandoKardex.set(false);
-          const msg =
-            err instanceof Error
-              ? err.message
-              : 'Error al obtener el Kardex del artículo. Intente nuevamente.';
-          this.errorListado.set(msg);
-          this.notificationService.toast(msg, 'error');
+          this.errorListado.set(
+            'No se pudieron cargar los movimientos de Kardex. Intente nuevamente.',
+          );
         },
       });
   }

@@ -134,14 +134,11 @@ export class KardexGeneralTabComponent implements OnInit {
           this.totalPaginas.set(page.totalPages ?? 0);
           this.cargando.set(false);
         },
-        error: (err: unknown) => {
+        error: () => {
           this.cargando.set(false);
-          const mensaje =
-            err instanceof Error
-              ? err.message
-              : 'No se pudieron cargar los movimientos de Kardex. Intente nuevamente.';
-          this.errorListado.set(mensaje);
-          this.notificationService.toast(mensaje, 'error');
+          this.errorListado.set(
+            'No se pudieron cargar los movimientos de Kardex. Intente nuevamente.',
+          );
         },
       });
   }
