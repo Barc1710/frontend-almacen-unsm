@@ -2,7 +2,6 @@ import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import {
-  LucideCircleAlert,
   LucideInbox,
   LucideLoader2,
   LucidePencil,
@@ -36,7 +35,6 @@ import { EncargadoAlmacenService } from '../../services';
     LucideTrash,
     LucideLoader2,
     LucideInbox,
-    LucideCircleAlert,
     LucideToggleLeft,
     LucideToggleRight,
   ],
@@ -51,7 +49,7 @@ export class AlmacenListComponent implements OnInit {
 
   readonly personalAlmacen = signal<EncargadoAlmacen[]>([]);
   readonly cargando = signal<boolean>(false);
-  readonly errorCarga = signal<string | null>(null);
+  readonly errorListado = signal<string | null>(null);
   readonly totalElementos = signal<number>(0);
   readonly totalPaginas = signal<number>(0);
   readonly paginaActual = signal<number>(0);
@@ -70,7 +68,7 @@ export class AlmacenListComponent implements OnInit {
   cargarPersonal(): void {
     this.cargarSub?.unsubscribe();
     this.cargando.set(true);
-    this.errorCarga.set(null);
+    this.errorListado.set(null);
 
     this.cargarSub = this.encargadoAlmacenService
       .listar({
@@ -94,13 +92,14 @@ export class AlmacenListComponent implements OnInit {
           this.personalAlmacen.set(activos);
           this.totalElementos.set(page.totalElements);
           this.totalPaginas.set(page.totalPages);
-          this.errorCarga.set(null);
+          this.errorListado.set(null);
           this.cargando.set(false);
         },
         error: () => {
-          this.errorCarga.set(
-            'No se pudo cargar la lista de personal de custodia. Verifique la conexión con el servidor.',
+          this.errorListado.set(
+            'No se pudieron cargar los encargados de almacén. Intente nuevamente.',
           );
+          this.personalAlmacen.set([]);
           this.cargando.set(false);
         },
       });

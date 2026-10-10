@@ -2,7 +2,6 @@ import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import {
-  LucideCircleAlert,
   LucideInbox,
   LucideLoader2,
   LucidePencil,
@@ -34,7 +33,6 @@ import { EncargadoService } from '../../services';
     LucideTrash,
     LucideLoader2,
     LucideInbox,
-    LucideCircleAlert,
   ],
   templateUrl: './jefe-list.component.html',
 })
@@ -47,7 +45,7 @@ export class JefeListComponent implements OnInit {
 
   readonly encargados = signal<Encargado[]>([]);
   readonly cargando = signal<boolean>(false);
-  readonly errorCarga = signal<string | null>(null);
+  readonly errorListado = signal<string | null>(null);
   readonly totalElementos = signal<number>(0);
   readonly totalPaginas = signal<number>(0);
   readonly paginaActual = signal<number>(0);
@@ -65,7 +63,7 @@ export class JefeListComponent implements OnInit {
   cargarEncargados(): void {
     this.cargarSub?.unsubscribe();
     this.cargando.set(true);
-    this.errorCarga.set(null);
+    this.errorListado.set(null);
 
     this.cargarSub = this.encargadoService
       .listar({
@@ -89,13 +87,14 @@ export class JefeListComponent implements OnInit {
           this.encargados.set(activos);
           this.totalElementos.set(page.totalElements);
           this.totalPaginas.set(page.totalPages);
-          this.errorCarga.set(null);
+          this.errorListado.set(null);
           this.cargando.set(false);
         },
         error: () => {
-          this.errorCarga.set(
-            'No se pudo cargar la lista de jefes. Verifique la conexión con el servidor.',
-          );
+          this.errorListado.set('No se pudieron cargar los jefes de almacén. Intente nuevamente.');
+          this.encargados.set([]);
+          this.totalElementos.set(0);
+          this.totalPaginas.set(0);
           this.cargando.set(false);
         },
       });

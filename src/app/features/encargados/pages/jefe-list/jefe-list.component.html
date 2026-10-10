@@ -111,20 +111,17 @@
                 </div>
               </td>
             </tr>
-          } @else if (errorCarga()) {
+          } @else if (errorListado()) {
             <tr>
-              <td colspan="7" class="py-12 text-center text-unsm-red">
-                <div class="flex flex-col items-center justify-center gap-2">
-                  <svg lucideCircleAlert class="size-8 text-unsm-red"></svg>
-                  <span class="text-sm font-semibold">{{ errorCarga() }}</span>
-                  <button
-                    type="button"
-                    (click)="cargarEncargados()"
-                    class="mt-2 px-3 py-1.5 rounded-lg bg-unsm-green text-white text-xs font-semibold cursor-pointer"
-                  >
-                    Reintentar
-                  </button>
-                </div>
+              <td colspan="7" class="p-6 text-center text-unsm-red">
+                <p role="alert">{{ errorListado() }}</p>
+                <button
+                  type="button"
+                  class="mt-2 underline font-semibold cursor-pointer"
+                  (click)="cargarEncargados()"
+                >
+                  Reintentar
+                </button>
               </td>
             </tr>
           } @else if (encargados().length === 0) {
@@ -155,7 +152,7 @@
 
                 <!-- Título o Profesión (texto normal sin recuadro) -->
                 <td class="py-3.5 px-4 text-center text-sm font-medium text-slate-700">
-                  {{ enc.siglaProfesion || '—' }}
+                  {{ enc.siglaProfesion || '' }}
                 </td>
 
                 <!-- Nombres -->
@@ -170,12 +167,12 @@
 
                 <!-- DNI -->
                 <td class="py-3.5 px-4 text-center font-mono tabular-nums text-sm text-slate-700">
-                  {{ enc.dni || '—' }}
+                  {{ enc.dni || '' }}
                 </td>
 
                 <!-- Cargo Institucional -->
                 <td class="py-3.5 px-4 text-center text-sm text-slate-600">
-                  {{ enc.cargo || '—' }}
+                  {{ enc.cargo || '' }}
                 </td>
 
                 <!-- Acciones -->
