@@ -154,6 +154,19 @@
                 </div>
               </td>
             </tr>
+          } @else if (errorListado()) {
+            <tr>
+              <td colspan="7" class="p-6 text-center text-unsm-red">
+                <p role="alert">{{ errorListado() }}</p>
+                <button
+                  type="button"
+                  class="mt-2 underline font-semibold cursor-pointer"
+                  (click)="cargarArticulos()"
+                >
+                  Reintentar
+                </button>
+              </td>
+            </tr>
           } @else {
             @for (art of articulos(); track art.id) {
               <tr class="hover:bg-slate-50/60 transition-colors">
@@ -177,8 +190,8 @@
                 </td>
 
                 <td class="py-3 px-4 whitespace-nowrap text-xs">
-                  <p class="text-slate-700">{{ art.nombreMarca || '-' }}</p>
-                  <p class="text-slate-400 mt-0.5">{{ art.nombreUbicacion || '-' }}</p>
+                  <p class="text-slate-700">{{ art.nombreMarca || '' }}</p>
+                  <p class="text-slate-400 mt-0.5">{{ art.nombreUbicacion || '' }}</p>
                 </td>
 
                 <td class="py-3 px-4 text-right whitespace-nowrap">

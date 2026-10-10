@@ -51,6 +51,7 @@ export class ArticulosListComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly cargando = signal(false);
+  readonly errorListado = signal<string | null>(null);
   readonly articulos = signal<Articulo[]>([]);
   readonly totalElementos = signal(0);
   readonly totalPaginas = signal(0);
@@ -95,6 +96,7 @@ export class ArticulosListComponent implements OnInit {
 
   cargarArticulos(): void {
     this.cargando.set(true);
+    this.errorListado.set(null);
 
     this.articuloService
       .listar({
@@ -119,6 +121,7 @@ export class ArticulosListComponent implements OnInit {
           this.cargando.set(false);
         },
         error: () => {
+          this.errorListado.set('No se pudieron cargar los artículos. Intente nuevamente.');
           this.articulos.set([]);
           this.totalElementos.set(0);
           this.totalPaginas.set(0);
@@ -241,7 +244,7 @@ export class ArticulosListComponent implements OnInit {
       cancelButtonText: 'Cancelar',
       focusCancel: tieneStock,
       confirmButtonClass:
-        'bg-rose-600 hover:bg-rose-700 text-white font-semibold px-4 py-2 rounded-xl text-sm shadow-xs transition-colors cursor-pointer',
+        'bg-unsm-red text-white font-semibold px-4 py-2 rounded-xl text-sm shadow-xs hover:opacity-90 transition-colors cursor-pointer',
       cancelButtonClass:
         'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm border border-slate-300 ml-2 transition-colors cursor-pointer',
     });

@@ -2,7 +2,6 @@ import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import {
-  LucideCircleAlert,
   LucideInbox,
   LucideLayers,
   LucideLoader2,
@@ -14,7 +13,7 @@ import {
 } from '@lucide/angular';
 import { finalize, Subscription } from 'rxjs';
 import { ApiResponse } from '../../../../core/models';
-import { AuthService, NotificationService } from '../../../../core/services';
+import { NotificationService } from '../../../../core/services';
 import { PaginationComponent } from '../../../../shared/components/pagination';
 import { FamiliaFormModalComponent } from '../../components/familia-form-modal/familia-form-modal.component';
 import { FamiliaResponse } from '../../models';
@@ -34,22 +33,19 @@ import { FamiliaService } from '../../services';
     LucideTrash,
     LucideLoader2,
     LucideInbox,
-    LucideCircleAlert,
   ],
   templateUrl: './familias-list.component.html',
 })
 export class FamiliasListComponent implements OnInit {
   private readonly familiaService = inject(FamiliaService);
-  private readonly authService = inject(AuthService);
   private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
 
   private cargarSub?: Subscription;
 
-  readonly esAdmin = this.authService.isAdmin;
   readonly familias = signal<FamiliaResponse[]>([]);
   readonly cargando = signal<boolean>(false);
-  readonly errorCarga = signal<string | null>(null);
+  readonly errorListado = signal<string | null>(null);
   readonly totalElementos = signal<number>(0);
   readonly totalPaginas = signal<number>(0);
   readonly paginaActual = signal<number>(0);
@@ -67,7 +63,7 @@ export class FamiliasListComponent implements OnInit {
   cargarFamilias(): void {
     this.cargarSub?.unsubscribe();
     this.cargando.set(true);
-    this.errorCarga.set(null);
+    this.errorListado.set(null);
 
     this.cargarSub = this.familiaService
       .listar({
@@ -87,13 +83,14 @@ export class FamiliasListComponent implements OnInit {
           this.familias.set(page.content);
           this.totalElementos.set(page.totalElements);
           this.totalPaginas.set(page.totalPages);
-          this.errorCarga.set(null);
+          this.errorListado.set(null);
           this.cargando.set(false);
         },
         error: () => {
-          this.errorCarga.set(
-            'No se pudo cargar el catálogo de familias. Error de conexión con el servidor.',
-          );
+          this.errorListado.set('No se pudieron cargar las familias. Intente nuevamente.');
+          this.familias.set([]);
+          this.totalElementos.set(0);
+          this.totalPaginas.set(0);
           this.cargando.set(false);
         },
       });

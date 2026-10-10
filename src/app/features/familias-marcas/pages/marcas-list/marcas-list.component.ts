@@ -2,7 +2,6 @@ import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import {
-  LucideCircleAlert,
   LucideInbox,
   LucideLoader2,
   LucidePencil,
@@ -14,7 +13,7 @@ import {
 } from '@lucide/angular';
 import { finalize, Subscription } from 'rxjs';
 import { ApiResponse } from '../../../../core/models';
-import { AuthService, NotificationService } from '../../../../core/services';
+import { NotificationService } from '../../../../core/services';
 import { PaginationComponent } from '../../../../shared/components/pagination';
 import { MarcaFormModalComponent } from '../../components/marca-form-modal/marca-form-modal.component';
 import { MarcaResponse } from '../../models';
@@ -34,22 +33,19 @@ import { MarcaService } from '../../services';
     LucideTrash,
     LucideLoader2,
     LucideInbox,
-    LucideCircleAlert,
   ],
   templateUrl: './marcas-list.component.html',
 })
 export class MarcasListComponent implements OnInit {
   private readonly marcaService = inject(MarcaService);
-  private readonly authService = inject(AuthService);
   private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
 
   private cargarSub?: Subscription;
 
-  readonly esAdmin = this.authService.isAdmin;
   readonly marcas = signal<MarcaResponse[]>([]);
   readonly cargando = signal<boolean>(false);
-  readonly errorCarga = signal<string | null>(null);
+  readonly errorListado = signal<string | null>(null);
   readonly totalElementos = signal<number>(0);
   readonly totalPaginas = signal<number>(0);
   readonly paginaActual = signal<number>(0);
@@ -67,7 +63,7 @@ export class MarcasListComponent implements OnInit {
   cargarMarcas(): void {
     this.cargarSub?.unsubscribe();
     this.cargando.set(true);
-    this.errorCarga.set(null);
+    this.errorListado.set(null);
 
     this.cargarSub = this.marcaService
       .listar({
@@ -87,13 +83,14 @@ export class MarcasListComponent implements OnInit {
           this.marcas.set(page.content);
           this.totalElementos.set(page.totalElements);
           this.totalPaginas.set(page.totalPages);
-          this.errorCarga.set(null);
+          this.errorListado.set(null);
           this.cargando.set(false);
         },
         error: () => {
-          this.errorCarga.set(
-            'No se pudo cargar el catálogo de marcas. Error de conexión con el servidor.',
-          );
+          this.errorListado.set('No se pudieron cargar las marcas. Intente nuevamente.');
+          this.marcas.set([]);
+          this.totalElementos.set(0);
+          this.totalPaginas.set(0);
           this.cargando.set(false);
         },
       });

@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LucideCircleAlert, LucideLoader2, LucideSave, LucideX } from '@lucide/angular';
 import { catchError, finalize, of, switchMap } from 'rxjs';
+import { ModalDialogDirective } from '../../../../shared/directives/modal-dialog.directive';
 import {
   Articulo,
   Familia,
@@ -26,11 +27,15 @@ interface ArticuloForm {
 
 @Component({
   selector: 'app-articulo-form',
-  imports: [ReactiveFormsModule, LucideX, LucideSave, LucideLoader2, LucideCircleAlert],
+  imports: [
+    ModalDialogDirective,
+    ReactiveFormsModule,
+    LucideX,
+    LucideSave,
+    LucideLoader2,
+    LucideCircleAlert,
+  ],
   templateUrl: './articulo-form.component.html',
-  host: {
-    '(document:keydown.escape)': 'onEscape()',
-  },
 })
 export class ArticuloFormComponent {
   private readonly articuloService = inject(ArticuloService);
@@ -139,12 +144,6 @@ export class ArticuloFormComponent {
         }
       }
     });
-  }
-
-  onEscape(): void {
-    if (this.visible() && !this.guardando()) {
-      this.onCerrar();
-    }
   }
 
   onBackdropClick(event: MouseEvent): void {

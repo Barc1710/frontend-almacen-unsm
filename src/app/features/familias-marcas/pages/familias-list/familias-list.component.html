@@ -106,29 +106,17 @@
                 </div>
               </td>
             </tr>
-          } @else if (errorCarga()) {
-            <!-- Estado de Error de Carga -->
+          } @else if (errorListado()) {
             <tr>
-              <td colspan="5" class="py-14 text-center text-slate-500">
-                <div class="max-w-sm mx-auto flex flex-col items-center">
-                  <div
-                    class="size-12 rounded-2xl bg-red-50 text-unsm-red flex items-center justify-center mb-3 border border-red-200"
-                  >
-                    <svg lucideCircleAlert class="size-6"></svg>
-                  </div>
-                  <p class="text-sm font-semibold text-slate-800">Error al cargar datos</p>
-                  <p class="text-xs text-slate-500 mt-1 mb-4 text-center">
-                    {{ errorCarga() }}
-                  </p>
-                  <button
-                    type="button"
-                    (click)="cargarFamilias()"
-                    class="px-4 py-2 rounded-xl text-xs font-semibold bg-unsm-green text-white hover:bg-unsm-green-dark transition-colors cursor-pointer flex items-center gap-2"
-                  >
-                    <svg lucideRefreshCw class="size-3.5"></svg>
-                    <span>Reintentar</span>
-                  </button>
-                </div>
+              <td colspan="5" class="p-6 text-center text-unsm-red">
+                <p role="alert">{{ errorListado() }}</p>
+                <button
+                  type="button"
+                  class="mt-2 underline font-semibold cursor-pointer"
+                  (click)="cargarFamilias()"
+                >
+                  Reintentar
+                </button>
               </td>
             </tr>
           } @else if (familias().length === 0) {
@@ -190,22 +178,20 @@
                     >
                       <svg lucidePencil class="size-4"></svg>
                     </button>
-                    @if (esAdmin()) {
-                      <button
-                        type="button"
-                        (click)="eliminar(familia)"
-                        [disabled]="procesandoFilaId() === familia.id"
-                        class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
-                        title="Eliminar familia"
-                        aria-label="Eliminar familia"
-                      >
-                        @if (procesandoFilaId() === familia.id) {
-                          <svg lucideLoader2 class="size-4 animate-spin text-rose-500"></svg>
-                        } @else {
-                          <svg lucideTrash class="size-4"></svg>
-                        }
-                      </button>
-                    }
+                    <button
+                      type="button"
+                      (click)="eliminar(familia)"
+                      [disabled]="procesandoFilaId() === familia.id"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
+                      title="Eliminar familia"
+                      aria-label="Eliminar familia"
+                    >
+                      @if (procesandoFilaId() === familia.id) {
+                        <svg lucideLoader2 class="size-4 animate-spin text-rose-500"></svg>
+                      } @else {
+                        <svg lucideTrash class="size-4"></svg>
+                      }
+                    </button>
                   </div>
                 </td>
               </tr>
