@@ -34,7 +34,6 @@ import {
   Usuario,
   UsuarioCreateRequest,
   UsuarioUpdateRequest,
-  esUsuarioAdminPrincipal,
 } from '../../models';
 import { UsuarioService } from '../../services';
 
@@ -96,7 +95,6 @@ export class UsuarioFormModalComponent {
   readonly mostrarConfirmarClave = signal<boolean>(false);
 
   readonly isEdit = computed(() => !!this.usuario());
-  readonly esAdminPrincipal = computed(() => esUsuarioAdminPrincipal(this.usuario()));
 
   readonly perfilesDisponibles = computed<Perfil[]>(() => {
     const lista = [...this.perfiles()];
@@ -176,12 +174,7 @@ export class UsuarioFormModalComponent {
           this.form.controls.confirmarClave.clearValidators();
           this.form.controls.confirmarClave.updateValueAndValidity();
           this.form.controls.usuario.disable();
-
-          if (this.esAdminPrincipal()) {
-            this.form.controls.idPerfil.disable();
-          } else {
-            this.form.controls.idPerfil.enable();
-          }
+          this.form.controls.idPerfil.enable();
 
           this.form.reset({
             usuario: u.usuario,

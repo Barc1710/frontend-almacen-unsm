@@ -26,7 +26,7 @@ import { extraerMensajeError } from '../../../../core/utils';
 import { PaginationComponent } from '../../../../shared/components/pagination';
 import { UsuarioFormModalComponent } from '../../components/usuario-form-modal/usuario-form-modal.component';
 import { UsuarioResetClaveModalComponent } from '../../components/usuario-reset-clave-modal/usuario-reset-clave-modal.component';
-import { Perfil, Usuario, esUsuarioAdminPrincipal } from '../../models';
+import { Perfil, Usuario } from '../../models';
 import { PerfilService, UsuarioService } from '../../services';
 
 @Component({
@@ -204,7 +204,7 @@ export class UsuariosListComponent implements OnInit {
   }
 
   async toggleEstado(user: Usuario): Promise<void> {
-    if (this.esAdminPrincipal(user) || this.procesandoFilaId() !== null) return;
+    if (this.procesandoFilaId() !== null) return;
 
     if (user.estado === '1') {
       const resultado = await this.notificationService.confirm({
@@ -271,9 +271,5 @@ export class UsuariosListComponent implements OnInit {
           });
       }
     }
-  }
-
-  esAdminPrincipal(user: Usuario): boolean {
-    return esUsuarioAdminPrincipal(user);
   }
 }
