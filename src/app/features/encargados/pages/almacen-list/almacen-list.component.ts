@@ -10,13 +10,16 @@ import {
   LucideSearch,
   LucideToggleLeft,
   LucideToggleRight,
-  LucideTrash,
+  LucideUserCheck,
+  LucideUserPlus,
   LucideWarehouse,
 } from '@lucide/angular';
 import { firstValueFrom, finalize, Subscription } from 'rxjs';
 import { ApiResponse } from '../../../../core/models';
 import { NotificationService } from '../../../../core/services';
+import { extraerMensajeError } from '../../../../core/utils';
 import { PaginationComponent } from '../../../../shared/components/pagination';
+import { CrearUsuarioModalComponent } from '../../components/crear-usuario-modal/crear-usuario-modal.component';
 import { CustodiaFormModalComponent } from '../../components/custodia-form-modal/custodia-form-modal.component';
 import { EncargadoAlmacen } from '../../models';
 import { EncargadoAlmacenService } from '../../services';
@@ -27,16 +30,18 @@ import { EncargadoAlmacenService } from '../../services';
     FormsModule,
     PaginationComponent,
     CustodiaFormModalComponent,
+    CrearUsuarioModalComponent,
     LucideWarehouse,
     LucidePlus,
     LucideSearch,
     LucideRefreshCw,
     LucidePencil,
-    LucideTrash,
     LucideLoader2,
     LucideInbox,
     LucideToggleLeft,
     LucideToggleRight,
+    LucideUserCheck,
+    LucideUserPlus,
   ],
   templateUrl: './almacen-list.component.html',
 })
@@ -55,9 +60,12 @@ export class AlmacenListComponent implements OnInit {
   readonly paginaActual = signal<number>(0);
   readonly tamanioPagina = signal<number>(10);
   readonly filtroTexto = signal<string>('');
+  readonly estadoFiltro = signal<string>('1');
 
   readonly personalSeleccionado = signal<EncargadoAlmacen | null>(null);
   readonly modalVisible = signal<boolean>(false);
+  readonly modalUsuarioVisible = signal<boolean>(false);
+  readonly personaParaUsuario = signal<EncargadoAlmacen | null>(null);
   readonly procesandoFilaId = signal<number | null>(null);
   readonly procesandoTitularId = signal<number | null>(null);
 
@@ -72,35 +80,30 @@ export class AlmacenListComponent implements OnInit {
 
     this.cargarSub = this.encargadoAlmacenService
       .listar({
-        filtro: this.filtroTexto(),
+        filtro: this.filtroTexto() || undefined,
+        estado: this.estadoFiltro() || undefined,
         page: this.paginaActual(),
         size: this.tamanioPagina(),
         sort: 'apellidos,asc',
       })
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.cargando.set(false)),
+      )
       .subscribe({
         next: (page) => {
-          // Filtrado estricto: no mostrar filas inactivas (estado = '0')
-          const activos = page.content.filter((p) => p.estado !== '0');
-
-          if (activos.length === 0 && this.paginaActual() > 0 && page.totalElements > 0) {
-            this.paginaActual.update((p) => p - 1);
-            this.cargarPersonal();
-            return;
-          }
-
-          this.personalAlmacen.set(activos);
+          this.personalAlmacen.set(page.content);
           this.totalElementos.set(page.totalElements);
           this.totalPaginas.set(page.totalPages);
           this.errorListado.set(null);
-          this.cargando.set(false);
         },
         error: () => {
           this.errorListado.set(
             'No se pudieron cargar los encargados de almacén. Intente nuevamente.',
           );
           this.personalAlmacen.set([]);
-          this.cargando.set(false);
+          this.totalElementos.set(0);
+          this.totalPaginas.set(0);
         },
       });
   }
@@ -110,8 +113,15 @@ export class AlmacenListComponent implements OnInit {
     this.cargarPersonal();
   }
 
+  onCambioEstado(val: string): void {
+    this.estadoFiltro.set(val);
+    this.paginaActual.set(0);
+    this.cargarPersonal();
+  }
+
   onLimpiarFiltros(): void {
     this.filtroTexto.set('');
+    this.estadoFiltro.set('1');
     this.paginaActual.set(0);
     this.cargarPersonal();
   }
@@ -144,6 +154,21 @@ export class AlmacenListComponent implements OnInit {
     this.personalSeleccionado.set(null);
   }
 
+  abrirCrearUsuario(persona: EncargadoAlmacen): void {
+    this.personaParaUsuario.set(persona);
+    this.modalUsuarioVisible.set(true);
+  }
+
+  cerrarModalUsuario(): void {
+    this.modalUsuarioVisible.set(false);
+    this.personaParaUsuario.set(null);
+  }
+
+  onUsuarioCreado(): void {
+    this.cerrarModalUsuario();
+    this.cargarPersonal();
+  }
+
   onGuardado(res: ApiResponse<EncargadoAlmacen>): void {
     this.cerrarModal();
     const mensaje = res.mensaje || res.message || 'Personal de custodia guardado con éxito';
@@ -157,93 +182,118 @@ export class AlmacenListComponent implements OnInit {
   async alternarTitular(persona: EncargadoAlmacen): Promise<void> {
     if (this.procesandoTitularId() !== null) return;
 
-    const nuevoEstado = !persona.esTitular;
+    if (persona.estado !== '1') {
+      this.notificationService.error(
+        'Acción no permitida',
+        'Un encargado inactivo no puede ser asignado como titular de turno.',
+      );
+      return;
+    }
+
     this.procesandoTitularId.set(persona.id);
 
     try {
-      if (nuevoEstado) {
-        const titularPrevio = this.personalAlmacen().find(
-          (p) => p.esTitular && p.id !== persona.id,
-        );
-        if (titularPrevio) {
-          await firstValueFrom(
-            this.encargadoAlmacenService.actualizar(titularPrevio.id, {
-              nombres: titularPrevio.nombres,
-              apellidos: titularPrevio.apellidos,
-              dni: titularPrevio.dni,
-              esTitular: false,
-            }),
-          );
-        }
-      }
-
-      await firstValueFrom(
-        this.encargadoAlmacenService.actualizar(persona.id, {
-          nombres: persona.nombres,
-          apellidos: persona.apellidos,
-          dni: persona.dni,
-          esTitular: nuevoEstado,
-        }),
+      const res = await firstValueFrom(
+        this.encargadoAlmacenService.alternarTitular(persona.id),
       );
 
+      const titularActualizado = res.data?.esTitular ?? !persona.esTitular;
       const nombreDisplay = persona.nombreCompleto || `${persona.nombres} ${persona.apellidos}`.trim();
-      const msg = nuevoEstado
+      const msg = titularActualizado
         ? `"${nombreDisplay}" ha sido asignado como Titular de Turno.`
         : `Se ha retirado la titularidad de turno de "${nombreDisplay}".`;
       this.notificationService.toast(msg);
 
       this.cargarPersonal();
-    } catch {
-      this.notificationService.error(
-        'Error de actualización',
-        'No se pudo actualizar el estado de titularidad. Intente nuevamente.',
-      );
+    } catch (err: unknown) {
+      const apiErr = err as { error?: { message?: string; mensaje?: string } };
+      const mensajeError =
+        apiErr?.error?.message ||
+        apiErr?.error?.mensaje ||
+        'No se pudo actualizar el estado de titularidad. Intente nuevamente.';
+      this.notificationService.error('Error de actualización', mensajeError);
     } finally {
       this.procesandoTitularId.set(null);
     }
   }
 
-  async eliminar(persona: EncargadoAlmacen): Promise<void> {
+  async toggleEstado(persona: EncargadoAlmacen): Promise<void> {
     if (this.procesandoFilaId() !== null) return;
 
-    const nombreDisplay = persona.nombreCompleto || `${persona.nombres} ${persona.apellidos}`.trim();
-    const resultado = await this.notificationService.confirm({
-      title: '¿Eliminar personal de almacén?',
-      text: `¿Está seguro de eliminar a "${nombreDisplay}"? Esta acción dará de baja su registro del sistema.`,
-      icon: 'warning',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonClass:
-        'bg-unsm-red text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-xs hover:opacity-90 cursor-pointer',
-      cancelButtonClass:
-        'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm border border-slate-300 ml-2 cursor-pointer',
-    });
+    const nombreCompleto =
+      persona.nombreCompleto?.trim() ||
+      `${persona.nombres} ${persona.apellidos}`.trim();
 
-    if (resultado.isConfirmed && !this.destroyRef.destroyed) {
-      this.procesandoFilaId.set(persona.id);
-      this.encargadoAlmacenService
-        .eliminar(persona.id)
-        .pipe(
-          takeUntilDestroyed(this.destroyRef),
-          finalize(() => this.procesandoFilaId.set(null)),
-        )
-        .subscribe({
-          next: () => {
-            this.personalAlmacen.update((lista) => lista.filter((p) => p.id !== persona.id));
-            this.totalElementos.update((total) => Math.max(0, total - 1));
-            this.notificationService.toast('Personal de almacén eliminado con éxito');
-            if (this.personalAlmacen().length === 0 && this.paginaActual() > 0) {
-              this.paginaActual.update((p) => p - 1);
-            }
-            this.cargarPersonal();
-          },
-          error: () => {
-            this.notificationService.error(
-              'Error al eliminar',
-              'No se pudo desactivar el personal de almacén. Por favor, reintente.',
-            );
-          },
-        });
+    if (persona.estado === '1') {
+      const resultado = await this.notificationService.confirm({
+        title: '¿Desactivar encargado de almacén?',
+        text: `¿Está seguro de suspender a "${nombreCompleto}"?`,
+        icon: 'warning',
+        confirmButtonText: 'Sí, desactivar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonClass:
+          'bg-unsm-red text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-xs hover:opacity-90 cursor-pointer',
+        cancelButtonClass:
+          'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm border border-slate-300 ml-2 cursor-pointer',
+      });
+
+      if (resultado.isConfirmed && !this.destroyRef.destroyed) {
+        this.procesandoFilaId.set(persona.id);
+        this.encargadoAlmacenService
+          .desactivar(persona.id)
+          .pipe(
+            takeUntilDestroyed(this.destroyRef),
+            finalize(() => this.procesandoFilaId.set(null)),
+          )
+          .subscribe({
+            next: () => {
+              this.notificationService.toast('Encargado de almacén desactivado exitosamente');
+              this.cargarPersonal();
+            },
+            error: (err: unknown) => {
+              const msg = extraerMensajeError(
+                err,
+                'No se pudo desactivar el registro del encargado de almacén.',
+              );
+              this.notificationService.error('Error al desactivar', msg);
+            },
+          });
+      }
+    } else {
+      const resultado = await this.notificationService.confirm({
+        title: '¿Activar encargado de almacén?',
+        text: `¿Desea restablecer a "${nombreCompleto}"?`,
+        icon: 'question',
+        confirmButtonText: 'Sí, activar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonClass:
+          'bg-unsm-green text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-xs hover:opacity-90 cursor-pointer',
+        cancelButtonClass:
+          'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm border border-slate-300 ml-2 cursor-pointer',
+      });
+
+      if (resultado.isConfirmed && !this.destroyRef.destroyed) {
+        this.procesandoFilaId.set(persona.id);
+        this.encargadoAlmacenService
+          .activar(persona.id)
+          .pipe(
+            takeUntilDestroyed(this.destroyRef),
+            finalize(() => this.procesandoFilaId.set(null)),
+          )
+          .subscribe({
+            next: () => {
+              this.notificationService.toast('Encargado de almacén activado exitosamente');
+              this.cargarPersonal();
+            },
+            error: (err: unknown) => {
+              const msg = extraerMensajeError(
+                err,
+                'No se pudo activar el registro del encargado de almacén.',
+              );
+              this.notificationService.error('Error al activar', msg);
+            },
+          });
+      }
     }
   }
 }
