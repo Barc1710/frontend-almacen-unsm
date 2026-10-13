@@ -10,6 +10,9 @@ export interface EncargadoAlmacen {
   readonly dni?: string | null;
   readonly estado?: string;
   readonly esTitular: boolean;
+  readonly idUsuario?: number | null;
+  readonly loginUsuario?: string | null;
+  readonly tieneUsuario?: boolean;
 }
 
 /**
@@ -28,6 +31,7 @@ export interface EncargadoAlmacenRequest {
  */
 export interface EncargadoAlmacenFiltros {
   filtro?: string;
+  estado?: string;
   page?: number;
   size?: number;
   sort?: string;

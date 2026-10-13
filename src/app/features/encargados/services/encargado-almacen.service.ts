@@ -9,6 +9,7 @@ import {
   PageResponse,
 } from '../../../core/models';
 import {
+  CrearUsuarioEncargadoRequest,
   EncargadoAlmacen,
   EncargadoAlmacenFiltros,
   EncargadoAlmacenRequest,
@@ -31,6 +32,10 @@ export class EncargadoAlmacenService {
       if (text) {
         params = params.set('filtro', text);
       }
+    }
+
+    if (filtros.estado !== undefined && filtros.estado !== null && filtros.estado.trim() !== '') {
+      params = params.set('estado', filtros.estado.trim());
     }
 
     if (filtros.sort) {
@@ -117,10 +122,34 @@ export class EncargadoAlmacenService {
   }
 
   /**
-   * Realiza la eliminación lógica del personal de custodia (cambia estado a '0').
+   * Alterna la condición de titular de turno de forma atómica en el servidor.
+   * Consume PATCH /encargados-almacen/{id}/titular
+   */
+  alternarTitular(id: number): Observable<ApiResponse<EncargadoAlmacen>> {
+    return this.http.patch<ApiResponse<EncargadoAlmacen>>(`${this.apiUrl}/encargados-almacen/${id}/titular`, {});
+  }
+
+  /**
+   * Desactiva lógicamente al personal de custodia (cambia estado a '0').
    * Consume DELETE /encargados-almacen/{id}
    */
-  eliminar(id: number): Observable<ApiResponse<void>> {
+  desactivar(id: number): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/encargados-almacen/${id}`);
+  }
+
+  /**
+   * Activa al personal de custodia (cambia estado a '1').
+   * Consume PATCH /encargados-almacen/{id}/activar
+   */
+  activar(id: number): Observable<ApiResponse<void>> {
+    return this.http.patch<ApiResponse<void>>(`${this.apiUrl}/encargados-almacen/${id}/activar`, {});
+  }
+
+  /**
+   * Crea y vincula una cuenta de usuario para el personal de custodia.
+   * Consume POST /encargados-almacen/{id}/crear-usuario
+   */
+  crearUsuario(id: number, request: CrearUsuarioEncargadoRequest): Observable<ApiResponse<EncargadoAlmacen>> {
+    return this.http.post<ApiResponse<EncargadoAlmacen>>(`${this.apiUrl}/encargados-almacen/${id}/crear-usuario`, request);
   }
 }

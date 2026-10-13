@@ -8,7 +8,12 @@ import {
   isPageResponse,
   PageResponse,
 } from '../../../core/models';
-import { Encargado, EncargadoFiltros, EncargadoRequest } from '../models';
+import {
+  CrearUsuarioEncargadoRequest,
+  Encargado,
+  EncargadoFiltros,
+  EncargadoRequest,
+} from '../models';
 
 @Service()
 export class EncargadoService {
@@ -27,6 +32,10 @@ export class EncargadoService {
       if (text) {
         params = params.set('filtro', text);
       }
+    }
+
+    if (filtros.estado !== undefined && filtros.estado !== null && filtros.estado.trim() !== '') {
+      params = params.set('estado', filtros.estado.trim());
     }
 
     if (filtros.sort) {
@@ -113,10 +122,26 @@ export class EncargadoService {
   }
 
   /**
-   * Realiza la eliminación lógica del encargado (cambia estado a '0').
+   * Desactiva lógicamente al encargado (cambia estado a '0').
    * Consume DELETE /encargados/{id}
    */
-  eliminar(id: number): Observable<ApiResponse<void>> {
+  desactivar(id: number): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/encargados/${id}`);
+  }
+
+  /**
+   * Activa al encargado (cambia estado a '1').
+   * Consume PATCH /encargados/{id}/activar
+   */
+  activar(id: number): Observable<ApiResponse<void>> {
+    return this.http.patch<ApiResponse<void>>(`${this.apiUrl}/encargados/${id}/activar`, {});
+  }
+
+  /**
+   * Crea y vincula una cuenta de usuario para el encargado.
+   * Consume POST /encargados/{id}/crear-usuario
+   */
+  crearUsuario(id: number, request: CrearUsuarioEncargadoRequest): Observable<ApiResponse<Encargado>> {
+    return this.http.post<ApiResponse<Encargado>>(`${this.apiUrl}/encargados/${id}/crear-usuario`, request);
   }
 }
