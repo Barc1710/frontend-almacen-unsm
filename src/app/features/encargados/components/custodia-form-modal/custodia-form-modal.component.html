@@ -95,50 +95,83 @@
               </div>
             </div>
 
-            <!-- Fila 2: DNI y Switch de Titular de Turno -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-              <div>
-                <label
-                  for="dniCustodio"
-                  class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
-                >
-                  DNI <span class="text-slate-400 font-normal lowercase">(8 dígitos)</span>
-                </label>
-                <input
-                  id="dniCustodio"
-                  type="text"
-                  inputmode="numeric"
-                  maxlength="8"
-                  formControlName="dni"
-                  (input)="onDniInput($event)"
-                  class="w-full h-10 px-3 font-mono tracking-wider rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
-                  [class.border-unsm-red]="isFieldInvalid('dni')"
-                  [class.border-slate-300]="!isFieldInvalid('dni')"
-                />
-                @if (isFieldInvalid('dni')) {
-                  <p class="text-xs text-unsm-red mt-1">El DNI debe tener exactamente 8 dígitos</p>
-                }
+            <!-- Fila 2: DNI -->
+            <div>
+              <label
+                for="dniCustodio"
+                class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                DNI <span class="text-slate-400 font-normal lowercase">(8 dígitos)</span>
+              </label>
+              <input
+                id="dniCustodio"
+                type="text"
+                inputmode="numeric"
+                maxlength="8"
+                formControlName="dni"
+                (input)="onDniInput($event)"
+                class="w-full h-10 px-3 font-mono tracking-wider rounded-lg border text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
+                [class.border-unsm-red]="isFieldInvalid('dni')"
+                [class.border-slate-300]="!isFieldInvalid('dni')"
+              />
+              @if (isFieldInvalid('dni')) {
+                <p class="text-xs text-unsm-red mt-1">El DNI debe tener exactamente 8 dígitos</p>
+              }
+            </div>
+
+            <!-- Fila 3: Switch de Titular de Turno -->
+            <div
+              class="p-3.5 rounded-xl border transition-all flex items-center justify-between"
+              [class.bg-emerald-50/60]="form.controls.esTitular.value && !isInactive()"
+              [class.border-emerald-200]="form.controls.esTitular.value && !isInactive()"
+              [class.bg-slate-50]="!form.controls.esTitular.value || isInactive()"
+              [class.border-slate-200]="!form.controls.esTitular.value || isInactive()"
+            >
+              <div class="pr-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Titular de Turno
+                  </span>
+                  @if (form.controls.esTitular.value && !isInactive()) {
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                      Asignado
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-200/70 text-slate-600">
+                      No asignado
+                    </span>
+                  }
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  @if (isInactive()) {
+                    <span class="text-amber-600 font-medium">No disponible: este encargado está inactivo.</span>
+                  } @else if (form.controls.esTitular.value) {
+                    Este encargado ejercerá la titularidad física de custodia en el almacén.
+                  } @else {
+                    Marque esta opción para designarlo como titular del almacén.
+                  }
+                </p>
               </div>
 
-              <div class="flex items-center justify-between pt-2 sm:pt-5 sm:px-2">
-                <label
-                  for="esTitularToggle"
-                  class="text-xs font-semibold text-slate-700 uppercase tracking-wider cursor-pointer select-none"
-                >
-                  Titular de Turno
-                </label>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input
-                    id="esTitularToggle"
-                    type="checkbox"
-                    formControlName="esTitular"
-                    class="sr-only peer"
-                  />
-                  <div
-                    class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute .after:top-[2px] .after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-unsm-green"
-                  ></div>
-                </label>
-              </div>
+              <!-- Switch interactivo accesible -->
+              <button
+                type="button"
+                role="switch"
+                id="esTitularToggle"
+                [attr.aria-checked]="form.controls.esTitular.value"
+                (click)="toggleTitular()"
+                [disabled]="isInactive() || guardando()"
+                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-unsm-green/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                [class.bg-unsm-green]="form.controls.esTitular.value && !isInactive()"
+                [class.bg-slate-300]="!form.controls.esTitular.value || isInactive()"
+              >
+                <span
+                  aria-hidden="true"
+                  class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out"
+                  [class.translate-x-5]="form.controls.esTitular.value && !isInactive()"
+                  [class.translate-x-0]="!form.controls.esTitular.value || isInactive()"
+                ></span>
+              </button>
             </div>
           </form>
         </div>

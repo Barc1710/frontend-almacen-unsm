@@ -47,6 +47,20 @@
         />
       </div>
 
+      <!-- Filtro por Estado -->
+      <div class="w-full sm:w-44">
+        <select
+          [ngModel]="estadoFiltro()"
+          (ngModelChange)="onCambioEstado($event)"
+          aria-label="Filtrar por estado"
+          class="w-full h-10 px-3 rounded-xl border border-slate-300 text-sm text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green bg-white cursor-pointer"
+        >
+          <option value="">Todos los estados</option>
+          <option value="1">Activos</option>
+          <option value="0">Inactivos</option>
+        </select>
+      </div>
+
       <div class="flex items-center gap-2">
         <button
           type="button"
@@ -93,7 +107,10 @@
             <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700 w-44 text-center">
               Titular de Turno
             </th>
-            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700 w-28 text-center">
+            <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700 w-28">
+              Estado
+            </th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700 w-24 text-center">
               Acciones
             </th>
           </tr>
@@ -101,7 +118,7 @@
         <tbody class="divide-y divide-slate-100">
           @if (cargando()) {
             <tr>
-              <td colspan="6" class="py-16 text-center text-slate-400">
+              <td colspan="7" class="py-16 text-center text-slate-400">
                 <div class="flex flex-col items-center justify-center gap-2">
                   <svg lucideLoader2 class="size-8 animate-spin text-unsm-green"></svg>
                   <span class="text-sm font-medium">Cargando personal de custodia...</span>
@@ -110,7 +127,7 @@
             </tr>
           } @else if (errorListado()) {
             <tr>
-              <td colspan="6" class="p-6 text-center text-unsm-red">
+              <td colspan="7" class="p-6 text-center text-unsm-red">
                 <p role="alert">{{ errorListado() }}</p>
                 <button
                   type="button"
@@ -123,7 +140,7 @@
             </tr>
           } @else if (personalAlmacen().length === 0) {
             <tr>
-              <td colspan="6" class="py-16 text-center text-slate-400">
+              <td colspan="7" class="py-16 text-center text-slate-400">
                 <div class="flex flex-col items-center justify-center gap-2">
                   <svg lucideInbox class="size-8 text-slate-300"></svg>
                   <span class="text-sm font-medium">No se encontró personal de custodia registrado</span>
@@ -167,13 +184,15 @@
                   <button
                     type="button"
                     (click)="alternarTitular(persona)"
-                    [disabled]="procesandoTitularId() === persona.id"
+                    [disabled]="procesandoTitularId() === persona.id || persona.estado !== '1'"
                     [title]="
-                      persona.esTitular
-                        ? 'Titular activo (clic para desmarcar)'
-                        : 'Sin titularidad (clic para asignar titular)'
+                      persona.estado !== '1'
+                        ? 'No se puede asignar titularidad a un encargado inactivo'
+                        : persona.esTitular
+                          ? 'Titular activo (clic para desmarcar)'
+                          : 'Sin titularidad (clic para asignar titular)'
                     "
-                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-50"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     [class.text-unsm-green-dark]="persona.esTitular"
                     [class.bg-unsm-green-light]="persona.esTitular"
                     [class.text-slate-500]="!persona.esTitular"
@@ -192,32 +211,66 @@
                   </button>
                 </td>
 
+                <!-- Columna: Estado (Clicable para alternar estado) -->
+                <td class="py-3.5 px-4 text-center whitespace-nowrap">
+                  <button
+                    type="button"
+                    (click)="toggleEstado(persona)"
+                    [disabled]="procesandoFilaId() === persona.id"
+                    [title]="
+                      persona.estado === '1'
+                        ? 'Activo (clic para suspender)'
+                        : 'Inactivo (clic para activar)'
+                    "
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    [class.text-unsm-green-dark]="persona.estado === '1'"
+                    [class.bg-unsm-green-light]="persona.estado === '1'"
+                    [class.text-slate-500]="persona.estado !== '1'"
+                    [class.bg-slate-100]="persona.estado !== '1'"
+                  >
+                    @if (persona.estado === '1') {
+                      <svg lucideToggleRight class="size-5 text-unsm-green"></svg>
+                      <span>Activo</span>
+                    } @else {
+                      <svg lucideToggleLeft class="size-5 text-slate-400"></svg>
+                      <span>Inactivo</span>
+                    }
+                  </button>
+                </td>
+
                 <!-- Acciones -->
-                <td class="py-3.5 px-4 text-center">
+                <td class="py-3.5 px-4 text-center whitespace-nowrap">
                   <div class="flex items-center justify-center gap-1">
+                    <!-- Crear Usuario / Estado de cuenta vinculada -->
+                    @if (persona.tieneUsuario) {
+                      <span
+                        [title]="'Cuenta de acceso vinculada: @' + (persona.loginUsuario || '')"
+                        class="p-1.5 rounded-lg text-emerald-600 bg-emerald-50 inline-flex items-center justify-center cursor-default"
+                        aria-label="Cuenta de acceso vinculada"
+                      >
+                        <svg lucideUserCheck class="size-4"></svg>
+                      </span>
+                    } @else {
+                      <button
+                        type="button"
+                        (click)="abrirCrearUsuario(persona)"
+                        [disabled]="persona.estado !== '1'"
+                        [title]="persona.estado === '1' ? 'Crear acceso al sistema' : 'No se puede crear usuario para un encargado inactivo'"
+                        aria-label="Crear acceso al sistema"
+                        class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-green hover:bg-unsm-green/10 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <svg lucideUserPlus class="size-4"></svg>
+                      </button>
+                    }
+
                     <button
                       type="button"
                       (click)="abrirEditar(persona)"
                       title="Editar personal"
                       aria-label="Editar personal"
-                      class="p-1.5 rounded-lg text-slate-500 hover:text-unsm-green hover:bg-unsm-green/10 transition-colors cursor-pointer"
+                      class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-cyan hover:bg-unsm-cyan/10 transition-colors cursor-pointer"
                     >
                       <svg lucidePencil class="size-4"></svg>
-                    </button>
-
-                    <button
-                      type="button"
-                      (click)="eliminar(persona)"
-                      [disabled]="procesandoFilaId() === persona.id"
-                      title="Eliminar personal"
-                      aria-label="Eliminar personal"
-                      class="p-1.5 rounded-lg text-slate-500 hover:text-unsm-red hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
-                    >
-                      @if (procesandoFilaId() === persona.id) {
-                        <svg lucideLoader2 class="size-4 animate-spin text-unsm-red"></svg>
-                      } @else {
-                        <svg lucideTrash class="size-4"></svg>
-                      }
                     </button>
                   </div>
                 </td>
@@ -252,5 +305,14 @@
     [personal]="personalSeleccionado()"
     (cerrar)="cerrarModal()"
     (guardado)="onGuardado($event)"
+  />
+
+  <!-- Modal de Creación de Usuario -->
+  <app-crear-usuario-modal
+    [visible]="modalUsuarioVisible()"
+    [persona]="personaParaUsuario()"
+    tipo="ALMACEN"
+    (cerrar)="cerrarModalUsuario()"
+    (guardado)="onUsuarioCreado()"
   />
 </div>

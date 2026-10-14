@@ -8,13 +8,17 @@ import {
   LucidePlus,
   LucideRefreshCw,
   LucideSearch,
-  LucideTrash,
+  LucideToggleLeft,
+  LucideToggleRight,
   LucideUserCheck,
+  LucideUserPlus,
 } from '@lucide/angular';
 import { finalize, Subscription } from 'rxjs';
 import { ApiResponse } from '../../../../core/models';
 import { NotificationService } from '../../../../core/services';
+import { extraerMensajeError } from '../../../../core/utils';
 import { PaginationComponent } from '../../../../shared/components/pagination';
+import { CrearUsuarioModalComponent } from '../../components/crear-usuario-modal/crear-usuario-modal.component';
 import { EncargadoFormModalComponent } from '../../components/encargado-form-modal/encargado-form-modal.component';
 import { Encargado } from '../../models';
 import { EncargadoService } from '../../services';
@@ -25,12 +29,15 @@ import { EncargadoService } from '../../services';
     FormsModule,
     PaginationComponent,
     EncargadoFormModalComponent,
+    CrearUsuarioModalComponent,
     LucideUserCheck,
+    LucideUserPlus,
     LucidePlus,
     LucideSearch,
     LucideRefreshCw,
     LucidePencil,
-    LucideTrash,
+    LucideToggleRight,
+    LucideToggleLeft,
     LucideLoader2,
     LucideInbox,
   ],
@@ -51,9 +58,12 @@ export class JefeListComponent implements OnInit {
   readonly paginaActual = signal<number>(0);
   readonly tamanioPagina = signal<number>(10);
   readonly filtroTexto = signal<string>('');
+  readonly estadoFiltro = signal<string>('1');
 
   readonly encargadoSeleccionado = signal<Encargado | null>(null);
   readonly modalVisible = signal<boolean>(false);
+  readonly modalUsuarioVisible = signal<boolean>(false);
+  readonly personaParaUsuario = signal<Encargado | null>(null);
   readonly procesandoFilaId = signal<number | null>(null);
 
   ngOnInit(): void {
@@ -67,35 +77,28 @@ export class JefeListComponent implements OnInit {
 
     this.cargarSub = this.encargadoService
       .listar({
-        filtro: this.filtroTexto(),
+        filtro: this.filtroTexto() || undefined,
+        estado: this.estadoFiltro() || undefined,
         page: this.paginaActual(),
         size: this.tamanioPagina(),
         sort: 'apellidos,asc',
       })
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.cargando.set(false)),
+      )
       .subscribe({
         next: (page) => {
-          // Filtrado estricto: no mostrar filas inactivas (estado = '0')
-          const activos = page.content.filter((e) => e.estado !== '0');
-
-          if (activos.length === 0 && this.paginaActual() > 0 && page.totalElements > 0) {
-            this.paginaActual.update((p) => p - 1);
-            this.cargarEncargados();
-            return;
-          }
-
-          this.encargados.set(activos);
+          this.encargados.set(page.content);
           this.totalElementos.set(page.totalElements);
           this.totalPaginas.set(page.totalPages);
           this.errorListado.set(null);
-          this.cargando.set(false);
         },
         error: () => {
           this.errorListado.set('No se pudieron cargar los jefes de almacén. Intente nuevamente.');
           this.encargados.set([]);
           this.totalElementos.set(0);
           this.totalPaginas.set(0);
-          this.cargando.set(false);
         },
       });
   }
@@ -105,8 +108,15 @@ export class JefeListComponent implements OnInit {
     this.cargarEncargados();
   }
 
+  onCambioEstado(val: string): void {
+    this.estadoFiltro.set(val);
+    this.paginaActual.set(0);
+    this.cargarEncargados();
+  }
+
   onLimpiarFiltros(): void {
     this.filtroTexto.set('');
+    this.estadoFiltro.set('1');
     this.paginaActual.set(0);
     this.cargarEncargados();
   }
@@ -139,6 +149,21 @@ export class JefeListComponent implements OnInit {
     this.encargadoSeleccionado.set(null);
   }
 
+  abrirCrearUsuario(encargado: Encargado): void {
+    this.personaParaUsuario.set(encargado);
+    this.modalUsuarioVisible.set(true);
+  }
+
+  cerrarModalUsuario(): void {
+    this.modalUsuarioVisible.set(false);
+    this.personaParaUsuario.set(null);
+  }
+
+  onUsuarioCreado(): void {
+    this.cerrarModalUsuario();
+    this.cargarEncargados();
+  }
+
   onGuardado(res: ApiResponse<Encargado>): void {
     this.cerrarModal();
     const mensaje = res.mensaje || res.message || 'Jefe guardado con éxito';
@@ -146,50 +171,77 @@ export class JefeListComponent implements OnInit {
     this.cargarEncargados();
   }
 
-  async eliminar(encargado: Encargado): Promise<void> {
+  async toggleEstado(encargado: Encargado): Promise<void> {
     if (this.procesandoFilaId() !== null) return;
 
     const nombreCompleto =
       encargado.nombreCompleto?.trim() ||
       `${encargado.nombres} ${encargado.apellidos}`.trim();
 
-    const resultado = await this.notificationService.confirm({
-      title: '¿Eliminar jefe?',
-      text: `¿Está seguro de eliminar a "${nombreCompleto}"? Esta acción dará de baja su registro como responsable firmante.`,
-      icon: 'warning',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonClass:
-        'bg-unsm-red text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-xs hover:opacity-90 cursor-pointer',
-      cancelButtonClass:
-        'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm border border-slate-300 ml-2 cursor-pointer',
-    });
+    if (encargado.estado === '1') {
+      const resultado = await this.notificationService.confirm({
+        title: '¿Desactivar jefe?',
+        text: `¿Está seguro de suspender a "${nombreCompleto}"?`,
+        icon: 'warning',
+        confirmButtonText: 'Sí, desactivar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonClass:
+          'bg-unsm-red text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-xs hover:opacity-90 cursor-pointer',
+        cancelButtonClass:
+          'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm border border-slate-300 ml-2 cursor-pointer',
+      });
 
-    if (resultado.isConfirmed && !this.destroyRef.destroyed) {
-      this.procesandoFilaId.set(encargado.id);
-      this.encargadoService
-        .eliminar(encargado.id)
-        .pipe(
-          takeUntilDestroyed(this.destroyRef),
-          finalize(() => this.procesandoFilaId.set(null)),
-        )
-        .subscribe({
-          next: () => {
-            this.encargados.update((lista) => lista.filter((e) => e.id !== encargado.id));
-            this.totalElementos.update((total) => Math.max(0, total - 1));
-            this.notificationService.toast('Jefe eliminado con éxito');
-            if (this.encargados().length === 0 && this.paginaActual() > 0) {
-              this.paginaActual.update((p) => p - 1);
-            }
-            this.cargarEncargados();
-          },
-          error: () => {
-            this.notificationService.error(
-              'Error al eliminar',
-              'No se pudo desactivar el registro del jefe. Por favor, reintente.',
-            );
-          },
-        });
+      if (resultado.isConfirmed && !this.destroyRef.destroyed) {
+        this.procesandoFilaId.set(encargado.id);
+        this.encargadoService
+          .desactivar(encargado.id)
+          .pipe(
+            takeUntilDestroyed(this.destroyRef),
+            finalize(() => this.procesandoFilaId.set(null)),
+          )
+          .subscribe({
+            next: () => {
+              this.notificationService.toast('Jefe desactivado exitosamente');
+              this.cargarEncargados();
+            },
+            error: (err: unknown) => {
+              const msg = extraerMensajeError(err, 'No se pudo desactivar el registro del jefe.');
+              this.notificationService.error('Error al desactivar', msg);
+            },
+          });
+      }
+    } else {
+      const resultado = await this.notificationService.confirm({
+        title: '¿Activar jefe?',
+        text: `¿Desea restablecer a "${nombreCompleto}"?`,
+        icon: 'question',
+        confirmButtonText: 'Sí, activar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonClass:
+          'bg-unsm-green text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-xs hover:opacity-90 cursor-pointer',
+        cancelButtonClass:
+          'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm border border-slate-300 ml-2 cursor-pointer',
+      });
+
+      if (resultado.isConfirmed && !this.destroyRef.destroyed) {
+        this.procesandoFilaId.set(encargado.id);
+        this.encargadoService
+          .activar(encargado.id)
+          .pipe(
+            takeUntilDestroyed(this.destroyRef),
+            finalize(() => this.procesandoFilaId.set(null)),
+          )
+          .subscribe({
+            next: () => {
+              this.notificationService.toast('Jefe activado exitosamente');
+              this.cargarEncargados();
+            },
+            error: (err: unknown) => {
+              const msg = extraerMensajeError(err, 'No se pudo activar el registro del jefe.');
+              this.notificationService.error('Error al activar', msg);
+            },
+          });
+      }
     }
   }
 }

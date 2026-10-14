@@ -187,6 +187,12 @@ export class SidebarComponent {
         nombreItem = 'Encargados';
       } else if (codigo === 'ENCARGADOS_ALMACEN' || url === '/encargados/almacen') {
         nombreItem = 'Almacén';
+      } else if (
+        codigo === 'SEGURIDAD_PERFILES' ||
+        codigo === 'PERFILES' ||
+        url === '/seguridad/perfiles'
+      ) {
+        nombreItem = 'Perfiles';
       }
 
       const item: SidebarItem = {

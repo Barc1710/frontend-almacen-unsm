@@ -11,6 +11,9 @@ export interface Encargado {
   readonly dni?: string | null;
   readonly cargo?: string | null;
   readonly estado?: string;
+  readonly idUsuario?: number | null;
+  readonly loginUsuario?: string | null;
+  readonly tieneUsuario?: boolean;
 }
 
 /**
@@ -30,7 +33,19 @@ export interface EncargadoRequest {
  */
 export interface EncargadoFiltros {
   filtro?: string;
+  estado?: string;
   page?: number;
   size?: number;
   sort?: string;
+}
+
+/**
+ * Payload para creación y vinculación de usuario para un encargado.
+ */
+export interface CrearUsuarioEncargadoRequest {
+  usuario: string;
+  clave: string;
+  correo?: string | null;
+  telefono?: string | null;
+  idPerfil: number;
 }

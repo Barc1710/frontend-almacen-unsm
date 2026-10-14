@@ -55,6 +55,7 @@ export class CustodiaFormModalComponent {
   readonly errorGeneral = signal<string | null>(null);
 
   readonly isEdit = computed(() => !!this.personal());
+  readonly isInactive = computed(() => this.personal()?.estado === '0');
 
   readonly form = new FormGroup<CustodiaForm>({
     nombres: new FormControl('', {
@@ -96,12 +97,18 @@ export class CustodiaFormModalComponent {
         this.guardando.set(false);
 
         if (p) {
+          const inactivo = p.estado === '0';
           this.form.reset({
             nombres: p.nombres ?? '',
             apellidos: p.apellidos ?? '',
             dni: p.dni ?? '',
-            esTitular: p.esTitular ?? false,
+            esTitular: inactivo ? false : Boolean(p.esTitular),
           });
+          if (inactivo) {
+            this.form.controls.esTitular.disable();
+          } else {
+            this.form.controls.esTitular.enable();
+          }
         } else {
           this.form.reset({
             nombres: '',
@@ -109,6 +116,7 @@ export class CustodiaFormModalComponent {
             dni: '',
             esTitular: false,
           });
+          this.form.controls.esTitular.enable();
         }
       }
     });
@@ -127,7 +135,8 @@ export class CustodiaFormModalComponent {
   }
 
   toggleTitular(): void {
-    const current = this.form.controls.esTitular.value;
+    if (this.isInactive() || this.guardando()) return;
+    const current = !!this.form.controls.esTitular.value;
     this.form.controls.esTitular.setValue(!current);
     this.form.controls.esTitular.markAsDirty();
   }

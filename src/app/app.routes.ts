@@ -104,6 +104,32 @@ export const routes: Routes = [
       { path: 'responsables', pathMatch: 'full', redirectTo: '/encargados/jefe' },
       { path: 'personal-firmante', pathMatch: 'full', redirectTo: '/encargados/jefe' },
       { path: 'cambiar-clave', pathMatch: 'full', redirectTo: '/' },
+      {
+        path: 'seguridad',
+        canActivate: [moduleGuard('SEGURIDAD')],
+        loadChildren: () =>
+          import('./features/seguridad/seguridad.routes').then((m) => m.SEGURIDAD_ROUTES),
+      },
+      { path: 'usuarios', pathMatch: 'full', redirectTo: '/seguridad/usuarios' },
+      { path: 'perfiles', pathMatch: 'full', redirectTo: '/seguridad/perfiles' },
+      {
+        path: 'proveedores',
+        title: 'Proveedores | Almacén UNSM',
+        canActivate: [moduleGuard('PROVEEDORES')],
+        loadComponent: () =>
+          import('./features/proveedores/pages/proveedores-list/proveedores-list.component').then(
+            (m) => m.ProveedoresListComponent,
+          ),
+      },
+      {
+        path: 'clientes',
+        title: 'Clientes | Almacén UNSM',
+        canActivate: [moduleGuard('CLIENTES')],
+        loadComponent: () =>
+          import('./features/clientes/pages/clientes-list/clientes-list.component').then(
+            (m) => m.ClientesListComponent,
+          ),
+      },
       // Rutas dinámicas universales para módulos y submódulos cargados desde la base de datos
       { path: ':modulo', canActivate: [moduleGuard()], loadComponent: loadDashboard },
       { path: ':seccion/:submodulo', canActivate: [moduleGuard()], loadComponent: loadDashboard },
