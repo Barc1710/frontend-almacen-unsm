@@ -112,7 +112,8 @@ export const SIDEBAR_ICONS: Record<string, LucideIcon> = {
   PROVEEDORES: LucideTruck,
   'BUILDING-2': LucideBuilding2,
   BUILDING_2: LucideBuilding2,
-  CLIENTES: LucideBuilding2,
+  CLIENTES: LucideUserRound,
+  CLIENTE: LucideUserRound,
   AREAS: LucideBuilding2,
 
   // Encargados
