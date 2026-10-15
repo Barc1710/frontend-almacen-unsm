@@ -146,18 +146,6 @@
           }
         </div>
       </form>
-
-      @if (developmentLoginEnabled) {
-        <div class="my-4 border-t border-slate-200" aria-hidden="true"></div>
-        <button
-          type="button"
-          (click)="onDevelopmentLogin()"
-          [disabled]="isLoading()"
-          class="flex h-11 w-full items-center justify-center rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-unsm-green-dark disabled:opacity-60 disabled:cursor-wait"
-        >
-          Acceso de desarrollo
-        </button>
-      }
     </div>
   </section>
 
