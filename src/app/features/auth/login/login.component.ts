@@ -15,7 +15,7 @@ import { AuthService } from '../../../core/services';
 })
 export class LoginComponent {
   private readonly fb = inject(FormBuilder);
-  protected readonly authService = inject(AuthService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
