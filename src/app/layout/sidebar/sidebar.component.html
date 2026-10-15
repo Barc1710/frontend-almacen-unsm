@@ -70,7 +70,11 @@
             class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-unsm-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-unsm-green-dark"
           >
             <div
-              [class]="isItemActive(item, itemActive.isActive) ? 'bg-unsm-cyan text-white shadow-sm' : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'"
+              [class]="
+                isItemActive(item, itemActive.isActive)
+                  ? 'bg-unsm-cyan text-white shadow-sm'
+                  : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'
+              "
               class="size-8 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-150"
             >
               <svg [lucideIcon]="item.icono" class="size-4.5"></svg>
@@ -80,7 +84,10 @@
 
           <!-- Separador sutil entre módulos -->
           @if (!last) {
-            <div class="h-px .bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
+            <div
+              class="h-px .bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3"
+              aria-hidden="true"
+            ></div>
           }
         } @else {
           <!-- Módulo Desplegable (Grupos: Inventario, Seguridad, etc.) -->
@@ -99,7 +106,11 @@
             >
               <div class="flex items-center gap-3 min-w-0">
                 <div
-                  [class]="(isGroupOpen(item) || isGroupActive(item)) ? 'bg-unsm-cyan text-white shadow-sm' : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'"
+                  [class]="
+                    isGroupOpen(item) || isGroupActive(item)
+                      ? 'bg-unsm-cyan text-white shadow-sm'
+                      : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'
+                  "
                   class="size-8 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-150"
                 >
                   <svg [lucideIcon]="item.icono" class="size-4.5"></svg>
@@ -132,7 +143,11 @@
                     class="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors duration-150 outline-none cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-unsm-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-unsm-green-dark"
                   >
                     <div
-                      [class]="isSubActive(sub, subActive.isActive) ? 'bg-unsm-yellow text-unsm-green-border shadow-sm font-bold' : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'"
+                      [class]="
+                        isSubActive(sub, subActive.isActive)
+                          ? 'bg-unsm-yellow text-unsm-green-border shadow-sm font-bold'
+                          : 'bg-white/10 text-white/80 group-hover:bg-white/20 group-hover:text-white'
+                      "
                       class="size-8 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-150"
                     >
                       <svg [lucideIcon]="sub.icono" class="size-4.5"></svg>
@@ -146,7 +161,10 @@
 
           <!-- Separador sutil tras el grupo si no es el último elemento -->
           @if (!last) {
-            <div class="h-px .bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3" aria-hidden="true"></div>
+            <div
+              class="h-px .bg-gradient-to-r from-transparent via-white/12 to-transparent my-1 mx-3"
+              aria-hidden="true"
+            ></div>
           }
         }
       } @empty {

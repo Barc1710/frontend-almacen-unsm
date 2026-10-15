@@ -2,11 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import {
-  ApiResponse,
-  PageResponse,
-  getApiResponseData,
-} from '../../../core/models';
+import { ApiResponse, PageResponse, getApiResponseData } from '../../../core/models';
 import {
   Usuario,
   UsuarioCreateRequest,

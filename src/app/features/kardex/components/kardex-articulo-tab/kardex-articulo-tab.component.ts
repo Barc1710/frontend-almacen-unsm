@@ -170,9 +170,7 @@ export class KardexArticuloTabComponent implements OnInit {
         next: (articulos) => {
           this.resultadosBusqueda.set(articulos);
           this.buscandoPredictivo.set(false);
-          this.dropdownAbierto.set(
-            articulos.length > 0 || this.busquedaQuery().trim().length >= 2,
-          );
+          this.dropdownAbierto.set(articulos.length > 0 || this.busquedaQuery().trim().length >= 2);
         },
         error: () => {
           this.buscandoPredictivo.set(false);

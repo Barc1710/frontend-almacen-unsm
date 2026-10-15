@@ -29,12 +29,7 @@ import { finalize } from 'rxjs';
 import { ApiResponse } from '../../../../core/models';
 import { extraerMensajeError } from '../../../../core/utils';
 import { ModalDialogDirective } from '../../../../shared/directives/modal-dialog.directive';
-import {
-  Perfil,
-  Usuario,
-  UsuarioCreateRequest,
-  UsuarioUpdateRequest,
-} from '../../models';
+import { Perfil, Usuario, UsuarioCreateRequest, UsuarioUpdateRequest } from '../../models';
 import { UsuarioService } from '../../services';
 
 function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {

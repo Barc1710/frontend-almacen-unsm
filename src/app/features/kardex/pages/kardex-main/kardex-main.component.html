@@ -61,9 +61,7 @@
 
   <!-- Contenido Dinámico de la Pestaña Activa -->
   @if (activeTab() === 'general') {
-    <app-kardex-general-tab
-      (auditarArticulo)="onAuditarArticuloDesdeGeneral($event)"
-    />
+    <app-kardex-general-tab (auditarArticulo)="onAuditarArticuloDesdeGeneral($event)" />
   } @else if (activeTab() === 'articulo') {
     <app-kardex-articulo-tab
       [articuloId]="selectedArticuloId()"

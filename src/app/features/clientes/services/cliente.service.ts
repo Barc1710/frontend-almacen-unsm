@@ -70,9 +70,9 @@ export class ClienteService {
    * Consume GET /clientes/activos
    */
   listarActivos(): Observable<Cliente[]> {
-    return this.http.get<ApiResponse<Cliente[]>>(`${this.apiUrl}/clientes/activos`).pipe(
-      map((res) => getApiResponseData(res) ?? []),
-    );
+    return this.http
+      .get<ApiResponse<Cliente[]>>(`${this.apiUrl}/clientes/activos`)
+      .pipe(map((res) => getApiResponseData(res) ?? []));
   }
 
   /**

@@ -53,18 +53,18 @@ export const routes: Routes = [
         title: 'Familias | Almacén UNSM',
         canActivate: [moduleGuard('INVENTARIO_FAMILIAS')],
         loadComponent: () =>
-          import(
-            './features/familias-marcas/pages/familias-list/familias-list.component'
-          ).then((m) => m.FamiliasListComponent),
+          import('./features/familias-marcas/pages/familias-list/familias-list.component').then(
+            (m) => m.FamiliasListComponent,
+          ),
       },
       {
         path: 'inventario/marcas',
         title: 'Marcas | Almacén UNSM',
         canActivate: [moduleGuard('INVENTARIO_MARCAS')],
         loadComponent: () =>
-          import(
-            './features/familias-marcas/pages/marcas-list/marcas-list.component'
-          ).then((m) => m.MarcasListComponent),
+          import('./features/familias-marcas/pages/marcas-list/marcas-list.component').then(
+            (m) => m.MarcasListComponent,
+          ),
       },
       { path: 'inventario', pathMatch: 'full', redirectTo: '/inventario/articulos' },
       { path: 'articulos', pathMatch: 'full', redirectTo: '/inventario/articulos' },
@@ -92,8 +92,7 @@ export const routes: Routes = [
       {
         path: 'kardex',
         canActivate: [moduleGuard('KARDEX')],
-        loadChildren: () =>
-          import('./features/kardex/kardex.routes').then((m) => m.KARDEX_ROUTES),
+        loadChildren: () => import('./features/kardex/kardex.routes').then((m) => m.KARDEX_ROUTES),
       },
       {
         path: 'encargados',

@@ -1,17 +1,8 @@
-import {
-  Component,
-  DestroyRef,
-  inject,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideBookOpen, LucideClipboardList } from '@lucide/angular';
-import {
-  KardexArticuloTabComponent,
-  KardexGeneralTabComponent,
-} from '../../components';
+import { KardexArticuloTabComponent, KardexGeneralTabComponent } from '../../components';
 import { KardexTab } from '../../models';
 
 @Component({
@@ -37,27 +28,25 @@ export class KardexMainComponent implements OnInit {
 
   ngOnInit(): void {
     // Deep Linking: Si la URL recibe ?articuloId=X o ?tab=articulo
-    this.route.queryParams
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((params) => {
-        const idParam = params['articuloId'];
-        const tabParam = params['tab'];
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const idParam = params['articuloId'];
+      const tabParam = params['tab'];
 
-        if (idParam) {
-          const numId = Number(idParam);
-          if (!isNaN(numId) && numId > 0) {
-            this.selectedArticuloId.set(numId);
-            this.activeTab.set('articulo');
-            return;
-          }
-        }
-
-        if (tabParam === 'articulo') {
+      if (idParam) {
+        const numId = Number(idParam);
+        if (!isNaN(numId) && numId > 0) {
+          this.selectedArticuloId.set(numId);
           this.activeTab.set('articulo');
-        } else if (tabParam === 'general') {
-          this.activeTab.set('general');
+          return;
         }
-      });
+      }
+
+      if (tabParam === 'articulo') {
+        this.activeTab.set('articulo');
+      } else if (tabParam === 'general') {
+        this.activeTab.set('general');
+      }
+    });
   }
 
   cambiarPestana(tab: KardexTab): void {

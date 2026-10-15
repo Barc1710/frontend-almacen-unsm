@@ -92,18 +92,16 @@
   <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
     <div class="overflow-x-auto min-h-80">
       <table class="w-full text-left text-sm text-slate-600 border-collapse">
-        <thead class="bg-slate-50/80 text-xs font-semibold text-slate-700 border-b border-slate-200">
+        <thead
+          class="bg-slate-50/80 text-xs font-semibold text-slate-700 border-b border-slate-200"
+        >
           <tr>
             <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700 w-14 text-center">#</th>
             <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700 w-32 text-center">
               Título / Profesión
             </th>
-            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">
-              Nombres
-            </th>
-            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">
-              Apellidos
-            </th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Nombres</th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Apellidos</th>
             <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700 w-32 text-center">
               DNI
             </th>
@@ -236,7 +234,11 @@
                         type="button"
                         (click)="abrirCrearUsuario(enc)"
                         [disabled]="enc.estado !== '1'"
-                        [title]="enc.estado === '1' ? 'Crear acceso al sistema' : 'No se puede crear usuario para un encargado inactivo'"
+                        [title]="
+                          enc.estado === '1'
+                            ? 'Crear acceso al sistema'
+                            : 'No se puede crear usuario para un encargado inactivo'
+                        "
                         aria-label="Crear acceso al sistema"
                         class="p-1.5 rounded-lg text-slate-400 hover:text-unsm-green hover:bg-unsm-green/10 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                       >

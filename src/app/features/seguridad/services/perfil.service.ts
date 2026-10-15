@@ -3,12 +3,7 @@ import { inject, Service } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse, getApiResponseData } from '../../../core/models';
-import {
-  AsignarPermisosRequest,
-  Perfil,
-  PerfilPermisosResponse,
-  PerfilRequest,
-} from '../models';
+import { AsignarPermisosRequest, Perfil, PerfilPermisosResponse, PerfilRequest } from '../models';
 
 @Service()
 export class PerfilService {
@@ -95,6 +90,9 @@ export class PerfilService {
     idPerfil: number,
     request: AsignarPermisosRequest,
   ): Observable<ApiResponse<void>> {
-    return this.http.put<ApiResponse<void>>(`${this.apiUrl}/perfiles/${idPerfil}/permisos`, request);
+    return this.http.put<ApiResponse<void>>(
+      `${this.apiUrl}/perfiles/${idPerfil}/permisos`,
+      request,
+    );
   }
 }

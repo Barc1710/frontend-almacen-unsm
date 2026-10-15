@@ -197,11 +197,7 @@ export class AuthService {
     const normalized = code.trim().toUpperCase();
     if (normalized === 'DASHBOARD') return true;
     if (normalized === 'EGRESOS' || normalized === 'DESPACHOS' || normalized === 'SALIDAS') {
-      return (
-        this.hasModule('EGRESOS') ||
-        this.hasModule('DESPACHOS') ||
-        this.hasModule('SALIDAS')
-      );
+      return this.hasModule('EGRESOS') || this.hasModule('DESPACHOS') || this.hasModule('SALIDAS');
     }
     if (normalized === 'INGRESOS' || normalized === 'ENTRADAS') {
       return this.hasModule('INGRESOS') || this.hasModule('ENTRADAS');
@@ -269,16 +265,11 @@ export class AuthService {
     }
     if (normalized === 'ENCARGADOS_JEFE' || normalized === 'JEFE') {
       return (
-        this.hasModule('ENCARGADOS_JEFE') ||
-        this.hasModule('JEFE') ||
-        this.hasModule('ENCARGADOS')
+        this.hasModule('ENCARGADOS_JEFE') || this.hasModule('JEFE') || this.hasModule('ENCARGADOS')
       );
     }
     if (normalized === 'ENCARGADOS_ALMACEN') {
-      return (
-        this.hasModule('ENCARGADOS_ALMACEN') ||
-        this.hasModule('ENCARGADOS')
-      );
+      return this.hasModule('ENCARGADOS_ALMACEN') || this.hasModule('ENCARGADOS');
     }
     return this.hasModule(normalized);
   }

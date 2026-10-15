@@ -70,4 +70,3 @@ export function isPageResponse<T>(value: unknown): value is PageResponse<T> {
 export function getApiResponseData<T>(response: ApiResponse<T>): T | undefined {
   return response.datos !== undefined ? response.datos : response.data;
 }
-

@@ -27,9 +27,7 @@ export class KardexService {
     page = 0,
     size = 10,
   ): Observable<PageResponse<KardexMovimiento>> {
-    let params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
+    let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
 
     if (filtros.desde?.trim()) {
       params = params.set('desde', filtros.desde.trim());
@@ -148,13 +146,11 @@ export class KardexService {
    * Consume GET /api/v1/articulos/{id}
    */
   obtenerArticuloPorId(idArticulo: number): Observable<Articulo | null> {
-    return this.http
-      .get<ApiResponse<Articulo>>(`${this.apiUrl}/articulos/${idArticulo}`)
-      .pipe(
-        map((response) => {
-          const data = getApiResponseData(response);
-          return data ?? (response as unknown as Articulo) ?? null;
-        }),
-      );
+    return this.http.get<ApiResponse<Articulo>>(`${this.apiUrl}/articulos/${idArticulo}`).pipe(
+      map((response) => {
+        const data = getApiResponseData(response);
+        return data ?? (response as unknown as Articulo) ?? null;
+      }),
+    );
   }
 }

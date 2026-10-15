@@ -271,9 +271,7 @@
                 <!-- Destinatario / Cliente -->
                 <td class="py-3 px-4 min-w-52">
                   @if (egr.tipoEgreso !== 'DESPACHO_ORDINARIO') {
-                    <span class="text-xs text-slate-400 italic">
-                      — (Baja interna)
-                    </span>
+                    <span class="text-xs text-slate-400 italic"> — (Baja interna) </span>
                   } @else {
                     <p
                       class="font-medium text-slate-800 line-clamp-1"
@@ -287,7 +285,10 @@
                 <!-- Área de Destino -->
                 <td class="py-3 px-4 min-w-44">
                   @if (egr.tipoEgreso !== 'DESPACHO_ORDINARIO') {
-                    <span class="text-xs text-slate-600 truncate block" [title]="egr.motivoBaja || 'Baja interna de almacén'">
+                    <span
+                      class="text-xs text-slate-600 truncate block"
+                      [title]="egr.motivoBaja || 'Baja interna de almacén'"
+                    >
                       {{ egr.motivoBaja || 'Baja interna' }}
                     </span>
                   } @else {
@@ -327,7 +328,7 @@
                   <div class="flex items-center gap-1.5 text-slate-700">
                     <svg lucideUser class="size-3.5 text-slate-400 shrink-0"></svg>
                     <span class="font-medium text-slate-800">{{
-                      (egr.nombreUsuario || egr.nombreEncargadoAlmacen || '') | titlecase
+                      egr.nombreUsuario || egr.nombreEncargadoAlmacen || '' | titlecase
                     }}</span>
                   </div>
                 </td>

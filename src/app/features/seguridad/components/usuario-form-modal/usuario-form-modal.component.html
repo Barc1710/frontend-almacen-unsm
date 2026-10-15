@@ -155,14 +155,20 @@
                       maxlength="100"
                       formControlName="confirmarClave"
                       class="w-full h-10 pl-3 pr-10 font-mono text-sm rounded-lg border text-slate-800 transition-colors outline-none focus:ring-2 focus:ring-unsm-green/20 focus:border-unsm-green"
-                      [class.border-unsm-red]="isFieldInvalid('confirmarClave') || clavesNoCoinciden()"
-                      [class.border-slate-300]="!isFieldInvalid('confirmarClave') && !clavesNoCoinciden()"
+                      [class.border-unsm-red]="
+                        isFieldInvalid('confirmarClave') || clavesNoCoinciden()
+                      "
+                      [class.border-slate-300]="
+                        !isFieldInvalid('confirmarClave') && !clavesNoCoinciden()
+                      "
                     />
                     <button
                       type="button"
                       (click)="toggleMostrarConfirmarClave()"
                       class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-                      [attr.aria-label]="mostrarConfirmarClave() ? 'Ocultar contraseña' : 'Ver contraseña'"
+                      [attr.aria-label]="
+                        mostrarConfirmarClave() ? 'Ocultar contraseña' : 'Ver contraseña'
+                      "
                     >
                       @if (mostrarConfirmarClave()) {
                         <svg lucideEyeOff class="size-4"></svg>

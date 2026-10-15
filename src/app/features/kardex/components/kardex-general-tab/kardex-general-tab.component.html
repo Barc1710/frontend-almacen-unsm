@@ -266,11 +266,11 @@
                 <td class="py-3 px-4 whitespace-nowrap text-xs">
                   <div class="flex items-center gap-1.5 text-slate-700">
                     <svg lucideCalendar class="size-3.5 text-slate-400 shrink-0"></svg>
-                    <span>{{ mov.fecha | date : 'dd/MM/yyyy' }}</span>
+                    <span>{{ mov.fecha | date: 'dd/MM/yyyy' }}</span>
                   </div>
                   @if (mov.fecha) {
                     <p class="text-[11px] font-mono text-slate-400 mt-0.5">
-                      {{ mov.fecha | date : 'HH:mm' }}
+                      {{ mov.fecha | date: 'HH:mm' }}
                     </p>
                   }
                 </td>
@@ -279,7 +279,9 @@
                 <td class="py-3 px-4 text-center whitespace-nowrap">
                   @let badge = obtenerBadge(mov.tipoMovimiento);
                   <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ badge.badgeClass }}"
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{
+                      badge.badgeClass
+                    }}"
                   >
                     {{ badge.label }}
                   </span>
@@ -289,7 +291,7 @@
                 <td class="py-3 px-4 text-right whitespace-nowrap font-mono tabular-nums text-xs">
                   @if (mov.entrada > 0) {
                     <span class="font-semibold text-unsm-green-dark">
-                      +{{ mov.entrada | number : (mov.permiteDecimales ? '1.2-2' : '1.0-0') }}
+                      +{{ mov.entrada | number: (mov.permiteDecimales ? '1.2-2' : '1.0-0') }}
                     </span>
                   } @else {
                     <span class="text-slate-300">-</span>
@@ -300,7 +302,7 @@
                 <td class="py-3 px-4 text-right whitespace-nowrap font-mono tabular-nums text-xs">
                   @if (mov.salida > 0) {
                     <span class="font-semibold text-amber-700">
-                      -{{ mov.salida | number : (mov.permiteDecimales ? '1.2-2' : '1.0-0') }}
+                      -{{ mov.salida | number: (mov.permiteDecimales ? '1.2-2' : '1.0-0') }}
                     </span>
                   } @else {
                     <span class="text-slate-300">-</span>
@@ -308,13 +310,18 @@
                 </td>
 
                 <!-- Saldo Resultante (tabular-nums) -->
-                <td class="py-3 px-4 text-right whitespace-nowrap font-mono tabular-nums text-xs font-bold text-slate-900">
-                  {{ mov.saldoResultante | number : (mov.permiteDecimales ? '1.2-2' : '1.0-0') }}
+                <td
+                  class="py-3 px-4 text-right whitespace-nowrap font-mono tabular-nums text-xs font-bold text-slate-900"
+                >
+                  {{ mov.saldoResultante | number: (mov.permiteDecimales ? '1.2-2' : '1.0-0') }}
                 </td>
 
                 <!-- Responsable -->
                 <td class="py-3 px-4 whitespace-nowrap text-xs">
-                  <div class="flex items-center gap-1.5 text-slate-700" [title]="mov.usuarioResponsable">
+                  <div
+                    class="flex items-center gap-1.5 text-slate-700"
+                    [title]="mov.usuarioResponsable"
+                  >
                     <svg lucideUser class="size-3.5 text-slate-400 shrink-0"></svg>
                     <span class="font-medium text-slate-800 truncate .max-w-[150px]">
                       {{ mov.usuarioResponsable || 'Almacén Central' }}

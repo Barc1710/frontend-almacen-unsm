@@ -150,7 +150,9 @@
             @for (u of usuarios(); track u.id; let idx = $index) {
               <tr class="hover:bg-slate-50/60 transition-colors">
                 <!-- Columna: # (Orden frontend) -->
-                <td class="py-3.5 px-4 text-center font-mono text-xs text-slate-400 whitespace-nowrap">
+                <td
+                  class="py-3.5 px-4 text-center font-mono text-xs text-slate-400 whitespace-nowrap"
+                >
                   {{ paginaActual() * tamanioPagina() + idx + 1 }}
                 </td>
 
@@ -168,7 +170,7 @@
                 </td>
 
                 <!-- Columna: Nombre Completo (Vacío si no hay, sin guiones) -->
-                <td class="py-3 px-4 min-w-[200px]">
+                <td class="py-3 px-4 .min-w-[200px]">
                   <p class="font-medium text-slate-800 line-clamp-1">
                     {{ u.nombreCompleto || '' }}
                   </p>

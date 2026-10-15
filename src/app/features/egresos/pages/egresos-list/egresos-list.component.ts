@@ -139,7 +139,7 @@ export class EgresosListComponent implements OnInit {
         },
         error: () => {
           this.errorCatalogos.set(
-            'No se pudieron cargar los datos necesarios para registrar un egreso. Intente nuevamente.'
+            'No se pudieron cargar los datos necesarios para registrar un egreso. Intente nuevamente.',
           );
           this.cargandoCatalogos.set(false);
         },

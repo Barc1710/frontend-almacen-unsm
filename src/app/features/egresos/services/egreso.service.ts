@@ -124,7 +124,8 @@ export class EgresoService {
     const payload = {
       idCliente: !esBaja && request.idCliente != null ? Number(request.idCliente) : null,
       idEncargado: !esBaja && request.idEncargado != null ? Number(request.idEncargado) : null,
-      nombreEncargadoLibre: !esBaja && request.nombreEncargadoLibre ? request.nombreEncargadoLibre.trim() : null,
+      nombreEncargadoLibre:
+        !esBaja && request.nombreEncargadoLibre ? request.nombreEncargadoLibre.trim() : null,
       tipoEgreso: request.tipoEgreso || 'DESPACHO_ORDINARIO',
       motivoBaja: esBaja && request.motivoBaja ? request.motivoBaja.trim() : null,
       idArea: !esBaja && request.idArea != null ? Number(request.idArea) : null,
@@ -251,15 +252,13 @@ export class EgresoService {
    */
   private normalizarEgreso(raw: Record<string, unknown>): Egreso {
     const id = Number(raw['id']);
-    const idCliente =
-      typeof raw['idCliente'] === 'number' ? raw['idCliente'] : null;
+    const idCliente = typeof raw['idCliente'] === 'number' ? raw['idCliente'] : null;
     const nombreCliente =
       typeof raw['nombreCliente'] === 'string' && raw['nombreCliente'].trim()
         ? raw['nombreCliente'].trim()
         : null;
 
-    const idArea =
-      typeof raw['idArea'] === 'number' ? raw['idArea'] : null;
+    const idArea = typeof raw['idArea'] === 'number' ? raw['idArea'] : null;
     const nombreArea =
       typeof raw['nombreArea'] === 'string' && raw['nombreArea'].trim()
         ? raw['nombreArea'].trim()
@@ -276,8 +275,7 @@ export class EgresoService {
             ? raw['nombreUsuario'].trim()
             : null;
 
-    const idEncargado =
-      typeof raw['idEncargado'] === 'number' ? raw['idEncargado'] : null;
+    const idEncargado = typeof raw['idEncargado'] === 'number' ? raw['idEncargado'] : null;
     const nombreEncargado =
       typeof raw['nombreEncargado'] === 'string' && raw['nombreEncargado'].trim()
         ? raw['nombreEncargado'].trim()

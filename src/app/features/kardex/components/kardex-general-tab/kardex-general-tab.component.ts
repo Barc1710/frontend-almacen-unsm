@@ -1,12 +1,5 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import {
-  Component,
-  DestroyRef,
-  inject,
-  OnInit,
-  output,
-  signal,
-} from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import {
