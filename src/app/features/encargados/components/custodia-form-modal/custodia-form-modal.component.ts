@@ -10,12 +10,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import {
-  LucideCircleAlert,
-  LucideLoader2,
-  LucideSave,
-  LucideX,
-} from '@lucide/angular';
+import { LucideCircleAlert, LucideLoader2, LucideSave, LucideX } from '@lucide/angular';
 import { finalize } from 'rxjs';
 import { ApiResponse } from '../../../../core/models';
 import { ModalDialogDirective } from '../../../../shared/directives/modal-dialog.directive';
@@ -187,7 +182,11 @@ export class CustodiaFormModalComponent {
         },
         error: (err: unknown) => {
           const mensaje =
-            err && typeof err === 'object' && 'error' in err && typeof (err as any).error === 'object' && (err as any).error?.mensaje
+            err &&
+            typeof err === 'object' &&
+            'error' in err &&
+            typeof (err as any).error === 'object' &&
+            (err as any).error?.mensaje
               ? (err as any).error.mensaje
               : 'Error al procesar el registro del personal de custodia.';
           this.errorGeneral.set(mensaje);

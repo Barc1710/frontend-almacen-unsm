@@ -62,7 +62,6 @@
 
       <!-- Botón de Limpiar / Recargar Filtros -->
       <div class="flex items-center gap-2">
-
         <button
           type="button"
           (click)="onLimpiarFiltros()"
@@ -91,7 +90,9 @@
             <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700 w-14 text-center">#</th>
             <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Nombre del Perfil</th>
             <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Tipo de Rol</th>
-            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Módulos Autorizados</th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">
+              Módulos Autorizados
+            </th>
             <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">Estado</th>
             <th scope="col" class="py-3.5 px-4 text-center font-semibold text-slate-700">
               Acciones
@@ -128,7 +129,9 @@
 
               <tr class="hover:bg-slate-50/60 transition-colors">
                 <!-- Columna: # (Orden frontend) -->
-                <td class="py-3.5 px-4 text-center font-mono text-xs text-slate-400 whitespace-nowrap">
+                <td
+                  class="py-3.5 px-4 text-center font-mono text-xs text-slate-400 whitespace-nowrap"
+                >
                   {{ idx + 1 }}
                 </td>
 
@@ -157,7 +160,9 @@
                 </td>
 
                 <!-- Columna: Módulos Autorizados (Sin porcentaje por solicitud) -->
-                <td class="py-3.5 px-4 whitespace-nowrap font-mono text-xs font-semibold text-slate-700">
+                <td
+                  class="py-3.5 px-4 whitespace-nowrap font-mono text-xs font-semibold text-slate-700"
+                >
                   <span class="bg-slate-100 px-2 py-0.5 rounded-md">
                     {{ autorizados }} / {{ totalModulosSistema() }} módulos
                   </span>

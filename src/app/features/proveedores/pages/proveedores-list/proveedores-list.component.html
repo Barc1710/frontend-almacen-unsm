@@ -121,7 +121,9 @@
             @for (p of proveedores(); track p.id; let idx = $index) {
               <tr class="hover:bg-slate-50/60 transition-colors">
                 <!-- Columna: # (Orden frontend) -->
-                <td class="py-3.5 px-4 text-center font-mono text-xs text-slate-400 whitespace-nowrap">
+                <td
+                  class="py-3.5 px-4 text-center font-mono text-xs text-slate-400 whitespace-nowrap"
+                >
                   {{ paginaActual() * tamanioPagina() + idx + 1 }}
                 </td>
 
@@ -151,7 +153,9 @@
                 <!-- Columna: Banco / Cuenta -->
                 <td class="py-3 px-4 whitespace-nowrap">
                   @if (p.banco || p.cuentaCorriente) {
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-700">
+                    <span
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono bg-slate-100 text-slate-700"
+                    >
                       {{ p.banco ? p.banco + ': ' : '' }}{{ p.cuentaCorriente || '' }}
                     </span>
                   } @else {
@@ -163,7 +167,9 @@
                 <td class="py-3 px-4 whitespace-nowrap">
                   @if (p.contacto) {
                     <div class="flex items-center gap-2">
-                      <div class="size-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
+                      <div
+                        class="size-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0"
+                      >
                         <svg lucideUser class="size-3.5"></svg>
                       </div>
                       <span class="text-slate-800 text-xs font-medium">{{ p.contacto }}</span>

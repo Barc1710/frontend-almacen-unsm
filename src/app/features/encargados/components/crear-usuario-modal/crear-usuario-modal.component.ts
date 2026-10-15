@@ -1,12 +1,4 @@
-import {
-  Component,
-  DestroyRef,
-  effect,
-  inject,
-  input,
-  output,
-  signal,
-} from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -30,11 +22,7 @@ import { extraerMensajeError } from '../../../../core/utils';
 import { ModalDialogDirective } from '../../../../shared/directives/modal-dialog.directive';
 import { Perfil } from '../../../seguridad/models';
 import { PerfilService } from '../../../seguridad/services';
-import {
-  CrearUsuarioEncargadoRequest,
-  Encargado,
-  EncargadoAlmacen,
-} from '../../models';
+import { CrearUsuarioEncargadoRequest, Encargado, EncargadoAlmacen } from '../../models';
 import { EncargadoAlmacenService, EncargadoService } from '../../services';
 
 function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
@@ -197,8 +185,7 @@ export class CrearUsuarioModalComponent {
     } else {
       const perfilAlmacen = lista.find(
         (p) =>
-          p.nombre.toUpperCase().includes('ALMACEN') ||
-          p.nombre.toUpperCase().includes('USUARIO'),
+          p.nombre.toUpperCase().includes('ALMACEN') || p.nombre.toUpperCase().includes('USUARIO'),
       );
       this.form.patchValue({ idPerfil: perfilAlmacen ? perfilAlmacen.id : lista[0].id });
     }
@@ -212,10 +199,7 @@ export class CrearUsuarioModalComponent {
   clavesNoCoinciden(): boolean {
     return (
       this.form.hasError('passwordMismatch') &&
-      !!(
-        this.form.get('confirmarClave')?.touched &&
-        this.form.get('confirmarClave')?.value
-      )
+      !!(this.form.get('confirmarClave')?.touched && this.form.get('confirmarClave')?.value)
     );
   }
 

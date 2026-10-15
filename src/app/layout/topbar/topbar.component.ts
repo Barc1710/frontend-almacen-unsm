@@ -1,10 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import {
-  LucideChevronDown,
-  LucideLogOut,
-  LucideMenu,
-  LucideUser,
-} from '@lucide/angular';
+import { LucideChevronDown, LucideLogOut, LucideMenu, LucideUser } from '@lucide/angular';
 import { AuthService } from '../../core/services';
 import { LayoutService } from '../layout.service';
 

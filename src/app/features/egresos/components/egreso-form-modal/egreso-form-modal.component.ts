@@ -204,8 +204,7 @@ export class EgresoFormModalComponent {
       const lista = this.encargadosAlmacenActivos();
       if (this.visible() && !this.cabeceraForm.controls.idEncargadoAlmacen.value) {
         untracked(() => {
-          const titular =
-            lista.find((e) => e.esTitular) || (lista.length === 1 ? lista[0] : null);
+          const titular = lista.find((e) => e.esTitular) || (lista.length === 1 ? lista[0] : null);
           if (titular) {
             this.cabeceraForm.controls.idEncargadoAlmacen.setValue(titular.id);
           }
@@ -215,7 +214,11 @@ export class EgresoFormModalComponent {
 
     effect(() => {
       const listaEnc = this.encargados().filter((e) => e.estado !== '0');
-      if (this.visible() && !this.cabeceraForm.controls.idEncargado.value && listaEnc.length === 1) {
+      if (
+        this.visible() &&
+        !this.cabeceraForm.controls.idEncargado.value &&
+        listaEnc.length === 1
+      ) {
         untracked(() => {
           this.cabeceraForm.controls.idEncargado.setValue(listaEnc[0].id);
         });
@@ -271,7 +274,11 @@ export class EgresoFormModalComponent {
       idEncargado.setValue(null);
       ambiente.clearValidators();
       ambiente.setValue('');
-      motivoBaja.setValidators([Validators.required, Validators.pattern(/\S/), Validators.maxLength(255)]);
+      motivoBaja.setValidators([
+        Validators.required,
+        Validators.pattern(/\S/),
+        Validators.maxLength(255),
+      ]);
     } else {
       idCliente.setValidators([Validators.required]);
       idArea.setValidators([Validators.required]);
@@ -558,7 +565,7 @@ export class EgresoFormModalComponent {
       idEncargado: !esBaja && raw.idEncargado ? Number(raw.idEncargado) : null,
       nombreEncargadoLibre: null,
       tipoEgreso: this.tipoOperacion(),
-      motivoBaja: esBaja ? (raw.motivoBaja?.trim() || null) : null,
+      motivoBaja: esBaja ? raw.motivoBaja?.trim() || null : null,
       idArea: !esBaja && raw.idArea ? Number(raw.idArea) : null,
       idEncargadoAlmacen: Number(raw.idEncargadoAlmacen),
       ambiente: !esBaja && raw.ambiente ? raw.ambiente.trim() : null,

@@ -158,7 +158,12 @@ export class DashboardComponent implements OnInit {
         textStyle: { color: '#1e293b', fontSize: 12 },
         extraCssText: 'box-shadow: 0 12px 24px -4px rgba(0,0,0,0.12); border-radius: 14px;',
         formatter: (params: unknown) => {
-          const list = params as Array<{ seriesName: string; value: number; color: string; axisValueLabel: string }>;
+          const list = params as Array<{
+            seriesName: string;
+            value: number;
+            color: string;
+            axisValueLabel: string;
+          }>;
           if (!list || list.length === 0) return '';
           let html = `<div class="font-bold text-slate-800 text-xs mb-2 border-b border-slate-100 pb-1">${list[0].axisValueLabel}</div>`;
           for (const item of list) {
@@ -298,7 +303,12 @@ export class DashboardComponent implements OnInit {
         textStyle: { color: '#1e293b', fontSize: 12 },
         extraCssText: 'box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08); border-radius: 12px;',
         formatter: (params: unknown) => {
-          const p = params as { name: string; value: number; percent: number; data: { saldo: number } };
+          const p = params as {
+            name: string;
+            value: number;
+            percent: number;
+            data: { saldo: number };
+          };
           return `
             <div class="font-bold text-slate-800 mb-1">${p.name}</div>
             <div class="text-xs text-slate-500">Artículos: <span class="font-semibold text-slate-700">${p.value} (${p.percent}%)</span></div>

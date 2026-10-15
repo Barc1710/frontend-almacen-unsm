@@ -63,7 +63,9 @@ export function normalizeModulo(value: unknown): ModuloResponse | null {
   const raw = value as Record<string, unknown>;
 
   const id = typeof raw['id'] === 'number' ? raw['id'] : Number(raw['id']) || 0;
-  const codigo = String(raw['codigo'] ?? raw['code'] ?? '').trim().toUpperCase();
+  const codigo = String(raw['codigo'] ?? raw['code'] ?? '')
+    .trim()
+    .toUpperCase();
   const nombre = String(raw['nombre'] ?? raw['name'] ?? codigo).trim();
   const rawUrl = String(raw['url'] ?? raw['ruta'] ?? raw['path'] ?? '').trim();
   const url = rawUrl ? (rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`) : '';
@@ -73,16 +75,14 @@ export function normalizeModulo(value: unknown): ModuloResponse | null {
       : typeof raw['icon'] === 'string'
         ? raw['icon'].trim()
         : null;
-  const orden =
-    typeof raw['orden'] === 'number'
-      ? raw['orden']
-      : Number(raw['orden']) || 0;
+  const orden = typeof raw['orden'] === 'number' ? raw['orden'] : Number(raw['orden']) || 0;
 
   if (!codigo && !url && !nombre) {
     return null;
   }
 
-  const finalCodigo = codigo || (url ? url.replace(/^\//, '').replace(/\//g, '_').toUpperCase() : 'MODULO');
+  const finalCodigo =
+    codigo || (url ? url.replace(/^\//, '').replace(/\//g, '_').toUpperCase() : 'MODULO');
   const resolvedUrl = url || (finalCodigo ? `/${finalCodigo.toLowerCase()}` : '/dashboard');
 
   return {

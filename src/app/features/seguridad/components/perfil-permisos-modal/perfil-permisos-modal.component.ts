@@ -9,12 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import {
-  LucideCircleAlert,
-  LucideLoader2,
-  LucideSave,
-  LucideX,
-} from '@lucide/angular';
+import { LucideCircleAlert, LucideLoader2, LucideSave, LucideX } from '@lucide/angular';
 import { finalize, forkJoin } from 'rxjs';
 import { ModuloResponse } from '../../../../core/models';
 import { NotificationService } from '../../../../core/services';
@@ -71,13 +66,7 @@ const SIDEBAR_GROUP_DEFS: readonly {
 
 @Component({
   selector: 'app-perfil-permisos-modal',
-  imports: [
-    ModalDialogDirective,
-    LucideX,
-    LucideSave,
-    LucideLoader2,
-    LucideCircleAlert,
-  ],
+  imports: [ModalDialogDirective, LucideX, LucideSave, LucideLoader2, LucideCircleAlert],
   templateUrl: './perfil-permisos-modal.component.html',
 })
 export class PerfilPermisosModalComponent {

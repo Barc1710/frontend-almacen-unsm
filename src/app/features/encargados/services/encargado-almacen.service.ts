@@ -96,13 +96,15 @@ export class EncargadoAlmacenService {
    * Consume GET /encargados-almacen/{id}
    */
   obtenerPorId(id: number): Observable<EncargadoAlmacen> {
-    return this.http.get<ApiResponse<EncargadoAlmacen>>(`${this.apiUrl}/encargados-almacen/${id}`).pipe(
-      map((res) => {
-        const data = getApiResponseData(res);
-        if (!data) throw new Error('Personal de almacén no encontrado');
-        return data;
-      }),
-    );
+    return this.http
+      .get<ApiResponse<EncargadoAlmacen>>(`${this.apiUrl}/encargados-almacen/${id}`)
+      .pipe(
+        map((res) => {
+          const data = getApiResponseData(res);
+          if (!data) throw new Error('Personal de almacén no encontrado');
+          return data;
+        }),
+      );
   }
 
   /**
@@ -110,15 +112,24 @@ export class EncargadoAlmacenService {
    * Consume POST /encargados-almacen
    */
   crear(request: EncargadoAlmacenRequest): Observable<ApiResponse<EncargadoAlmacen>> {
-    return this.http.post<ApiResponse<EncargadoAlmacen>>(`${this.apiUrl}/encargados-almacen`, request);
+    return this.http.post<ApiResponse<EncargadoAlmacen>>(
+      `${this.apiUrl}/encargados-almacen`,
+      request,
+    );
   }
 
   /**
    * Actualiza el personal de almacén (nombre y/o titularidad).
    * Consume PUT /encargados-almacen/{id}
    */
-  actualizar(id: number, request: EncargadoAlmacenRequest): Observable<ApiResponse<EncargadoAlmacen>> {
-    return this.http.put<ApiResponse<EncargadoAlmacen>>(`${this.apiUrl}/encargados-almacen/${id}`, request);
+  actualizar(
+    id: number,
+    request: EncargadoAlmacenRequest,
+  ): Observable<ApiResponse<EncargadoAlmacen>> {
+    return this.http.put<ApiResponse<EncargadoAlmacen>>(
+      `${this.apiUrl}/encargados-almacen/${id}`,
+      request,
+    );
   }
 
   /**
@@ -126,7 +137,10 @@ export class EncargadoAlmacenService {
    * Consume PATCH /encargados-almacen/{id}/titular
    */
   alternarTitular(id: number): Observable<ApiResponse<EncargadoAlmacen>> {
-    return this.http.patch<ApiResponse<EncargadoAlmacen>>(`${this.apiUrl}/encargados-almacen/${id}/titular`, {});
+    return this.http.patch<ApiResponse<EncargadoAlmacen>>(
+      `${this.apiUrl}/encargados-almacen/${id}/titular`,
+      {},
+    );
   }
 
   /**
@@ -142,14 +156,23 @@ export class EncargadoAlmacenService {
    * Consume PATCH /encargados-almacen/{id}/activar
    */
   activar(id: number): Observable<ApiResponse<void>> {
-    return this.http.patch<ApiResponse<void>>(`${this.apiUrl}/encargados-almacen/${id}/activar`, {});
+    return this.http.patch<ApiResponse<void>>(
+      `${this.apiUrl}/encargados-almacen/${id}/activar`,
+      {},
+    );
   }
 
   /**
    * Crea y vincula una cuenta de usuario para el personal de custodia.
    * Consume POST /encargados-almacen/{id}/crear-usuario
    */
-  crearUsuario(id: number, request: CrearUsuarioEncargadoRequest): Observable<ApiResponse<EncargadoAlmacen>> {
-    return this.http.post<ApiResponse<EncargadoAlmacen>>(`${this.apiUrl}/encargados-almacen/${id}/crear-usuario`, request);
+  crearUsuario(
+    id: number,
+    request: CrearUsuarioEncargadoRequest,
+  ): Observable<ApiResponse<EncargadoAlmacen>> {
+    return this.http.post<ApiResponse<EncargadoAlmacen>>(
+      `${this.apiUrl}/encargados-almacen/${id}/crear-usuario`,
+      request,
+    );
   }
 }

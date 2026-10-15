@@ -193,12 +193,11 @@ export class AlmacenListComponent implements OnInit {
     this.procesandoTitularId.set(persona.id);
 
     try {
-      const res = await firstValueFrom(
-        this.encargadoAlmacenService.alternarTitular(persona.id),
-      );
+      const res = await firstValueFrom(this.encargadoAlmacenService.alternarTitular(persona.id));
 
       const titularActualizado = res.data?.esTitular ?? !persona.esTitular;
-      const nombreDisplay = persona.nombreCompleto || `${persona.nombres} ${persona.apellidos}`.trim();
+      const nombreDisplay =
+        persona.nombreCompleto || `${persona.nombres} ${persona.apellidos}`.trim();
       const msg = titularActualizado
         ? `"${nombreDisplay}" ha sido asignado como Titular de Turno.`
         : `Se ha retirado la titularidad de turno de "${nombreDisplay}".`;
@@ -221,8 +220,7 @@ export class AlmacenListComponent implements OnInit {
     if (this.procesandoFilaId() !== null) return;
 
     const nombreCompleto =
-      persona.nombreCompleto?.trim() ||
-      `${persona.nombres} ${persona.apellidos}`.trim();
+      persona.nombreCompleto?.trim() || `${persona.nombres} ${persona.apellidos}`.trim();
 
     if (persona.estado === '1') {
       const resultado = await this.notificationService.confirm({

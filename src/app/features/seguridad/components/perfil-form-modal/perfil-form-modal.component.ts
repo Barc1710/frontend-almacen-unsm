@@ -10,12 +10,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import {
-  LucideCircleAlert,
-  LucideLoader2,
-  LucideSave,
-  LucideX,
-} from '@lucide/angular';
+import { LucideCircleAlert, LucideLoader2, LucideSave, LucideX } from '@lucide/angular';
 import { finalize } from 'rxjs';
 import { NotificationService } from '../../../../core/services';
 import { extraerMensajeError } from '../../../../core/utils';

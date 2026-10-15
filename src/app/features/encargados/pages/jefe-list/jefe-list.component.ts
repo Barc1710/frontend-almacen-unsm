@@ -175,8 +175,7 @@ export class JefeListComponent implements OnInit {
     if (this.procesandoFilaId() !== null) return;
 
     const nombreCompleto =
-      encargado.nombreCompleto?.trim() ||
-      `${encargado.nombres} ${encargado.apellidos}`.trim();
+      encargado.nombreCompleto?.trim() || `${encargado.nombres} ${encargado.apellidos}`.trim();
 
     if (encargado.estado === '1') {
       const resultado = await this.notificationService.confirm({

@@ -141,7 +141,13 @@ export class EncargadoService {
    * Crea y vincula una cuenta de usuario para el encargado.
    * Consume POST /encargados/{id}/crear-usuario
    */
-  crearUsuario(id: number, request: CrearUsuarioEncargadoRequest): Observable<ApiResponse<Encargado>> {
-    return this.http.post<ApiResponse<Encargado>>(`${this.apiUrl}/encargados/${id}/crear-usuario`, request);
+  crearUsuario(
+    id: number,
+    request: CrearUsuarioEncargadoRequest,
+  ): Observable<ApiResponse<Encargado>> {
+    return this.http.post<ApiResponse<Encargado>>(
+      `${this.apiUrl}/encargados/${id}/crear-usuario`,
+      request,
+    );
   }
 }

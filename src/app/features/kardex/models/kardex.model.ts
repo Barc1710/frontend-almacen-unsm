@@ -1,11 +1,5 @@
 export type TipoMovimiento =
-  | 'SALDO_INICIAL'
-  | 'INGRESO'
-  | 'EGRESO'
-  | 'REVERSO_EGRESO'
-  | 'REVERSO_INGRESO'
-  | 'AJUSTE'
-  | 'BAJA';
+  'SALDO_INICIAL' | 'INGRESO' | 'EGRESO' | 'REVERSO_EGRESO' | 'REVERSO_INGRESO' | 'AJUSTE' | 'BAJA';
 
 export interface KardexMovimiento {
   readonly id: number;

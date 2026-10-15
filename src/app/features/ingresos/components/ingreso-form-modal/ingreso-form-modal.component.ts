@@ -29,7 +29,15 @@ import {
   LucideTrash,
   LucideX,
 } from '@lucide/angular';
-import { catchError, debounceTime, distinctUntilChanged, of, Subject, Subscription, switchMap } from 'rxjs';
+import {
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  of,
+  Subject,
+  Subscription,
+  switchMap,
+} from 'rxjs';
 import { obtenerFechaHoy } from '../../../../core';
 import { ModalDialogDirective } from '../../../../shared/directives/modal-dialog.directive';
 import { Articulo } from '../../../articulos/models';

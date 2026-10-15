@@ -84,7 +84,9 @@
         >
           <tr>
             <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700 w-14 text-center">#</th>
-            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Nombre o Razón Social</th>
+            <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">
+              Nombre o Razón Social
+            </th>
             <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">DNI</th>
             <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Teléfono</th>
             <th scope="col" class="py-3.5 px-4 font-semibold text-slate-700">Correo Electrónico</th>
@@ -120,7 +122,9 @@
             @for (c of clientes(); track c.id; let idx = $index) {
               <tr class="hover:bg-slate-50/60 transition-colors">
                 <!-- Columna: # (Orden frontend) -->
-                <td class="py-3.5 px-4 text-center font-mono text-xs text-slate-400 whitespace-nowrap">
+                <td
+                  class="py-3.5 px-4 text-center font-mono text-xs text-slate-400 whitespace-nowrap"
+                >
                   {{ paginaActual() * tamanioPagina() + idx + 1 }}
                 </td>
 

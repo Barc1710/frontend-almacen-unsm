@@ -1,18 +1,8 @@
 import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import {
-  NavigationEnd,
-  Router,
-  RouterLink,
-  RouterLinkActive,
-} from '@angular/router';
-import {
-  LucideChevronDown,
-  LucideDynamicIcon,
-  type LucideIcon,
-  LucideX,
-} from '@lucide/angular';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { LucideChevronDown, LucideDynamicIcon, type LucideIcon, LucideX } from '@lucide/angular';
 import { filter, map } from 'rxjs';
 import { AuthService } from '../../core/services';
 import { LayoutService } from '../layout.service';

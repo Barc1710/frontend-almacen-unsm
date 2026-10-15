@@ -8,11 +8,7 @@ import {
   isPageResponse,
   PageResponse,
 } from '../../../core/models';
-import {
-  Proveedor,
-  ProveedorFiltros,
-  ProveedorRequest,
-} from '../models';
+import { Proveedor, ProveedorFiltros, ProveedorRequest } from '../models';
 
 @Service()
 export class ProveedorService {
@@ -74,9 +70,9 @@ export class ProveedorService {
    * Consume GET /proveedores/activos
    */
   listarActivos(): Observable<Proveedor[]> {
-    return this.http.get<ApiResponse<Proveedor[]>>(`${this.apiUrl}/proveedores/activos`).pipe(
-      map((res) => getApiResponseData(res) ?? []),
-    );
+    return this.http
+      .get<ApiResponse<Proveedor[]>>(`${this.apiUrl}/proveedores/activos`)
+      .pipe(map((res) => getApiResponseData(res) ?? []));
   }
 
   /**

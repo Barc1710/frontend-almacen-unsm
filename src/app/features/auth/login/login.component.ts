@@ -5,7 +5,6 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideEye, LucideEyeOff } from '@lucide/angular';
 import { finalize, switchMap } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 import { LoginRequest } from '../../../core/models';
 import { AuthService } from '../../../core/services';
 
@@ -16,12 +15,10 @@ import { AuthService } from '../../../core/services';
 })
 export class LoginComponent {
   private readonly fb = inject(FormBuilder);
-  protected readonly authService = inject(AuthService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
-  readonly developmentLoginEnabled =
-    !environment.production && environment.developmentLogin !== null;
 
   /**
    * Estado reactivo del componente
@@ -86,11 +83,6 @@ export class LoginComponent {
     }
 
     this.authenticate({ usuario, clave });
-  }
-
-  onDevelopmentLogin(): void {
-    if (!this.developmentLoginEnabled || !environment.developmentLogin) return;
-    this.authenticate(environment.developmentLogin);
   }
 
   private authenticate(credentials: LoginRequest): void {

@@ -17,16 +17,14 @@ export class DashboardService {
    * Consume GET /dashboard/resumen
    */
   obtenerResumen(): Observable<DashboardResumen> {
-    return this.http
-      .get<ApiResponse<DashboardResumen>>(`${this.apiUrl}/dashboard/resumen`)
-      .pipe(
-        map((res) => {
-          const data = getApiResponseData(res);
-          if (!data) {
-            throw new Error('Respuesta vacía o inválida del servidor');
-          }
-          return data;
-        }),
-      );
+    return this.http.get<ApiResponse<DashboardResumen>>(`${this.apiUrl}/dashboard/resumen`).pipe(
+      map((res) => {
+        const data = getApiResponseData(res);
+        if (!data) {
+          throw new Error('Respuesta vacía o inválida del servidor');
+        }
+        return data;
+      }),
+    );
   }
 }
