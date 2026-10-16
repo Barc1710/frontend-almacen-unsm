@@ -1,0 +1,9 @@
+dist/
+node_modules/
+.angular/
+.git/
+.gitignore
+.vscode/
+.codex/
+.gemini/
+.agents/
